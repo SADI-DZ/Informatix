@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatix - تعلم المعلوماتية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="particles" id="particles"></div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">&lt;/&gt;</span>
+            <span class="logo-text">Informa<span class="highlight">tix</span></span>
+        </div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="#" class="active">الرئيسية</a></li>
+            <li><a href="#modules">الوحدات</a></li>
+            <li><a href="#">مخبر المعلوماتية</a></li>
+            <li><a href="#">اتصل بنا</a></li>
+        </ul>
+        <div class="nav-controls">
+            <label for="theme-checkbox" class="theme-switch" aria-label="تبديل المظهر">
+                <input type="checkbox" id="theme-checkbox">
+                <div class="slider">
+                    <div class="sun-moon">
+                        <div class="crater crater-1"></div>
+                        <div class="crater crater-2"></div>
+                        <div class="crater crater-3"></div>
+                    </div>
+                    <div class="clouds">
+                        <div class="cloud cloud-1"></div>
+                        <div class="cloud cloud-2"></div>
+                        <div class="cloud cloud-3"></div>
+                        <div class="cloud cloud-4"></div>
+                        <div class="cloud cloud-5"></div>
+                    </div>
+                    <div class="stars">
+                        <div class="star star-1"></div>
+                        <div class="star star-2"></div>
+                        <div class="star star-3"></div>
+                        <div class="star star-4"></div>
+                        <div class="star star-5"></div>
+                    </div>
+                </div>
+            </label>
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="القائمة">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">تعلم <span class="highlight-gradient">المعلوماتية</span> بطريقة تفاعلية</h1>
+            <p class="hero-subtitle">منصتك التعليمية المتكاملة لمادة المعلوماتية - مستوى الأولى ثانوي. دروس، تمارين،
+                وأدوات تفاعلية لمساعدتك على التفوق.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary btn-large">ابدأ التعلم الآن</button>
+                <button class="btn-secondary btn-large">تصفح المحتوى</button>
+            </div>
+        </div>
+        <div class="hero-graphics">
+            <div class="glass-card floating-card card-1" dir="ltr">
+                <div class="code-line"><span class="keyword">if</span> (student.isLearning) {</div>
+                <div class="code-line indent">success++;</div>
+                <div class="code-line">}</div>
+            </div>
+            <div class="glass-card floating-card card-2">
+                <div class="icon">🖥️</div>
+                <div>أساسيات الحاسوب</div>
+            </div>
+            <div class="glass-card floating-card card-3">
+                <div class="icon">⚙️</div>
+                <div>الخوارزميات</div>
+            </div>
+            <div class="glow-sphere"></div>
+        </div>
+    </main>
+
+    <section id="modules" class="modules-section">
+        <h2 class="section-title">وحدات المقرر الدراسي</h2>
+        <div class="modules-grid">
+            <div class="module-card border-purple">
+                <div class="module-icon-circle bg-purple-circle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                </div>
+                <h3>بيئة التعامل مع الحاسوب</h3>
+                <p>تعلم أساسيات الحاسوب، نظام التشغيل،والشبكات</p>
+                <button class="lessons-btn"><span class="arrow">&larr;</span> 6 دروس</button>
+            </div>
+
+            <div class="module-card border-green">
+                <div class="module-icon-circle bg-green-circle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                </div>
+                <h3>مدخل إلى البرمجة</h3>
+                <p>المخططات الانسيابية والخوارزميات والبحث المنطقي</p>
+                <button class="lessons-btn"><span class="arrow">&larr;</span> 3 دروس</button>
+            </div>
+
+            <div class="module-card border-yellow">
+                <div class="module-icon-circle bg-yellow-circle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
+                    </svg>
+                </div>
+                <h3>تقنيات الويب</h3>
+                <p>المتصفحات، البريد الإلكتروني، وإنشاء صفحات الويب</p>
+                <button class="lessons-btn"><span class="arrow">&larr;</span> 4 دروس</button>
+            </div>
+
+            <div class="module-card border-pink">
+                <div class="module-icon-circle bg-pink-circle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <h3>المكتبية</h3>
+                <p>معالج النصوص، جداول البيانات، والعروض التقديمية</p>
+                <button class="lessons-btn"><span class="arrow">&larr;</span> 6 دروس</button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 جميع الحقوق محفوظة لمنصة Informatix.</p>
+            <p class="designer">
+                صمم بواسطة
+                <img src="images/sadi-logo.jpeg" alt="SADI Logo" class="sadi-logo">
+                <span class="highlight">SADI</span>
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
