@@ -619,3 +619,17 @@ input:checked + .slider .clouds {
         transform: scale(0.7);
     }
 }
+
+.skip-link {
+    position: absolute;
+    top: -100px;
+    right: 0;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 8px 8px;
+    font-weight: 600;
+    z-index: 9999;
+    transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
