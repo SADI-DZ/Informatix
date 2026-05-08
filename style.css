@@ -36,6 +36,7 @@
     --code-color: #334155;
 }
 
+/* التنسيقات العامة للصفحة */
 * {
     margin: 0;
     padding: 0;
@@ -48,12 +49,13 @@ body {
     color: var(--text-color);
     overflow-x: hidden;
     position: relative;
+    /* إضاءات خافتة في الخلفية لإعطاء طابع عصري */
     background-image: 
         radial-gradient(circle at 15% 50%, rgba(79, 172, 254, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
 }
 
-/* Navbar */
+/* تصميم الشريط العلوي (النافبار) */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -68,7 +70,7 @@ body {
     border-bottom: 1px solid var(--glass-border);
 }
 
-/* Theme Switch Cloud */
+/* تصميم زر التبديل بين الوضعين الليلي والنهاري (على شكل سماء) */
 .theme-switch {
     position: relative;
     display: inline-block;
@@ -157,7 +159,7 @@ body {
 .cloud-4 { width: 15px; height: 15px; bottom: 8px; right: 25px; }
 .cloud-5 { width: 20px; height: 20px; bottom: -8px; right: 35px; }
 
-/* Light Mode Checked State */
+/* تأثيرات الوضع المضيء (النهاري) */
 input:checked + .slider {
     background-color: #87ceeb; /* day sky */
 }
@@ -232,7 +234,7 @@ input:checked + .slider .clouds {
     box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);
 }
 
-/* Hero Section */
+/* تصميم القسم الترحيبي (أعلى الصفحة) */
 .hero-section {
     min-height: 100vh;
     display: flex;
@@ -375,7 +377,7 @@ input:checked + .slider .clouds {
     animation: pulse 4s ease-in-out infinite alternate;
 }
 
-/* Modules Section */
+/* قسم عرض وحدات المقرر الدراسي */
 .modules-section {
     padding: 5rem 5%;
 }
@@ -471,7 +473,7 @@ input:checked + .slider .clouds {
     background: var(--btn-hover);
 }
 
-/* Animations */
+/* الحركات والتأثيرات البصرية */
 @keyframes float {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-20px); }
@@ -483,7 +485,7 @@ input:checked + .slider .clouds {
     100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
 }
 
-/* Particles */
+/* تصميم الجسيمات العائمة في الخلفية */
 .particles {
     position: fixed;
     top: 0;
@@ -501,7 +503,7 @@ input:checked + .slider .clouds {
     opacity: 0.3;
 }
 
-/* Footer */
+/* تذييل الصفحة وحقوق النشر */
 .footer {
     text-align: center;
     padding: 2rem 5%;
@@ -553,7 +555,7 @@ input:checked + .slider .clouds {
     padding: 0.5rem;
 }
 
-/* Responsive */
+/* التجاوب مع مقاسات الشاشات المختلفة (الهواتف والأجهزة اللوحية) */
 @media (max-width: 768px) {
     .hero-section {
         flex-direction: column;
