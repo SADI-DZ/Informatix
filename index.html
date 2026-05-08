@@ -67,7 +67,7 @@
 
     <!-- القسم الترحيبي (البداية) الذي يظهر في أعلى الصفحة -->
     <main id="home" class="hero-section">
-        <div class="hero-content">
+        <div class="hero-content reveal">
             <h1 class="hero-title">تعلم <span class="highlight-gradient">المعلوماتية</span> بطريقة تفاعلية</h1>
             <p class="hero-subtitle">منصتك التعليمية المتكاملة لمادة المعلوماتية - مستوى الأولى ثانوي. دروس، تمارين،
                 وأدوات تفاعلية لمساعدتك على التفوق.</p>
@@ -76,7 +76,7 @@
                 <a href="#modules" class="btn-secondary btn-large">تصفح المحتوى</a>
             </div>
         </div>
-        <div class="hero-graphics">
+        <div class="hero-graphics reveal reveal-delay-2">
             <div class="glass-card floating-card card-1" dir="ltr">
                 <div class="code-line"><span class="keyword">if</span> (student.isLearning) {</div>
                 <div class="code-line indent">success++;</div>
@@ -95,9 +95,9 @@
     </main>
 
     <section id="modules" class="modules-section">
-        <h2 class="section-title">وحدات المقرر الدراسي</h2>
+        <h2 class="section-title reveal">وحدات المقرر الدراسي</h2>
         <div class="modules-grid">
-            <div class="module-card border-purple">
+            <div class="module-card border-purple reveal reveal-delay-1">
                 <div class="module-icon-circle bg-purple-circle">
                     <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -112,7 +112,7 @@
                         class="arrow">&larr;</span> 6 دروس</button>
             </div>
 
-            <div class="module-card border-green">
+            <div class="module-card border-green reveal reveal-delay-2">
                 <div class="module-icon-circle bg-green-circle">
                     <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -126,7 +126,7 @@
                         class="arrow">&larr;</span> 3 دروس</button>
             </div>
 
-            <div class="module-card border-yellow">
+            <div class="module-card border-yellow reveal reveal-delay-3">
                 <div class="module-icon-circle bg-yellow-circle">
                     <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -143,7 +143,7 @@
                         class="arrow">&larr;</span> 4 دروس</button>
             </div>
 
-            <div class="module-card border-pink">
+            <div class="module-card border-pink reveal reveal-delay-4">
                 <div class="module-icon-circle bg-pink-circle">
                     <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -164,13 +164,47 @@
 
     <!-- تذييل الصفحة وحقوق النشر -->
     <footer class="footer">
-        <div class="footer-content">
-            <p>&copy; 2026 جميع الحقوق محفوظة لمنصة Informatix.</p>
-            <p class="designer">
-                صمم بواسطة
-                <img src="images/sadi-logo.jpeg" alt="SADI Logo" class="sadi-logo" width="40" height="40">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo">
+                    <span class="logo-icon">&lt;/&gt;</span>
+                    <span class="logo-text">Informa<span class="highlight">tix</span></span>
+                </div>
+                <p class="brand-description">منصتك التعليمية الأولى لتعلم المعلوماتية بطريقة حديثة وتفاعلية، مصممة خصيصاً لطلاب الأولى ثانوي.</p>
+            </div>
+    
+            <div class="footer-links">
+                <h4>روابط سريعة</h4>
+                <ul>
+                    <li><a href="#home">الرئيسية</a></li>
+                    <li><a href="#modules">الوحدات الدراسية</a></li>
+                    <li><a href="#">مخبر المعلوماتية</a></li>
+                    <li><a href="#">سياسة الخصوصية</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-contact">
+                <h4>تواصل معنا</h4>
+                <div class="contact-item">
+                    <span class="contact-icon">📧</span>
+                    <span class="contact-text">contact@informatix.edu</span>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <span class="contact-text">الجزائر العاصمة</span>
+                </div>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="copyright">
+                &copy; 2026 جميع الحقوق محفوظة لمنصة <strong>Informatix</strong>.
+            </div>
+            <div class="designer">
+                <span>صمم بواسطة</span>
+                <img src="images/sadi-logo.jpeg" alt="SADI Logo" class="sadi-logo">
                 <span class="highlight">SADI</span>
-            </p>
+            </div>
         </div>
     </footer>
 

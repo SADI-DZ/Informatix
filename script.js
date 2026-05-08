@@ -114,6 +114,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { threshold: 0.5 });
     sections.forEach(s => observer.observe(s));
+    
+    // تفعيل تأثيرات الظهور عند التمرير (Scroll Reveal)
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    revealElements.forEach(el => revealObserver.observe(el));
 
     // إغلاق قائمة الموبايل عند Escape وعند الضغط خارجها
     document.addEventListener('keydown', (e) => {
@@ -122,4 +134,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.navbar') && navLinks) navLinks.classList.remove('active');
     });
+
+    // إضافة تأثير الكتابة البسيط للعنوان الفرعي
+    const subtitle = document.querySelector('.hero-subtitle');
+    if (subtitle) {
+        const text = subtitle.textContent;
+        subtitle.textContent = '';
+        let i = 0;
+        function typeWriter() {
+            if (i < text.length) {
+                subtitle.textContent += text.charAt(i);
+                i++;
+                setTimeout(typeWriter, 20);
+            }
+        }
+        // نبدأ التأثير بعد قليل من ظهور الصفحة
+        setTimeout(typeWriter, 1000);
+    }
 });

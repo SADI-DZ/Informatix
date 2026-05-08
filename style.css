@@ -15,6 +15,10 @@
     --btn-text: #ffffff;
     --floating-bg: rgba(15, 23, 42, 0.8);
     --code-color: #e2e8f0;
+    --glow-purple: rgba(124, 58, 237, 0.5);
+    --glow-green: rgba(16, 185, 129, 0.5);
+    --glow-yellow: rgba(245, 158, 11, 0.5);
+    --glow-pink: rgba(236, 72, 153, 0.5);
 }
 
 [data-theme="light"] {
@@ -258,6 +262,7 @@ input:checked + .slider .clouds {
 .highlight-gradient {
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -409,9 +414,14 @@ input:checked + .slider .clouds {
 }
 
 .module-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-10px) scale(1.02);
     background: var(--card-hover-bg);
 }
+
+.module-card.border-purple:hover { box-shadow: 0 10px 30px var(--glow-purple); }
+.module-card.border-green:hover { box-shadow: 0 10px 30px var(--glow-green); }
+.module-card.border-yellow:hover { box-shadow: 0 10px 30px var(--glow-yellow); }
+.module-card.border-pink:hover { box-shadow: 0 10px 30px var(--glow-pink); }
 
 .border-purple { border-top: 4px solid #7c3aed; }
 .border-green { border-top: 4px solid #10b981; }
@@ -485,6 +495,23 @@ input:checked + .slider .clouds {
     100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
 }
 
+/* Scroll Reveal Effects */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
 /* تصميم الجسيمات العائمة في الخلفية */
 .particles {
     position: fixed;
@@ -505,58 +532,140 @@ input:checked + .slider .clouds {
 
 /* تذييل الصفحة وحقوق النشر */
 .footer {
-    text-align: center;
-    padding: 2rem 5%;
+    padding: 5rem 5% 2rem;
     background: var(--nav-bg);
     backdrop-filter: blur(10px);
     border-top: 1px solid var(--glass-border);
     margin-top: 4rem;
 }
 
-.footer-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.footer-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr;
+    gap: 4rem;
+    margin-bottom: 4rem;
 }
 
-.footer-content p {
+.footer-brand .brand-description {
     color: var(--text-muted);
+    margin-top: 1.5rem;
+    line-height: 1.8;
+    max-width: 400px;
 }
 
-.designer {
-    font-weight: 600;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+.footer-links h4, .footer-contact h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
 }
 
-.sadi-logo {
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--primary-color);
+.footer-links h4::after, .footer-contact h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
 }
 
-.nav-controls {
+.footer-links ul {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s, padding-right 0.3s;
+}
+
+.footer-links a:hover {
+    color: var(--primary-color);
+    padding-right: 5px;
+}
+
+.footer-contact .contact-item {
     display: flex;
     align-items: center;
     gap: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
 }
 
-.mobile-menu-btn {
-    display: none;
-    background: transparent;
-    border: none;
-    color: var(--text-color);
-    cursor: pointer;
-    padding: 0.5rem;
+.contact-icon {
+    font-size: 1.2rem;
 }
 
-/* التجاوب مع مقاسات الشاشات المختلفة (الهواتف والأجهزة اللوحية) */
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--glass-border);
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.copyright {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.designer {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-weight: 600;
+}
+
+.sadi-logo {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    object-fit: cover;
+}
+
+/* التجاوب مع مقاسات الشاشات المختلفة */
+@media (max-width: 992px) {
+    .footer-container {
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+    }
+    .footer-brand {
+        grid-column: span 2;
+    }
+}
+
 @media (max-width: 768px) {
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        text-align: center;
+    }
+    
+    .footer-brand {
+        grid-column: span 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-links h4::after, .footer-contact h4::after {
+        right: 50%;
+        transform: translateX(50%);
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
+
     .hero-section {
         flex-direction: column;
         text-align: center;
@@ -603,10 +712,6 @@ input:checked + .slider .clouds {
     
     .modules-grid {
         grid-template-columns: 1fr;
-    }
-    
-    .footer-content {
-        gap: 1rem;
     }
 }
 
