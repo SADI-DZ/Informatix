@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ====== جسيمات المخبر المتطورة ======
+    // Particles animation
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const container = document.getElementById('lab-particles');
         if (container) {
@@ -27,24 +27,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ====== Theme toggle (Fixed for Dashboard) ======
-    const themeBtn = document.getElementById('theme-toggle');
+    // Theme toggle
+    const themeCheckbox = document.getElementById('theme-checkbox');
     const body = document.body;
+    const html = document.documentElement;
     const savedTheme = localStorage.getItem('theme');
     
     if (savedTheme === 'light') {
         body.classList.add('light-mode');
+        html.setAttribute('data-theme', 'light');
+        if (themeCheckbox) themeCheckbox.checked = true;
     }
 
-    if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', () => {
             body.classList.toggle('light-mode');
-            const currentTheme = body.classList.contains('light-mode') ? 'light' : 'dark';
-            localStorage.setItem('theme', currentTheme);
+            if (themeCheckbox.checked) {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+            }
         });
     }
 
-    // ====== Scroll-to-top ======
+    // Scroll-to-top button
     const topBtn = document.getElementById('scroll-to-top');
     const contentArea = document.querySelector('.content-area');
     if (topBtn && contentArea) {
@@ -54,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         topBtn.addEventListener('click', () => contentArea.scrollTo({ top: 0, behavior: 'smooth' }));
     }
 
-    // ====== محطات المخبر (toggle + dots) ======
+    // Station activation system
     const stationCards = document.querySelectorAll('.station-card');
     const stationToggles = document.querySelectorAll('.station-toggle');
     const stationDots = document.querySelectorAll('.station-dot');
@@ -68,10 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const dot = document.querySelector(`.station-dot[data-station="${id}"]`);
         if (dot) dot.classList.add('active');
         
-        // Sync sidebar if possible
         sidebarItems.forEach(item => {
             if (item.dataset.station === id) item.classList.add('active');
-            else if (!item.dataset.station && id === 'env') item.classList.add('active'); // Default
+            else if (!item.dataset.station && id === 'env') item.classList.add('active');
             else item.classList.remove('active');
         });
     }
@@ -112,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ====== نظام التبويبات الفرعية ======
+    // Sub-tabs system
     document.querySelectorAll('.sub-tabs').forEach(tabs => {
         tabs.querySelectorAll('.sub-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -127,11 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ============================================================
-    // ====== المحطة 1: بيئة التعامل مع الحاسوب ======
-    // ============================================================
-
-    // --- محاكي التثبيت ---
+    // Installer simulator setup
     const installSteps = [
         { icon: '💾', title: 'التحضير', text: 'تحميل ملفات التثبيت...' },
         { icon: '⚙️', title: 'الإقلاع', text: 'الإقلاع من وسيط التثبيت...' },
@@ -229,9 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    renderInstallSteps();
-
-    // --- إنشاء الشبكات ---
+    // Network simulator
     const netCanvas = document.getElementById('network-canvas');
     const netDeviceCount = document.getElementById('net-device-count');
     const netLinkCount = document.getElementById('net-link-count');
@@ -369,11 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ============================================================
-    // ====== المحطة 2: مدخل إلى البرمجة ======
-    // ============================================================
-
-    // --- مصمم المخططات ---
+    // Flowchart designer setup
     const flowData = {
         max: {
             steps: [
@@ -496,9 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // ====== المحطة 3: تقنيات الويب (محرر HTML) ======
-    // ============================================================
-
+    // HTML editor
     const htmlEditor = document.getElementById('html-editor-textarea');
     const htmlRunBtn = document.getElementById('html-run-btn');
     const htmlPreview = document.getElementById('html-preview-iframe');
@@ -517,12 +512,11 @@ document.addEventListener('DOMContentLoaded', () => {
         htmlEditor.addEventListener('input', updateHtmlPreview);
     }
 
-    // Initial preview
     if (htmlPreview && htmlEditor) {
         setTimeout(updateHtmlPreview, 500);
     }
 
-    // ====== تأثير الكتابة في مدخل المخبر ======
+    // Typing effect for lab subtitle
     const typingEl = document.getElementById('lab-typing');
     if (typingEl) {
         const texts = [

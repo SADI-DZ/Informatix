@@ -53,13 +53,11 @@ body {
     color: var(--text-color);
     overflow-x: hidden;
     position: relative;
-    /* إضاءات خافتة في الخلفية لإعطاء طابع عصري */
     background-image: 
         radial-gradient(circle at 15% 50%, rgba(79, 172, 254, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
 }
 
-/* تصميم الشريط العلوي (النافبار) */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -74,7 +72,6 @@ body {
     border-bottom: 1px solid var(--glass-border);
 }
 
-/* تصميم زر التبديل بين الوضعين الليلي والنهاري (على شكل سماء) */
 .theme-switch {
     position: relative;
     display: inline-block;
@@ -95,7 +92,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #1e293b; /* night sky */
+    background-color: #1e293b;
     transition: .4s;
     border-radius: 30px;
     overflow: hidden;
@@ -108,7 +105,7 @@ body {
     width: 22px;
     left: 4px;
     bottom: 4px;
-    background-color: #f1c40f; /* moon color */
+    background-color: #f1c40f;
     transition: .4s;
     border-radius: 50%;
     box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
@@ -163,9 +160,9 @@ body {
 .cloud-4 { width: 15px; height: 15px; bottom: 8px; right: 25px; }
 .cloud-5 { width: 20px; height: 20px; bottom: -8px; right: 35px; }
 
-/* تأثيرات الوضع المضيء (النهاري) */
+/* Light mode effects */
 input:checked + .slider {
-    background-color: #87ceeb; /* day sky */
+    background-color: #87ceeb;
 }
 
 input:checked + .slider .sun-moon {
