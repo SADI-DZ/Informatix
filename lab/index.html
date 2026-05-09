@@ -4,13 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مخبر المعلوماتية - Informatix</title>
+    <title>Informatix Lab - مخبر المعلوماتية</title>
     <link rel="stylesheet" href="style.css">
     <!-- Using Google Fonts for better Arabic typography -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <div class="lab-particles" id="lab-particles"></div>
+    <div class="scan-line-overlay"></div>
+
     <div class="dashboard-layout">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
@@ -92,10 +95,9 @@
                         </svg>
                         الرئيسية
                     </a>
-                    <button class="icon-btn">
+                    <button class="icon-btn" id="theme-toggle">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                         </svg>
                     </button>
                     <button class="icon-btn profile-btn">
@@ -109,261 +111,244 @@
 
             <!-- Main Content Area -->
             <main class="content-area">
-                <div class="page-header">
-                    <div class="header-text">
-                        <h1>مخبر المعلوماتية</h1>
-                        <p>تجربة عملية متكاملة لتعلم وتطبيق مفاهيم المعلوماتية</p>
+                <!-- مدخل المخبر -->
+                <section class="lab-hero">
+                    <div class="lab-hero-bg">
+                        <div class="cyber-ring ring-1"></div>
+                        <div class="cyber-ring ring-2"></div>
+                        <div class="cyber-ring ring-3"></div>
                     </div>
-                    <div class="header-decoration">
-                        <svg width="200" height="80" viewBox="0 0 200 80" fill="none" stroke="rgba(59, 130, 246, 0.3)"
-                            stroke-width="1.5">
-                            <path d="M10 40 h30 l15 -20 h40 l15 20 h30 m10 0 h20" />
-                            <circle cx="95" cy="20" r="3" fill="rgba(59, 130, 246, 0.5)" />
-                            <circle cx="140" cy="40" r="3" fill="rgba(59, 130, 246, 0.5)" />
-                            <rect x="10" y="20" width="40" height="40" rx="4" stroke-dasharray="4" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Modules Grid -->
-                <div class="modules-grid">
-                    <!-- Module 1: Network & OS -->
-                    <div class="module-card card-blue">
-                        <div class="card-badge badge-blue">01</div>
-                        <h2>بيئة التعامل مع الحاسوب</h2>
-                        <p class="card-desc"><strong>محاكي التثبيت وإنشاء الشبكات:</strong> قم بتثبيت Windows 11 في بيئة افتراضية آمنة، وأنشئ شبكات بسيطة.</p>
-
-                        <div class="card-visual">
-                            <div class="visual-split">
-                                <div class="win-screen">
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                                        <line x1="12" y1="17" x2="12" y2="21"></line>
-                                    </svg>
-                                    <div class="win-title">Windows Setup</div>
-                                    <button class="win-install-btn">تثبيت الآن</button>
-                                    <div class="win-footer">© Microsoft Corporation</div>
-                                </div>
-                                <div class="net-topology">
-                                    <div class="node pc-node">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
-                                            stroke-width="2">
-                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                                        </svg>
-                                        <span>PC1</span>
-                                    </div>
-                                    <div class="wire wire-1"></div>
-                                    <div class="node switch-node">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa"
-                                            stroke-width="2">
-                                            <rect x="4" y="8" width="16" height="8" rx="2" ry="2"></rect>
-                                            <line x1="8" y1="12" x2="8.01" y2="12"></line>
-                                            <line x1="12" y1="12" x2="12.01" y2="12"></line>
-                                            <line x1="16" y1="12" x2="16.01" y2="12"></line>
-                                        </svg>
-                                        <span>Switch</span>
-                                    </div>
-                                    <div class="wire wire-2"></div>
-                                    <div class="node pc-node">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
-                                            stroke-width="2">
-                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                                        </svg>
-                                        <span>PC2</span>
-                                    </div>
-                                </div>
+                    <div class="lab-hero-content">
+                        <div class="lab-badge">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            <span>LAB 0x01</span>
+                        </div>
+                        <h1 class="lab-hero-title">
+                            <span class="glitch-text" data-text="مخبر المعلوماتية">مخبر المعلوماتية</span>
+                        </h1>
+                        <div class="lab-hero-sub">
+                            <span class="typing-line" id="lab-typing">بيئة تفاعلية لتجربة المفاهيم البرمجية</span>
+                            <span class="cursor-blink">_</span>
+                        </div>
+                        <div class="lab-hero-stats">
+                            <div class="stat-item">
+                                <span class="stat-num" id="stat-modules">3</span>
+                                <span class="stat-label">وحدات</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <span class="stat-num" id="stat-tools">5</span>
+                                <span class="stat-label">أدوات تفاعلية</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <span class="stat-num" id="stat-algos">3</span>
+                                <span class="stat-label">خوارزمية</span>
                             </div>
                         </div>
+                    </div>
+                </section>
 
-                        <div class="card-actions">
-                            <button class="btn btn-primary btn-blue">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                فتح المحاكي
-                            </button>
-                            <button class="btn btn-outline btn-outline-blue">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <circle cx="12" cy="5" r="3"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12" y2="20"></line>
-                                    <line x1="18" y1="8" x2="22" y2="12"></line>
-                                    <line x1="18" y1="16" x2="22" y2="12"></line>
-                                    <circle cx="18" cy="18" r="3"></circle>
-                                    <circle cx="6" cy="18" r="3"></circle>
-                                    <circle cx="18" cy="5" r="3"></circle>
-                                </svg>
-                                إنشاء شبكة
+                <!-- محطات المخبر -->
+                <section class="lab-stations" id="lab-stations">
+
+                    <!-- محطة 1: بيئة التعامل مع الحاسوب -->
+                    <div class="station-card active" id="station-env">
+                        <div class="station-header">
+                            <div class="station-id">STATION_01</div>
+                            <div class="station-title-group">
+                                <h2 class="station-title">بيئة التعامل مع الحاسوب</h2>
+                                <p class="station-desc">محاكي التثبيت وإنشاء الشبكات</p>
+                            </div>
+                            <button class="station-toggle" data-station="env">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Module 2: Algorithms -->
-                    <div class="module-card card-purple">
-                        <div class="card-badge badge-purple">02</div>
-                        <h2>مدخل إلى البرمجة</h2>
-                        <p class="card-desc"><strong>مصمم المخططات ومحرر الأكواد:</strong> صمم المخططات الانسيابية بسهولة، واكتب الخوارزميات مع التحقق التلقائي.</p>
-
-                        <div class="card-visual">
-                            <div class="visual-split">
-                                <div class="flowchart-visual">
-                                    <div class="fc-node fc-terminal">Start</div>
-                                    <div class="fc-line"></div>
-                                    <div class="fc-node fc-io"><span class="unskew" dir="ltr">Write "Hello
-                                            World!"</span></div>
-                                    <div class="fc-line"></div>
-                                    <div class="fc-node fc-terminal">End</div>
+                        <div class="station-body">
+                            <div class="station-workspace">
+                                <div class="sub-tabs">
+                                    <button class="sub-tab active" data-subtab="installer">محاكي التثبيت</button>
+                                    <button class="sub-tab" data-subtab="network">إنشاء الشبكات</button>
                                 </div>
-                                <div class="code-visual">
-                                    <div class="code-header">
-                                        <span>الخوارزمية</span>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b"
-                                            stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                        </svg>
+
+                                <!-- التبويب 1: محاكي التثبيت -->
+                                <div class="subtab-content active" id="subtab-installer">
+                                    <div class="installer-container">
+                                        <div class="installer-sidebar">
+                                            <div class="installer-steps" id="installer-steps"></div>
+                                        </div>
+                                        <div class="installer-main">
+                                            <div class="installer-screen" id="installer-screen">
+                                                <div class="installer-progress-bar">
+                                                    <div class="installer-progress-fill" id="installer-progress"></div>
+                                                </div>
+                                                <div class="installer-content" id="installer-content">
+                                                    <div class="installer-icon">💻</div>
+                                                    <h3 class="installer-title">مرحباً بك في مثبت النظام</h3>
+                                                    <p class="installer-text">انقر "بدء التثبيت" لمحاكاة عملية تثبيت نظام التشغيل</p>
+                                                </div>
+                                            </div>
+                                            <div class="installer-controls">
+                                                <button id="installer-prev" class="glass-btn" disabled>السابق</button>
+                                                <button id="installer-next" class="glass-btn primary">بدء التثبيت</button>
+                                                <button id="installer-reset" class="glass-btn" style="display:none">إعادة</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="code-body">
-                                        <div class="cl"><span class="c-num">1</span> <span class="c-kw">Start</span>
+                                </div>
+
+                                <!-- التبويب 2: إنشاء الشبكات -->
+                                <div class="subtab-content" id="subtab-network">
+                                    <div class="network-container">
+                                        <div class="network-toolbar">
+                                            <button class="net-device-btn" data-device="pc">💻 حاسوب</button>
+                                            <button class="net-device-btn" data-device="server">🖥️ خادم</button>
+                                            <button class="net-device-btn" data-device="switch">🔀 مبدل</button>
+                                            <button class="net-device-btn" data-device="router">📡 موجه</button>
+                                            <button class="net-clear-btn" id="net-clear">🗑️ مسح</button>
                                         </div>
-                                        <div class="cl"><span class="c-num">2</span> <span class="c-kw">Write</span>
-                                            <span class="c-var">"Hello World!"</span>
+                                        <div class="network-canvas-wrapper">
+                                            <div class="network-canvas" id="network-canvas"></div>
+                                            <div class="network-hint">اسحب الأجهزة إلى سطح العمل</div>
                                         </div>
-                                        <div class="cl"><span class="c-num">3</span> <span class="c-kw">End</span>
+                                        <div class="network-info" id="network-info">
+                                            <span class="net-info-label">عدد الأجهزة: <strong id="net-device-count">0</strong></span>
+                                            <span class="net-info-label">عدد الوصلات: <strong id="net-link-count">0</strong></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card-actions">
-                            <button class="btn btn-primary btn-purple">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                فتح المحرر
-                            </button>
-                            <button class="btn btn-outline btn-outline-purple">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="16 18 22 12 16 6"></polyline>
-                                    <polyline points="8 6 2 12 8 18"></polyline>
-                                </svg>
-                                محرر الأكواد
-                            </button>
-                        </div>
                     </div>
 
-                    <!-- Module 3: Web Dev -->
-                    <div class="module-card card-teal">
-                        <div class="card-badge badge-teal">03</div>
-                        <h2>تقنيات الويب</h2>
-                        <p class="card-desc"><strong>محرر HTML ومتصفح افتراضي:</strong> اكتب كود HTML, CSS, JS وشاهد النتيجة مباشرة في المتصفح المدمج.</p>
+                    <!-- محطة 2: مدخل إلى البرمجة -->
+                    <div class="station-card" id="station-programming">
+                        <div class="station-header">
+                            <div class="station-id">STATION_02</div>
+                            <div class="station-title-group">
+                                <h2 class="station-title">مدخل إلى البرمجة</h2>
+                                <p class="station-desc">مصمم المخططات ومحرر الأكواد</p>
+                            </div>
+                            <button class="station-toggle" data-station="programming">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </div>
+                        <div class="station-body">
+                            <div class="station-workspace">
+                                <div class="sub-tabs">
+                                    <button class="sub-tab active" data-subtab="flowchart">مصمم المخططات</button>
+                                    <button class="sub-tab" data-subtab="code-editor">محرر الأكواد</button>
+                                </div>
 
-                        <div class="card-visual">
-                            <div class="visual-split">
-                                <div class="web-code">
-                                    <div class="code-header">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b"
-                                            stroke-width="2">
-                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                        </svg>
-                                        <span>index.html</span>
+                                <!-- التبويب 1: مصمم المخططات -->
+                                <div class="subtab-content active" id="subtab-flowchart">
+                                    <div class="algo-selector">
+                                        <button class="algo-pill active" data-algo="max">إيجاد الأكبر</button>
+                                        <button class="algo-pill" data-algo="fact">مضروب العدد</button>
+                                        <button class="algo-pill" data-algo="prime">العدد الأولي</button>
                                     </div>
-                                    <div class="code-body html-code">
-                                        <div class="cl"><span class="c-num">1</span> <span class="c-tag">&lt;!DOCTYPE
-                                                html&gt;</span></div>
-                                        <div class="cl"><span class="c-num">2</span> <span class="c-tag">&lt;html</span>
-                                            <span class="c-attr">lang</span>=<span class="c-val">"ar"</span><span
-                                                class="c-tag">&gt;</span>
+                                    <div class="flowchart-main">
+                                        <div class="flowchart-track" id="flowchart-steps"></div>
+                                        <div class="flowchart-sidebar">
+                                            <div class="flowchart-code-panel">
+                                                <div class="code-panel-header">
+                                                    <span class="code-dot red"></span>
+                                                    <span class="code-dot yellow"></span>
+                                                    <span class="code-dot green"></span>
+                                                    <span class="code-label-text">pseudo.code</span>
+                                                </div>
+                                                <pre id="flowchart-code-display" dir="ltr"></pre>
+                                            </div>
+                                            <div class="flowchart-nav">
+                                                <button id="flowchart-prev" class="nav-arrow" disabled>
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                                                </button>
+                                                <span id="flowchart-step-indicator" class="step-indicator">0 / 0</span>
+                                                <button id="flowchart-next" class="nav-arrow">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="cl"><span class="c-num">3</span> <span
-                                                class="c-tag">&lt;head&gt;</span></div>
-                                        <div class="cl"><span class="c-num">4</span> <span class="c-tag">&lt;meta</span>
-                                            <span class="c-attr">charset</span>=<span class="c-val">"UTF-8"</span><span
-                                                class="c-tag">&gt;</span>
-                                        </div>
-                                        <div class="cl"><span class="c-num">5</span> <span
-                                                class="c-tag">&lt;title&gt;</span>Informatix<span
-                                                class="c-tag">&lt;/title&gt;</span></div>
-                                        <div class="cl"><span class="c-num">6</span> <span class="c-tag">&lt;link</span>
-                                            <span class="c-attr">rel</span>=<span class="c-val">"stylesheet"</span>
-                                            <span class="c-attr">href</span>...<span class="c-tag">&gt;</span>
-                                        </div>
-                                        <div class="cl"><span class="c-num">7</span> <span
-                                                class="c-tag">&lt;/head&gt;</span></div>
-                                        <div class="cl"><span class="c-num">8</span> <span
-                                                class="c-tag">&lt;body&gt;</span></div>
-                                        <div class="cl"><span class="c-num">9</span> <span
-                                                class="c-tag">&lt;h1&gt;</span>مرحباً بك في Informatix<span
-                                                class="c-tag">&lt;/h1&gt;</span></div>
-                                        <div class="cl"><span class="c-num">10</span> <span
-                                                class="c-tag">&lt;p&gt;</span>محرر HTML + متصفح افتراضي<span
-                                                class="c-tag">&lt;/p&gt;</span></div>
-                                        <div class="cl"><span class="c-num">11</span> <span
-                                                class="c-tag">&lt;/body&gt;</span></div>
-                                        <div class="cl"><span class="c-num">12</span> <span
-                                                class="c-tag">&lt;/html&gt;</span></div>
                                     </div>
                                 </div>
-                                <div class="web-preview">
-                                    <div class="browser-header">
-                                        <div class="browser-dots">
-                                            <span></span><span></span><span></span>
+
+                                <!-- التبويب 2: محرر الأكواد -->
+                                <div class="subtab-content" id="subtab-code-editor">
+                                    <div class="code-editor-container">
+                                        <div class="code-editor-header">
+                                            <span class="code-dot red"></span>
+                                            <span class="code-dot yellow"></span>
+                                            <span class="code-dot green"></span>
+                                            <span class="code-label-text">code.pseudo</span>
+                                            <button id="code-run-btn" class="code-run-btn">▶ تشغيل</button>
                                         </div>
-                                        <div class="browser-tab">Informatix <svg width="10" height="10"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg></div>
-                                    </div>
-                                    <div class="browser-body">
-                                        <h1>مرحباً بك في Informatix</h1>
-                                        <p>محرر HTML + متصفح افتراضي</p>
-                                        <div class="mock-devices"></div>
+                                        <textarea id="code-editor-textarea" class="code-editor-textarea" dir="ltr" spellcheck="false">// خوارزمية لجمع عددين
+اقرأ A
+اقرأ B
+S ← A + B
+اطبع S</textarea>
+                                        <div class="code-editor-output" id="code-editor-output">
+                                            <div class="output-label">OUTPUT</div>
+                                            <div class="output-content" id="output-content">انقر "تشغيل" لتنفيذ الكود</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="card-actions">
-                            <button class="btn btn-primary btn-teal">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                    <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
-                                    <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
-                                    <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
-                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                                </svg>
-                                محرر الويب
-                            </button>
-                            <button class="btn btn-outline btn-outline-teal">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="2" y1="12" x2="22" y2="12"></line>
-                                    <path
-                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-                                    </path>
-                                </svg>
-                                فتح المتصفح
+                    <!-- محطة 3: تقنيات الويب -->
+                    <div class="station-card" id="station-web">
+                        <div class="station-header">
+                            <div class="station-id">STATION_03</div>
+                            <div class="station-title-group">
+                                <h2 class="station-title">تقنيات الويب</h2>
+                                <p class="station-desc">محرر HTML مع معاينة حية</p>
+                            </div>
+                            <button class="station-toggle" data-station="web">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                             </button>
                         </div>
+                        <div class="station-body">
+                            <div class="station-workspace">
+                                <div class="html-editor-container">
+                                    <div class="html-editor-pane">
+                                        <div class="html-editor-header">
+                                            <span class="code-dot red"></span>
+                                            <span class="code-dot yellow"></span>
+                                            <span class="code-dot green"></span>
+                                            <span class="code-label-text">index.html</span>
+                                            <button id="html-run-btn" class="code-run-btn">▶ تشغيل</button>
+                                        </div>
+                                        <textarea id="html-editor-textarea" class="code-editor-textarea" dir="ltr" spellcheck="false">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;صفحتي الأولى&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;مرحباً بالعالم!&lt;/h1&gt;
+    &lt;p&gt;هذه صفحة HTML بسيطة.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+                                    </div>
+                                    <div class="html-preview-pane">
+                                        <div class="html-preview-header">
+                                            <span class="code-label-text">🔍 المعاينة الحية</span>
+                                        </div>
+                                        <iframe id="html-preview-iframe" class="html-preview-iframe"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- متصفح المحطات -->
+                    <div class="station-dots">
+                        <button class="station-dot active" data-station="env" title="بيئة التعامل مع الحاسوب"></button>
+                        <button class="station-dot" data-station="programming" title="مدخل إلى البرمجة"></button>
+                        <button class="station-dot" data-station="web" title="تقنيات الويب"></button>
+                    </div>
+                </section>
 
                 <footer class="main-footer">
                     جميع الحقوق محفوظة - 2026 © Informatix
@@ -371,6 +356,14 @@
             </main>
         </div>
     </div>
+
+    <button id="scroll-to-top" class="scroll-to-top" aria-label="العودة للأعلى" style="display:none">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
+    <script src="script.js"></script>
 </body>
 
 </html>
