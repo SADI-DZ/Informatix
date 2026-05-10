@@ -10,6 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -24,26 +25,26 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li>
+                    <li data-station="env">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
+                            stroke-width="2" aria-hidden="true">
                             <path
                                 d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
                             </path>
                         </svg>
                         بيئة التعامل مع الحاسوب
                     </li>
-                    <li>
+                    <li data-station="programming">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
+                            stroke-width="2" aria-hidden="true">
                             <polyline points="16 18 22 12 16 6"></polyline>
                             <polyline points="8 6 2 12 8 18"></polyline>
                         </svg>
                         مقدمة في البرمجة
                     </li>
-                    <li>
+                    <li data-station="web">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
+                            stroke-width="2" aria-hidden="true">
                             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                             <line x1="8" y1="21" x2="16" y2="21"></line>
                             <line x1="12" y1="17" x2="12" y2="21"></line>
@@ -159,9 +160,9 @@
                                 <h2 class="station-title">بيئة التعامل مع الحاسوب</h2>
                                 <p class="station-desc">محاكي التثبيت وإنشاء الشبكات</p>
                             </div>
-                            <button class="station-toggle" data-station="env">
+                            <button class="station-toggle" data-station="env" aria-label="فتح/إغلاق محطة بيئة التعامل مع الحاسوب" aria-expanded="true">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                    stroke-width="2.5" aria-hidden="true">
                                     <polyline points="9 18 15 12 9 6" />
                                 </svg>
                             </button>
@@ -206,11 +207,12 @@
                                 <div class="subtab-content" id="subtab-network">
                                     <div class="network-container">
                                         <div class="network-toolbar">
-                                            <button class="net-device-btn" data-device="pc">💻 حاسوب</button>
-                                            <button class="net-device-btn" data-device="server">🖥️ خادم</button>
-                                            <button class="net-device-btn" data-device="switch">🔀 مبدل</button>
-                                            <button class="net-device-btn" data-device="router">📡 موجه</button>
-                                            <button class="net-clear-btn" id="net-clear">🗑️ مسح</button>
+                                            <button class="net-device-btn" data-device="pc" aria-label="إضافة حاسوب">💻 حاسوب</button>
+                                            <button class="net-device-btn" data-device="server" aria-label="إضافة خادم">🖥️ خادم</button>
+                                            <button class="net-device-btn" data-device="switch" aria-label="إضافة مبدل">🔀 مبدل</button>
+                                            <button class="net-device-btn" data-device="router" aria-label="إضافة موجه">📡 موجه</button>
+                                            <button class="net-device-btn net-link-btn" id="net-link-mode" aria-label="وضع ربط الأجهزة">🔗 ربط</button>
+                                            <button class="net-clear-btn" id="net-clear" aria-label="مسح جميع الأجهزة">🗑️ مسح</button>
                                         </div>
                                         <div class="network-canvas-wrapper">
                                             <div class="network-canvas" id="network-canvas"></div>
@@ -236,9 +238,9 @@
                                 <h2 class="station-title">مدخل إلى البرمجة</h2>
                                 <p class="station-desc">مصمم المخططات ومحرر الأكواد</p>
                             </div>
-                            <button class="station-toggle" data-station="programming">
+                            <button class="station-toggle" data-station="programming" aria-label="فتح/إغلاق محطة مدخل إلى البرمجة" aria-expanded="false">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                    stroke-width="2.5" aria-hidden="true">
                                     <polyline points="9 18 15 12 9 6" />
                                 </svg>
                             </button>
@@ -299,7 +301,7 @@
                                             <button id="code-run-btn" class="code-run-btn">▶ تشغيل</button>
                                         </div>
                                         <textarea id="code-editor-textarea" class="code-editor-textarea" dir="ltr"
-                                            spellcheck="false">// خوارزمية لجمع عددين
+                                            spellcheck="false" aria-label="محرر الكود الزائف">// خوارزمية لجمع عددين
 اقرأ A
 اقرأ B
 S ← A + B
@@ -323,9 +325,9 @@ S ← A + B
                                 <h2 class="station-title">تقنيات الويب</h2>
                                 <p class="station-desc">محرر HTML مع معاينة حية</p>
                             </div>
-                            <button class="station-toggle" data-station="web">
+                            <button class="station-toggle" data-station="web" aria-label="فتح/إغلاق محطة تقنيات الويب" aria-expanded="false">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                    stroke-width="2.5" aria-hidden="true">
                                     <polyline points="9 18 15 12 9 6" />
                                 </svg>
                             </button>
@@ -342,7 +344,7 @@ S ← A + B
                                             <button id="html-run-btn" class="code-run-btn">▶ تشغيل</button>
                                         </div>
                                         <textarea id="html-editor-textarea" class="code-editor-textarea" dir="ltr"
-                                            spellcheck="false">&lt;!DOCTYPE html&gt;
+                                            spellcheck="false" aria-label="محرر HTML">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
     &lt;title&gt;صفحتي الأولى&lt;/title&gt;

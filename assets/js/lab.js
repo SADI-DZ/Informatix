@@ -1,18 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Particles animation
+    // Particles animation — عدد مخفّض لأداء أفضل على الأجهزة الضعيفة
+    const particleAnimations = [];
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const container = document.getElementById('lab-particles');
         if (container) {
             const colors = ['#00f2fe', '#4facfe', '#a78bfa', '#10b981', '#f59e0b'];
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 18; i++) {
                 const p = document.createElement('div');
                 p.className = 'lab-particle';
                 const size = Math.random() * 4 + 1;
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                p.style.cssText = `position:fixed;width:${size}px;height:${size}px;left:${x}vw;top:${y}vh;background:${colors[i%5]};pointer-events:none;z-index:0;border-radius:50%;opacity:0;`;
-                p.animate([
+                p.style.cssText = `position:fixed;width:${size}px;height:${size}px;left:${x}vw;top:${y}vh;background:${colors[i%5]};pointer-events:none;z-index:0;border-radius:50%;opacity:0;will-change:transform,opacity;`;
+                const anim = p.animate([
                     { transform: 'translate(0,0) scale(0)', opacity: 0 },
                     { transform: `translate(${Math.random()*80-40}px,${Math.random()*80-40}px) scale(1)`, opacity: Math.random() * 0.6 + 0.2 },
                     { transform: `translate(${Math.random()*120-60}px,${Math.random()*120-60}px) scale(0)`, opacity: 0 }
@@ -22,8 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     iterations: Infinity,
                     easing: 'ease-in-out'
                 });
+                particleAnimations.push(anim);
                 container.appendChild(p);
             }
+            // إيقاف الحركة عند إخفاء الصفحة لتوفير الموارد
+            document.addEventListener('visibilitychange', () => {
+                particleAnimations.forEach(a => document.hidden ? a.pause() : a.play());
+            });
         }
     }
 
@@ -76,18 +82,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const dot = document.querySelector(`.station-dot[data-station="${id}"]`);
         if (dot) dot.classList.add('active');
         
+        // تزامن القائمة الجانبية عبر data-station
         sidebarItems.forEach(item => {
-            if (item.dataset.station === id) item.classList.add('active');
-            else if (!item.dataset.station && id === 'env') item.classList.add('active');
-            else item.classList.remove('active');
+            item.classList.toggle('active', item.dataset.station === id);
         });
+
+        // تحديث aria-expanded لجميع أزرار التبديل
+        stationToggles.forEach(btn => {
+            btn.setAttribute('aria-expanded', btn.dataset.station === id ? 'true' : 'false');
+        });
+
+        // التمرير التلقائي للمحطة المفتوحة
+        if (card) {
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+        }
     }
 
     stationToggles.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const id = btn.dataset.station;
-            activateStation(id);
+            activateStation(btn.dataset.station);
         });
     });
 
@@ -96,26 +112,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (header) {
             header.addEventListener('click', (e) => {
                 if (e.target.closest('.station-toggle')) return;
-                const id = card.id.replace('station-', '');
-                activateStation(id);
+                activateStation(card.id.replace('station-', ''));
             });
         }
     });
 
     stationDots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            const id = dot.dataset.station;
-            activateStation(id);
-        });
+        dot.addEventListener('click', () => activateStation(dot.dataset.station));
     });
 
-    // Sidebar navigation to stations
-    sidebarItems.forEach((item, index) => {
+    // الانتقال بين المحطات من القائمة الجانبية
+    sidebarItems.forEach(item => {
         item.addEventListener('click', () => {
-            const stations = ['env', 'programming', 'web'];
-            if (index < stations.length) {
-                activateStation(stations[index]);
-            }
+            if (item.dataset.station) activateStation(item.dataset.station);
         });
     });
 
@@ -237,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const netDeviceCount = document.getElementById('net-device-count');
     const netLinkCount = document.getElementById('net-link-count');
     const netClear = document.getElementById('net-clear');
+    const netLinkModeBtn = document.getElementById('net-link-mode');
 
     let netDevices = [];
     let netLinks = [];
@@ -249,12 +259,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const deviceIcons = { pc: '💻', server: '🖥️', switch: '🔀', router: '📡' };
     const deviceColors = { pc: '#4facfe', server: '#10b981', switch: '#f59e0b', router: '#a78bfa' };
 
+    function updateLinkModeUI() {
+        if (netLinkModeBtn) {
+            netLinkModeBtn.classList.toggle('active', isLinking);
+            netLinkModeBtn.style.background = isLinking ? 'var(--blue-primary)' : '';
+            netLinkModeBtn.style.color = isLinking ? '#fff' : '';
+        }
+        if (netCanvas) {
+            netCanvas.style.cursor = isLinking ? 'crosshair' : '';
+        }
+    }
+
     function renderNet() {
         if (!netCanvas) return;
         netCanvas.innerHTML = '';
 
-        // Draw links
-        netLinks.forEach((link, idx) => {
+        // رسم الوصلات
+        netLinks.forEach(link => {
             const from = netDevices[link.from];
             const to = netDevices[link.to];
             if (!from || !to) return;
@@ -264,42 +285,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const x2 = to.x + 30, y2 = to.y + 20;
             const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
             const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-            line.style.cssText = `
-                position:absolute;left:${x1}px;top:${y1}px;width:${length}px;height:2px;
-                transform-origin:0 0;transform:rotate(${angle}deg);
-                background:linear-gradient(90deg,var(--blue-primary),#10b981);
-                z-index:1;pointer-events:none;
-            `;
+            line.style.cssText = `position:absolute;left:${x1}px;top:${y1}px;width:${length}px;height:2px;transform-origin:0 0;transform:rotate(${angle}deg);background:linear-gradient(90deg,var(--blue-primary),#10b981);z-index:1;pointer-events:none;`;
             netCanvas.appendChild(line);
         });
 
-        // Draw devices
+        // رسم الأجهزة
         netDevices.forEach((dev, idx) => {
             const el = document.createElement('div');
-            el.className = `net-device${selectedDevice === idx ? ' selected' : ''}`;
+            const isSelected = selectedDevice === idx;
+            const isLinkSource = isLinking && linkStart === idx;
+            el.className = `net-device${isSelected ? ' selected' : ''}${isLinkSource ? ' link-source' : ''}`;
             el.dataset.index = idx;
-            el.style.cssText = `position:absolute;left:${dev.x}px;top:${dev.y}px;border:2px solid ${deviceColors[dev.type]};background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;display:flex;flex-direction:column;align-items:center;cursor:grab;z-index:2;`;
-            el.innerHTML = `
-                <span style="font-size:1.5rem">${deviceIcons[dev.type]}</span>
-                <span style="font-size:0.7rem;margin-top:5px;color:white;">${dev.name}</span>
-            `;
-            // Drag
-            el.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
+            el.style.cssText = `position:absolute;left:${dev.x}px;top:${dev.y}px;border:2px solid ${isLinkSource ? '#fff' : deviceColors[dev.type]};background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;display:flex;flex-direction:column;align-items:center;cursor:${isLinking ? 'crosshair' : 'grab'};z-index:2;transition:border-color 0.2s;`;
+            el.innerHTML = `<span style="font-size:1.5rem">${deviceIcons[dev.type]}</span><span class="net-device-label">${dev.name}</span>`;
+
+            // بدء السحب (ماوس + لمس)
+            function startDrag(clientX, clientY) {
+                if (isLinking) return;
                 dragDevice = idx;
-                dragOffset.x = e.clientX - dev.x;
-                dragOffset.y = e.clientY - dev.y;
-                el.style.cursor = 'grabbing';
-            });
-            // Click to select
+                dragOffset.x = clientX - dev.x;
+                dragOffset.y = clientY - dev.y;
+            }
+            el.addEventListener('mousedown', (e) => { e.stopPropagation(); startDrag(e.clientX, e.clientY); });
+            el.addEventListener('touchstart', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const t = e.touches[0];
+                startDrag(t.clientX, t.clientY);
+            }, { passive: false });
+
+            // النقر للتحديد أو الربط
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (isLinking) {
-                    if (linkStart !== null && linkStart !== idx) {
+                    if (linkStart === null) {
+                        linkStart = idx;
+                    } else if (linkStart !== idx) {
                         addLink(linkStart, idx);
+                        linkStart = null;
+                        isLinking = false;
+                        updateLinkModeUI();
                     }
-                    isLinking = false;
-                    linkStart = null;
                     renderNet();
                     return;
                 }
@@ -316,56 +341,67 @@ document.addEventListener('DOMContentLoaded', () => {
     function addLink(from, to) {
         if (from === to) return;
         const exists = netLinks.some(l => (l.from === from && l.to === to) || (l.from === to && l.to === from));
-        if (!exists) {
-            netLinks.push({ from, to });
-        }
+        if (!exists) netLinks.push({ from, to });
     }
 
+    // أحداث السحب العامة (ماوس + لمس)
+    function onDragMove(clientX, clientY) {
+        if (dragDevice === null || !netCanvas) return;
+        const rect = netCanvas.getBoundingClientRect();
+        netDevices[dragDevice].x = Math.max(0, Math.min(clientX - rect.left - dragOffset.x, netCanvas.clientWidth - 70));
+        netDevices[dragDevice].y = Math.max(0, Math.min(clientY - rect.top - dragOffset.y, netCanvas.clientHeight - 50));
+        renderNet();
+    }
+    function onDragEnd() { dragDevice = null; }
+
     if (netCanvas) {
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('mousemove', (e) => onDragMove(e.clientX, e.clientY));
+        document.addEventListener('touchmove', (e) => {
             if (dragDevice === null) return;
-            const rect = netCanvas.getBoundingClientRect();
-            const x = Math.max(0, Math.min(e.clientX - rect.left - dragOffset.x, netCanvas.clientWidth - 70));
-            const y = Math.max(0, Math.min(e.clientY - rect.top - dragOffset.y, netCanvas.clientHeight - 50));
-            netDevices[dragDevice].x = x;
-            netDevices[dragDevice].y = y;
-            renderNet();
-        });
-        document.addEventListener('mouseup', () => {
-            dragDevice = null;
-        });
+            e.preventDefault();
+            onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+        document.addEventListener('mouseup', onDragEnd);
+        document.addEventListener('touchend', onDragEnd);
 
         netCanvas.addEventListener('click', (e) => {
             if (e.target === netCanvas) {
                 selectedDevice = null;
-                isLinking = false;
-                linkStart = null;
+                if (isLinking) { isLinking = false; linkStart = null; updateLinkModeUI(); }
                 renderNet();
             }
         });
     }
 
-    document.querySelectorAll('.net-device-btn').forEach(btn => {
+    // زر وضع الربط
+    if (netLinkModeBtn) {
+        netLinkModeBtn.addEventListener('click', () => {
+            isLinking = !isLinking;
+            linkStart = null;
+            updateLinkModeUI();
+            renderNet();
+        });
+    }
+
+    // إضافة الأجهزة
+    document.querySelectorAll('.net-device-btn[data-device]').forEach(btn => {
         btn.addEventListener('click', () => {
             if (!netCanvas) return;
             const type = btn.dataset.device;
             const count = netDevices.filter(d => d.type === type).length;
             const names = {pc: 'حاسوب', server: 'خادم', switch: 'مبدل', router: 'موجه'};
-            const name = `${names[type]} ${count + 1}`;
             const x = 20 + Math.random() * (netCanvas.clientWidth - 100);
             const y = 20 + Math.random() * (netCanvas.clientHeight - 80);
-            netDevices.push({ type, name, x, y });
+            netDevices.push({ type, name: `${names[type]} ${count + 1}`, x, y });
             renderNet();
         });
     });
 
     if (netClear) {
         netClear.addEventListener('click', () => {
-            netDevices = [];
-            netLinks = [];
-            selectedDevice = null;
-            isLinking = false;
-            linkStart = null;
+            netDevices = []; netLinks = [];
+            selectedDevice = null; isLinking = false; linkStart = null;
+            updateLinkModeUI();
             renderNet();
         });
     }
@@ -442,9 +478,16 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = step.icon === 'io' ? `<span class="unskew">${step.text}</span>` : step.text;
             flowTrack.appendChild(div);
         });
-        if (flowCode) flowCode.textContent = data.code;
+
+        // تمييز السطر النشط في لوحة الكود
+        if (flowCode) {
+            const lines = data.code.split('\n');
+            flowCode.innerHTML = lines.map((line, i) =>
+                `<span class="${i === curStep ? 'code-line-active' : ''}">${line}</span>`
+            ).join('\n');
+        }
+
         if (flowInd) flowInd.textContent = `${curStep + 1} / ${data.steps.length}`;
-        
         if (flowPrev) flowPrev.disabled = curStep <= 0;
         if (flowNext) flowNext.disabled = curStep >= data.steps.length - 1;
     }
@@ -468,35 +511,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (algoPills.length) renderFlow();
 
-    // --- محرر الأكواد ---
+    // --- محرر الأكواد — مفسّر كود زائف حقيقي ---
     const codeEditorArea = document.getElementById('code-editor-textarea');
     const codeRunBtn = document.getElementById('code-run-btn');
     const codeOutput = document.getElementById('output-content');
 
+    // تقييم تعبير رياضي بسيط باستخدام المتغيرات
+    function evalExpr(expr, vars) {
+        let e = expr.trim();
+        // استبدال أسماء المتغيرات بقيمها (الأطول أولاً لتجنب الاستبدال الجزئي)
+        const sorted = Object.keys(vars).sort((a, b) => b.length - a.length);
+        sorted.forEach(v => { e = e.replace(new RegExp(`\\b${v}\\b`, 'g'), vars[v]); });
+        // تحويل العمليات العربية
+        e = e.replace(/×/g, '*').replace(/÷/g, '/');
+        try { return Function('"use strict"; return (' + e + ')')(); }
+        catch { return e; }
+    }
+
+    function executePseudo(code) {
+        const vars = {};
+        const output = [];
+        const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
+
+        for (const line of lines) {
+            if (line.startsWith('اقرأ')) {
+                const varNames = line.replace('اقرأ', '').split(',').map(v => v.trim());
+                for (const vn of varNames) {
+                    const val = prompt(`⌨️ أدخل قيمة ${vn}:`);
+                    if (val === null) return ['⚠️ تم إلغاء التنفيذ'];
+                    vars[vn] = isNaN(val) ? val : Number(val);
+                }
+            } else if (line.includes('←')) {
+                const [left, right] = line.split('←').map(s => s.trim());
+                // دعم التعيين المتعدد: F ← 1, I ← 1
+                if (right.includes(',') && right.includes('←')) {
+                    const parts = line.split(',').map(s => s.trim());
+                    parts.forEach(p => {
+                        const [l, r] = p.split('←').map(s => s.trim());
+                        vars[l] = evalExpr(r, vars);
+                    });
+                } else {
+                    vars[left] = evalExpr(right, vars);
+                }
+            } else if (line.startsWith('اطبع') || line.startsWith('أظهر')) {
+                const varName = line.replace(/^(اطبع|أظهر)\s*/, '').trim();
+                const val = vars[varName] !== undefined ? vars[varName] : evalExpr(varName, vars);
+                output.push(`> ${val}`);
+            }
+        }
+        return output.length ? output : ['> تم التنفيذ بنجاح (بدون مخرجات)'];
+    }
+
     if (codeRunBtn && codeEditorArea) {
         codeRunBtn.addEventListener('click', () => {
-            const code = codeEditorArea.value;
-            if (codeOutput) {
-                codeOutput.textContent = 'جاري التنفيذ...';
-                codeOutput.style.color = 'var(--text-secondary)';
-                setTimeout(() => {
-                    if (code.includes('اطبع') || code.includes('أظهر')) {
-                        const match = code.match(/(?:اطبع|أظهر)\s+([^\n]+)/);
-                        codeOutput.textContent = match ? `> ${match[1]}` : '> تم التنفيذ بنجاح';
-                    } else {
-                        codeOutput.textContent = '> تم التنفيذ بنجاح (بدون مخرجات)';
-                    }
-                    codeOutput.style.color = '#10b981';
-                }, 600);
-            }
+            if (!codeOutput) return;
+            codeOutput.textContent = 'جاري التنفيذ...';
+            codeOutput.style.color = 'var(--text-secondary)';
+            setTimeout(() => {
+                try {
+                    const results = executePseudo(codeEditorArea.value);
+                    codeOutput.textContent = results.join('\n');
+                    codeOutput.style.color = results[0].includes('⚠️') ? '#f59e0b' : '#10b981';
+                } catch (err) {
+                    codeOutput.textContent = `❌ خطأ: ${err.message}`;
+                    codeOutput.style.color = '#ef4444';
+                }
+            }, 300);
         });
     }
 
     // ============================================================
-    // HTML editor
+    // HTML editor — مع debounce لتحسين الأداء
     const htmlEditor = document.getElementById('html-editor-textarea');
     const htmlRunBtn = document.getElementById('html-run-btn');
     const htmlPreview = document.getElementById('html-preview-iframe');
+    let htmlDebounceTimer;
 
     function updateHtmlPreview() {
         if (!htmlPreview || !htmlEditor) return;
@@ -509,7 +598,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (htmlRunBtn && htmlEditor) {
         htmlRunBtn.addEventListener('click', updateHtmlPreview);
-        htmlEditor.addEventListener('input', updateHtmlPreview);
+        htmlEditor.addEventListener('input', () => {
+            clearTimeout(htmlDebounceTimer);
+            htmlDebounceTimer = setTimeout(updateHtmlPreview, 300);
+        });
     }
 
     if (htmlPreview && htmlEditor) {

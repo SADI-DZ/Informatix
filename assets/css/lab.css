@@ -1398,6 +1398,53 @@ h3 {
     .tools-grid {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     }
+
+    /* Responsive: مكونات المحطات الداخلية */
+    .installer-container {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .installer-sidebar {
+        border-left: none;
+        border-bottom: 1px solid #333;
+        padding-left: 0;
+        padding-bottom: 1rem;
+    }
+
+    .flowchart-main {
+        grid-template-columns: 1fr;
+    }
+
+    .html-editor-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .html-editor-pane,
+    .html-preview-pane {
+        min-height: 250px;
+    }
+
+    .network-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .network-canvas-wrapper {
+        height: 300px;
+    }
+
+    .station-workspace {
+        padding: 1rem;
+    }
+
+    .lab-hero-title {
+        font-size: 2rem;
+    }
+
+    .content-area {
+        padding: 1rem;
+    }
 }
 
 /* ==========================================================================
@@ -1700,8 +1747,7 @@ h3 {
 }
 
 .station-card.active .station-body {
-    max-height: 1000px;
-    /* Large enough to contain content */
+    max-height: 2000px;
 }
 
 .station-workspace {
@@ -1841,9 +1887,19 @@ h3 {
 }
 
 .installer-text {
-    color: #888;
+    color: #aaa;
     margin-bottom: 2rem;
     line-height: 1.6;
+}
+
+/* تأثير ظهور محتوى المثبت */
+.installer-content {
+    animation: contentSlideUp 0.3s ease-out;
+}
+
+@keyframes contentSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .glass-btn {
@@ -1997,6 +2053,23 @@ h3 {
     line-height: 1.6;
     color: #4ade80;
     margin: 0;
+}
+
+/* تمييز السطر النشط في لوحة الكود */
+#flowchart-code-display .code-line-active {
+    background: rgba(59, 130, 246, 0.2);
+    border-right: 3px solid var(--blue-primary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: 700;
+}
+
+/* تسمية الجهاز في محاكي الشبكات */
+.net-device-label {
+    font-size: 0.7rem;
+    margin-top: 5px;
+    color: var(--text-primary);
 }
 
 .flowchart-nav {
