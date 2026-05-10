@@ -68,38 +68,186 @@ document.addEventListener('DOMContentLoaded', () => {
         topBtn.addEventListener('click', () => contentArea.scrollTo({ top: 0, behavior: 'smooth' }));
     }
 
-    // Station activation system
-    const stationCards = document.querySelectorAll('.station-card');
-    const stationToggles = document.querySelectorAll('.station-toggle');
-    const stationDots = document.querySelectorAll('.station-dot');
+    // --- New Workshop Navigation Logic ---
+    const workshopsData = {
+        env: [
+            { id: 'installer', title: 'محاكي التثبيت', desc: 'تجربة تثبيت نظام تشغيل وهمي خطوة بخطوة وتجربة مراحل الإعداد.', icon: '💻', category: 'بيئة التعامل مع الحاسوب' },
+            { id: 'network', title: 'إنشاء الشبكات', desc: 'تصميم وبناء شبكة حاسوبية تفاعلية وربط الأجهزة ببعضها البعض.', icon: '🔗', category: 'بيئة التعامل مع الحاسوب' }
+        ],
+        programming: [
+            { id: 'flowchart', title: 'مصمم المخططات', desc: 'تحويل الخوارزميات المنطقية إلى مخططات انسيابية مرئية تفاعلية.', icon: '📊', category: 'مقدمة في البرمجة' },
+            { id: 'code-editor', title: 'محرر الأكواد', desc: 'كتابة وتنفيذ الكود الزائف (Pseudo-code) واختبار المنطق البرمجي.', icon: '⌨️', category: 'مقدمة في البرمجة' }
+        ],
+        web: [
+            { id: 'web-editor', title: 'محرر الويب', desc: 'بناء صفحات ويب حقيقية باستخدام HTML ومعاينتها بشكل مباشر.', icon: '🌐', category: 'تقنيات الويب' }
+        ]
+    };
+
+    const labHero = document.querySelector('.lab-hero');
+    const labStationsSection = document.getElementById('lab-stations');
+    const workshopSelection = document.getElementById('workshop-selection');
+    const workshopGrid = document.getElementById('workshop-grid');
+    const categoryTitle = document.getElementById('selection-category-title');
+    const btnBackToHero = document.getElementById('btn-back-to-hero');
+    
+    const wsFullscreen = document.getElementById('workshop-fullscreen');
+    const fsContentArea = document.getElementById('fullscreen-content-area');
+    const fsCategory = document.getElementById('fs-category');
+    const fsTitle = document.getElementById('fs-title');
+    const btnCloseWorkshop = document.getElementById('btn-close-workshop');
+
     const sidebarItems = document.querySelectorAll('.sidebar-nav li');
 
-    function activateStation(id) {
-        stationCards.forEach(c => c.classList.remove('active'));
-        stationDots.forEach(d => d.classList.remove('active'));
-        const card = document.getElementById(`station-${id}`);
-        if (card) card.classList.add('active');
-        const dot = document.querySelector(`.station-dot[data-station="${id}"]`);
-        if (dot) dot.classList.add('active');
-        
-        // تزامن القائمة الجانبية عبر data-station
-        sidebarItems.forEach(item => {
-            item.classList.toggle('active', item.dataset.station === id);
+    let currentWorkshopParent = null;
+    let currentWorkshopElement = null;
+
+    function showWorkshopSelection(categoryId) {
+        const data = workshopsData[categoryId];
+        if (!data) return;
+
+        // تحديث العناوين
+        const categories = { env: 'بيئة التعامل مع الحاسوب', programming: 'مقدمة في البرمجة', web: 'تقنيات الويب' };
+        categoryTitle.textContent = categories[categoryId];
+
+        // توليد البطاقات
+        workshopGrid.innerHTML = '';
+        data.forEach(ws => {
+            const card = document.createElement('div');
+            card.className = 'workshop-card';
+            card.innerHTML = `
+                <div class="workshop-icon">${ws.icon}</div>
+                <h3>${ws.title}</h3>
+                <p>${ws.desc}</p>
+            `;
+            card.addEventListener('click', () => openWorkshopFullscreen(ws, categoryId));
+            workshopGrid.appendChild(card);
         });
 
-        // تحديث aria-expanded لجميع أزرار التبديل
-        stationToggles.forEach(btn => {
-            btn.setAttribute('aria-expanded', btn.dataset.station === id ? 'true' : 'false');
-        });
+        // تبديل الواجهات
+        if (labHero) labHero.style.display = 'none';
+        if (labStationsSection) labStationsSection.style.display = 'none';
+        workshopSelection.style.display = 'block';
 
-        // التمرير التلقائي للمحطة المفتوحة
-        if (card) {
-            setTimeout(() => {
-                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 150);
+        // التمرير للأعلى
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openWorkshopFullscreen(ws, categoryId) {
+        fsCategory.textContent = ws.category;
+        fsTitle.textContent = ws.title;
+
+        // إيجاد محتوى الورشة الأصلي
+        let targetId = '';
+        if (ws.id === 'installer') targetId = 'subtab-installer';
+        if (ws.id === 'network') targetId = 'subtab-network';
+        if (ws.id === 'flowchart') targetId = 'subtab-flowchart';
+        if (ws.id === 'code-editor') targetId = 'subtab-code-editor';
+        if (ws.id === 'web-editor') targetId = 'station-web'; // محطة الويب كاملة
+
+        const originalContent = document.getElementById(targetId);
+        if (originalContent) {
+            // حفظ المكان الأصلي لنقله لاحقاً
+            currentWorkshopParent = originalContent.parentElement;
+            currentWorkshopElement = originalContent;
+            
+            // نقل المحتوى للنافذة الكاملة
+            fsContentArea.appendChild(originalContent);
+            
+            // التأكد من أن المحتوى ظاهر (في حال كان في تبويب غير نشط)
+            originalContent.style.display = 'block';
+            originalContent.classList.add('active');
+            
+            // تفعيل النافذة الكاملة
+            wsFullscreen.classList.add('active');
+            document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
+            
+            // تحديث محاكي الويب إذا كان هو المختار
+            if (ws.id === 'web-editor') {
+                 // تأخير بسيط لضمان تحميل الـ iframe بعد النقل
+                setTimeout(() => {
+                    const htmlEditor = document.getElementById('html-editor-textarea');
+                    if (htmlEditor) {
+                        const event = new Event('input');
+                        htmlEditor.dispatchEvent(event);
+                    }
+                }, 100);
+            }
         }
     }
 
+    function closeWorkshop() {
+        if (currentWorkshopElement && currentWorkshopParent) {
+            // إعادة المحتوى لمكانه الأصلي
+            currentWorkshopParent.appendChild(currentWorkshopElement);
+            
+            // استعادة الحالة الأصلية للعرض (إذا لم تكن هي النشطة برمجياً)
+            // ملاحظة: النظام القديم يعتمد على .active للتبويبات
+            if (!currentWorkshopElement.id.startsWith('station-')) {
+                // إذا كان تبويب، نتركه كما هو أو نعيده لحالته
+            }
+        }
+
+        wsFullscreen.classList.remove('active');
+        document.body.style.overflow = '';
+        currentWorkshopElement = null;
+        currentWorkshopParent = null;
+    }
+
+    if (btnBackToHero) {
+        btnBackToHero.addEventListener('click', () => {
+            workshopSelection.style.display = 'none';
+            if (labHero) {
+                labHero.style.display = 'flex';
+                // إعادة تشغيل الأنيميشن إذا لزم الأمر
+                labHero.classList.remove('fadeIn');
+                void labHero.offsetWidth; // Force reflow
+                labHero.classList.add('fadeIn');
+            }
+            if (labStationsSection) labStationsSection.style.display = 'none';
+            
+            // إزالة النشاط من القائمة الجانبية
+            sidebarItems.forEach(item => item.classList.remove('active'));
+        });
+    }
+
+    if (btnCloseWorkshop) {
+        btnCloseWorkshop.addEventListener('click', closeWorkshop);
+    }
+
+    // تعديل وظيفة تنشيط المحطة لتعمل مع النظام الجديد
+    function activateStation(id) {
+        // بدلاً من فتح الأكورديون، نفتح واجهة اختيار الورشات
+        showWorkshopSelection(id);
+        
+        // تحديث القائمة الجانبية
+        sidebarItems.forEach(item => {
+            item.classList.toggle('active', item.dataset.station === id);
+        });
+    }
+
+    // الانتقال بين المحطات من القائمة الجانبية
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (item.dataset.station) {
+                activateStation(item.dataset.station);
+            }
+        });
+    });
+
+    // تنشيط من خلال البطاقات الرئيسية أيضاً
+    const stationCards = document.querySelectorAll('.station-card');
+    stationCards.forEach(card => {
+        const header = card.querySelector('.station-header');
+        if (header) {
+            header.addEventListener('click', () => {
+                const id = card.id.replace('station-', '');
+                activateStation(id);
+            });
+        }
+    });
+
+    const stationToggles = document.querySelectorAll('.station-toggle');
     stationToggles.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -107,41 +255,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    stationCards.forEach(card => {
-        const header = card.querySelector('.station-header');
-        if (header) {
-            header.addEventListener('click', (e) => {
-                if (e.target.closest('.station-toggle')) return;
-                activateStation(card.id.replace('station-', ''));
-            });
-        }
-    });
-
+    const stationDots = document.querySelectorAll('.station-dot');
     stationDots.forEach(dot => {
         dot.addEventListener('click', () => activateStation(dot.dataset.station));
     });
 
-    // الانتقال بين المحطات من القائمة الجانبية
-    sidebarItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (item.dataset.station) activateStation(item.dataset.station);
-        });
-    });
-
-    // Sub-tabs system
-    document.querySelectorAll('.sub-tabs').forEach(tabs => {
-        tabs.querySelectorAll('.sub-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const parent = tabs.closest('.station-workspace') || tabs.parentElement;
-                tabs.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const subtabId = tab.dataset.subtab;
-                parent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
-                const target = parent.querySelector(`#subtab-${subtabId}`);
-                if (target) target.classList.add('active');
-            });
-        });
-    });
+    // إخفاء الأكورديون الأصلي لأنه لم يعد مطلوباً في التصميم الجديد
+    // لكن نتركه في الـ HTML كـ "مخزن" للمحتوى
+    if (labStationsSection) {
+        // labStationsSection.style.display = 'none'; 
+    }
 
     // Installer simulator setup
     const installSteps = [

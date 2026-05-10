@@ -149,11 +149,27 @@
                     </div>
                 </section>
 
+                <!-- واجهة اختيار الورشات -->
+                <section class="workshop-selection" id="workshop-selection" style="display:none">
+                    <div class="selection-header">
+                        <button class="btn-back-to-hero" id="btn-back-to-hero">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            العودة للرئيسية
+                        </button>
+                        <h2 class="selection-title" id="selection-category-title">اختر الورشة</h2>
+                    </div>
+                    <div class="workshop-grid" id="workshop-grid">
+                        <!-- سيتم توليد البطاقات برمجياً -->
+                    </div>
+                </section>
+
                 <!-- محطات المخبر -->
-                <section class="lab-stations" id="lab-stations">
+                <section class="lab-stations" id="lab-stations" style="display:none">
 
                     <!-- محطة 1: بيئة التعامل مع الحاسوب -->
-                    <div class="station-card active" id="station-env">
+                    <div class="station-card" id="station-env">
                         <div class="station-header">
                             <div class="station-id">STATION_01</div>
                             <div class="station-title-group">
@@ -387,6 +403,25 @@ S ← A + B
             <polyline points="18 15 12 9 6 15"></polyline>
         </svg>
     </button>
+
+    <!-- نافذة الورشة الكاملة -->
+    <div class="workshop-fullscreen" id="workshop-fullscreen">
+        <div class="fullscreen-header">
+            <div class="fullscreen-title-group">
+                <span class="fullscreen-category" id="fs-category">المجال</span>
+                <h2 class="fullscreen-title" id="fs-title">اسم الورشة</h2>
+            </div>
+            <button class="btn-close-workshop" id="btn-close-workshop">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                الرجوع للقائمة
+            </button>
+        </div>
+        <div class="fullscreen-body" id="fullscreen-content-area">
+            <!-- سيتم نقل محتوى الورشة إلى هنا عند الفتح -->
+        </div>
+    </div>
 
     <script src="../assets/js/lab.js"></script>
 </body>

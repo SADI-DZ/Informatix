@@ -2546,6 +2546,232 @@ body.light-mode .loop-text {
 }
 
 /* Fix for Network labels in simulator */
-body.light-mode .net-device span:last-child {
-    color: #1e293b !important;
+/* ==========================================================================
+   Workshop Explorer & Fullscreen View (New Navigation System)
+   ========================================================================== */
+
+.workshop-selection {
+    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 2rem 0;
+}
+
+.selection-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 1.5rem;
+}
+
+.btn-back-to-hero {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--blue-primary);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-back-to-hero:hover {
+    background: var(--blue-primary);
+    color: white;
+    transform: translateX(5px);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+}
+
+.selection-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.workshop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+}
+
+.workshop-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.workshop-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.workshop-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, var(--blue-primary), var(--purple-primary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.workshop-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    border-color: var(--blue-primary);
+    box-shadow: 0 30px 60px rgba(59, 130, 246, 0.2);
+}
+
+.workshop-card:hover::before {
+    opacity: 1;
+}
+
+.workshop-card:hover::after {
+    transform: scaleX(1);
+}
+
+.workshop-icon {
+    font-size: 5rem;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.workshop-card:hover .workshop-icon {
+    transform: scale(1.25) rotate(8deg);
+}
+
+.workshop-card h3 {
+    font-size: 1.6rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.workshop-card p {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    max-width: 90%;
+}
+
+/* Workshop Fullscreen Styles */
+.workshop-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-dark);
+    z-index: 5000;
+    display: none;
+    flex-direction: column;
+    padding: 2rem 4rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.workshop-fullscreen.active {
+    display: flex;
+    animation: fullscreenReveal 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@keyframes fullscreenReveal {
+    from { clip-path: circle(0% at center); opacity: 0; transform: scale(0.95); }
+    to { clip-path: circle(150% at center); opacity: 1; transform: scale(1); }
+}
+
+.fullscreen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 3rem;
+    flex-shrink: 0;
+}
+
+.fullscreen-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fullscreen-category {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--blue-primary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0.8;
+}
+
+.fullscreen-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+}
+
+.btn-close-workshop {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 1rem 2rem;
+    border-radius: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-close-workshop:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.05) translateX(-5px);
+    box-shadow: 0 15px 30px rgba(239, 68, 68, 0.3);
+}
+
+.fullscreen-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure containers take full height in fullscreen */
+.fullscreen-body .installer-container,
+.fullscreen-body .network-container,
+.fullscreen-body .flowchart-main,
+.fullscreen-body .code-editor-container,
+.fullscreen-body .html-editor-container {
+    height: calc(100vh - 250px);
+    min-height: 500px;
+}
+
+/* Glassmorphism effect in fullscreen body */
+.fullscreen-body > div {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.02);
 }
