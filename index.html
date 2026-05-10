@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -72,8 +73,8 @@
             <p class="hero-subtitle">منصتك التعليمية المتكاملة لمادة المعلوماتية - مستوى الأولى ثانوي. دروس، تمارين،
                 وأدوات تفاعلية لمساعدتك على التفوق.</p>
             <div class="hero-buttons">
-                <button class="btn-primary btn-large">ابدأ التعلم الآن</button>
-                <a href="#modules" class="btn-secondary btn-large">تصفح المحتوى</a>
+                <a href="#" class="btn-primary btn-large">ابدأ التعلم الآن</a>
+                <a href="lab/index.html" class="btn-secondary btn-large">جرب المخبر</a>
             </div>
         </div>
         <div class="hero-graphics reveal reveal-delay-2">
@@ -117,7 +118,7 @@
     </section>
 
     <section id="modules" class="modules-section">
-        <h2 class="section-title reveal">وحدات المقرر الدراسي</h2>
+        <h2 class="section-title reveal"> مجالات المقرر الدراسي</h2>
         <div class="modules-grid">
             <div class="module-card border-purple reveal reveal-delay-1">
                 <div class="module-icon-circle bg-purple-circle">
@@ -129,9 +130,9 @@
                     </svg>
                 </div>
                 <h3>بيئة التعامل مع الحاسوب</h3>
-                <p>تعلم أساسيات الحاسوب، نظام التشغيل،والشبكات</p>
-                <button class="lessons-btn" title="قريباً" style="cursor:not-allowed; opacity:0.7;"><span
-                        class="arrow">&larr;</span> 6 دروس</button>
+                <p>تعلم أساسيات الحاسوب، نظام التشغيل، والشبكات</p>
+                <button class="lessons-btn" data-field="env"><span
+                        class="arrow">&larr;</span> تصفح الوحدات</button>
             </div>
 
             <div class="module-card border-green reveal reveal-delay-2">
@@ -144,8 +145,8 @@
                 </div>
                 <h3>مدخل إلى البرمجة</h3>
                 <p>المخططات الانسيابية والخوارزميات والبحث المنطقي</p>
-                <button class="lessons-btn" title="قريباً" style="cursor:not-allowed; opacity:0.7;"><span
-                        class="arrow">&larr;</span> 3 دروس</button>
+                <button class="lessons-btn" data-field="programming"><span
+                        class="arrow">&larr;</span> تصفح الوحدات</button>
             </div>
 
             <div class="module-card border-yellow reveal reveal-delay-3">
@@ -161,8 +162,8 @@
                 </div>
                 <h3>تقنيات الويب</h3>
                 <p>المتصفحات، البريد الإلكتروني، وإنشاء صفحات الويب</p>
-                <button class="lessons-btn" title="قريباً" style="cursor:not-allowed; opacity:0.7;"><span
-                        class="arrow">&larr;</span> 4 دروس</button>
+                <button class="lessons-btn" data-field="web"><span
+                        class="arrow">&larr;</span> تصفح الوحدات</button>
             </div>
 
             <div class="module-card border-pink reveal reveal-delay-4">
@@ -178,8 +179,8 @@
                 </div>
                 <h3>المكتبية</h3>
                 <p>معالج النصوص، جداول البيانات، والعروض التقديمية</p>
-                <button class="lessons-btn" title="قريباً" style="cursor:not-allowed; opacity:0.7;"><span
-                        class="arrow">&larr;</span> 6 دروس</button>
+                <button class="lessons-btn" data-field="office"><span
+                        class="arrow">&larr;</span> تصفح الوحدات</button>
             </div>
         </div>
     </section>
@@ -230,6 +231,23 @@
             </div>
         </div>
     </footer>
+    
+    <!-- Course Viewer Overlay -->
+    <div id="course-viewer" class="course-viewer-overlay">
+        <div class="viewer-header">
+            <div class="viewer-nav">
+                <button id="btn-back-to-home" class="btn-viewer-home">الرئيسية</button>
+                <button id="btn-back-to-field" class="btn-viewer-back" style="display:none">العودة للمجال</button>
+            </div>
+            <div class="viewer-title-group">
+                <span id="viewer-category" class="viewer-category">المجال</span>
+                <h2 id="viewer-title" class="viewer-title">اسم الوحدة</h2>
+            </div>
+        </div>
+        <div id="viewer-content" class="viewer-content">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
 
     <!-- ربط ملف الجافاسكريبت الخاص بتشغيل التفاعلات -->
     <script src="assets/js/script.js"></script>

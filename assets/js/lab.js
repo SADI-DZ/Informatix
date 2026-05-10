@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
+
     const labHero = document.querySelector('.lab-hero');
     const labStationsSection = document.getElementById('lab-stations');
     const workshopSelection = document.getElementById('workshop-selection');
@@ -106,8 +107,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data) return;
 
         // تحديث العناوين
-        const categories = { env: 'بيئة التعامل مع الحاسوب', programming: 'مقدمة في البرمجة', web: 'تقنيات الويب' };
-        categoryTitle.textContent = categories[categoryId];
+        const categories = { 
+            env: 'بيئة التعامل مع الحاسوب', 
+            programming: 'مقدمة في البرمجة', 
+            web: 'تقنيات الويب',
+            office: 'المكتبية'
+        };
+        categoryTitle.textContent = categories[categoryId] || 'المجال';
 
         // توليد البطاقات
         workshopGrid.innerHTML = '';
@@ -143,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ws.id === 'flowchart') targetId = 'subtab-flowchart';
         if (ws.id === 'code-editor') targetId = 'subtab-code-editor';
         if (ws.id === 'web-editor') targetId = 'station-web'; // محطة الويب كاملة
+
+
 
         const originalContent = document.getElementById(targetId);
         if (originalContent) {
@@ -189,9 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         wsFullscreen.classList.remove('active');
         document.body.style.overflow = '';
+        
+
+
         currentWorkshopElement = null;
         currentWorkshopParent = null;
     }
+
+
 
     if (btnBackToHero) {
         btnBackToHero.addEventListener('click', () => {
