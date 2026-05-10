@@ -245,12 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = 'hidden';
     }
 
+    function getLessonContent(filePath) {
+        if (window.LESSON_CONTENT && window.LESSON_CONTENT[filePath]) {
+            return window.LESSON_CONTENT[filePath];
+        }
+        return null;
+    }
+
     window.openLesson = async function(filePath, unitTitle, fieldId) {
         viewerTitle.textContent = unitTitle;
         btnBackToField.style.display = 'block';
         viewerContent.innerHTML = '<div class="loader-container"><div class="loader"></div><p>جاري تحميل الدرس...</p></div>';
 
-        // Save progress
         try {
             localStorage.setItem('informatix_last_lesson', JSON.stringify({
                 fieldId: fieldId || currentFieldId,
@@ -259,33 +265,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }));
         } catch (e) { /* ignore */ }
 
-        try {
-            const response = await fetch(encodeURI(filePath));
-            if (!response.ok) throw new Error('تعذر تحميل الملف');
-            const mdText = await response.text();
-            
-            const renderer = new marked.Renderer();
-            renderer.blockquote = (quote) => {
-                if (quote.includes('[!TIP]')) {
-                    return `<div class="alert alert-tip"><div class="alert-title">💡 نصيحة</div>${quote.replace('[!TIP]', '')}</div>`;
-                }
-                if (quote.includes('[!WARNING]') || quote.includes('[!CAUTION]')) {
-                    return `<div class="alert alert-warning"><div class="alert-title">⚠️ تنبيه</div>${quote.replace('[!WARNING]', '').replace('[!CAUTION]', '')}</div>`;
-                }
-                if (quote.includes('[!NOTE]')) {
-                    return `<div class="alert alert-note"><div class="alert-title">📝 ملاحظة</div>${quote.replace('[!NOTE]', '')}</div>`;
-                }
-                if (quote.includes('[!INFO]')) {
-                    return `<div class="alert alert-info"><div class="alert-title">ℹ️ معلومات</div>${quote.replace('[!INFO]', '')}</div>`;
-                }
-                return `<blockquote>${quote}</blockquote>`;
-            };
+        let mdText = getLessonContent(filePath);
 
-            const htmlContent = marked.parse(mdText, { renderer });
+        if (!mdText) {
+            try {
+                const response = await fetch(encodeURI(filePath));
+                if (!response.ok) throw new Error('تعذر تحميل الملف');
+                mdText = await response.text();
+            } catch (fetchErr) {
+                viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: تعذر تحميل الدرس. يرجى التأكد من تشغيل الموقع عبر خادم ويب (http://) وليس مباشرة (file://)</div>`;
+                return;
+            }
+        }
+
+         try {
+            let htmlContent = marked.parse(mdText);
+            
+            htmlContent = htmlContent.replace(
+                /<blockquote>([\s\S]*?)<\/blockquote>/gi, 
+                (match, content) => {
+                    const inner = content.trim();
+                    if (inner.includes('[!TIP]')) {
+                        return `<div class="alert alert-tip"><div class="alert-title">💡 نصيحة</div>${inner.replace('[!TIP]', '')}</div>`;
+                    }
+                    if (inner.includes('[!WARNING]') || inner.includes('[!CAUTION]')) {
+                        return `<div class="alert alert-warning"><div class="alert-title">⚠️ تنبيه</div>${inner.replace('[!WARNING]', '').replace('[!CAUTION]', '')}</div>`;
+                    }
+                    if (inner.includes('[!NOTE]')) {
+                        return `<div class="alert alert-note"><div class="alert-title">📝 ملاحظة</div>${inner.replace('[!NOTE]', '')}</div>`;
+                    }
+                    if (inner.includes('[!INFO]')) {
+                        return `<div class="alert alert-info"><div class="alert-title">ℹ️ معلومات</div>${inner.replace('[!INFO]', '')}</div>`;
+                    }
+                    return match;
+                }
+            );
+
             viewerContent.innerHTML = `<div class="md-container"><div class="md-content">${htmlContent}</div></div>`;
             viewerContent.scrollTo({ top: 0, behavior: 'smooth' });
             
-            // Reset progress bar
             const progressFill = document.getElementById('reading-progress-fill');
             if (progressFill) progressFill.style.width = '0%';
         } catch (err) {
