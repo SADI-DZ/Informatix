@@ -261,10 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // إخفاء الأكورديون الأصلي لأنه لم يعد مطلوباً في التصميم الجديد
-    // لكن نتركه في الـ HTML كـ "مخزن" للمحتوى
-    if (labStationsSection) {
-        // labStationsSection.style.display = 'none'; 
-    }
+    // نتركه في الـ HTML كمخزن للمحتوى فقط
 
     // Installer simulator setup
     const installSteps = [
@@ -728,7 +725,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (htmlPreview && htmlEditor) {
-        setTimeout(updateHtmlPreview, 500);
+        // Initial preview load
+        setTimeout(updateHtmlPreview, 1000);
     }
 
     // Typing effect for lab subtitle
