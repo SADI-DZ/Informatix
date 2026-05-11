@@ -1,3 +1,4 @@
+"use strict";
 window.LESSON_CONTENT = {
   'content/1- بيئة التعامل مع الحاسوب/01_تقنية_المعلومات.md': `# 💡 تقنية المعلومات
 

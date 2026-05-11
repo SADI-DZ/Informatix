@@ -1,5 +1,6 @@
 // Network Simulator Advanced — Canvas-based network designer
 (function() {
+    "use strict";
     const nsCanvas = document.getElementById('ns-canvas');
     const nsCtx = nsCanvas ? nsCanvas.getContext('2d') : null;
 
@@ -41,6 +42,7 @@
         return `192.168.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
     }
 
+    /** إنشاء جهاز شبكة جديد وإضافته للرسم */
     function nsCreateDevice(type, x, y) {
         const id = ++nsState.deviceIdCounter;
         const d = { id, type, x, y, name: NS_DEVICE_NAMES[type] + ' ' + id, ip: nsRandIP(), ports: [] };
@@ -62,6 +64,7 @@
         }
     }
 
+    /** رسم جهاز على الـ Canvas مع تحديد الشكل واللون حسب النوع */
     function nsDrawDevice(d) {
         if (!nsCtx) return;
         const s = nsGetDeviceSize(d.type) * nsState.zoom;
@@ -113,6 +116,7 @@
         ctx.fillText(d.ip, x, y + s/2 + 18);
     }
 
+    /** رسم خط توصيل بين جهازين مع تمييز النوع (سلكي/لاسلكي) */
     function nsDrawConnection(c) {
         if (!nsCtx) return;
         const a = nsState.devices.find(d => d.id === c.from);

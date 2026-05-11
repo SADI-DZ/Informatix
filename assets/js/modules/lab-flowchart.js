@@ -1,5 +1,6 @@
 // Flowchart designer
 (function() {
+    "use strict";
     document.addEventListener('DOMContentLoaded', () => {
         const flowData = {
             max: {

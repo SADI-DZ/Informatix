@@ -1,3 +1,10 @@
+/* ============================================================
+   Informatix Lab CSS — تم التقسيم إلى:
+   lab-core.css       (متغيرات، تخطيط، شريط جانبي، تذييل)
+   lab-components.css (الهيرو، المحطات، البطاقات)
+   lab-editors.css    (محررات HTML، الخوارزميات، الشبكات)
+   هذا الملف احتفظ به للتوافق القديم فقط.
+   ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 
 :root {

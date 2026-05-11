@@ -4,6 +4,7 @@
  * This file loads in the correct order and initializes all modules.
  */
 (function() {
+    "use strict";
     document.addEventListener('DOMContentLoaded', () => {
         console.log('informatix: تم تهيئة المخبر بنجاح');
     });

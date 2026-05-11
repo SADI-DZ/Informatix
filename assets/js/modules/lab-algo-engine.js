@@ -1,5 +1,6 @@
 // Algorithm Editor Engine
 (function() {
+    "use strict";
     document.addEventListener('DOMContentLoaded', () => {
         const algoEditorEl = document.getElementById('algoEditor');
         const algoHighlightEl = document.getElementById('algoHighlight');
@@ -61,6 +62,7 @@
         let algoVM = { lines: [], blocks: [], pc: 0, vars: {}, out: [], halted: false, _ifMap: new Map(), _whileMap: new Map(), _forMap: new Map() };
 
         // ==================== HELPERS ====================
+        /** تنظيف وحظر التعبيرات الخطرة (حقن) */
         function algoSanitizeExpr(expr) {
             const s = String(expr ?? '').trim();
             if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) throw new Error('تعبير غير مسموح.');
@@ -71,6 +73,7 @@
             return s;
         }
 
+        /** تقييم تعبير آمن باستخدام parser مخصص (يمنع eval) */
         function algoSafeEval(expr, vars) {
             let pos = 0;
             const s = expr.trim();

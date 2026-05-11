@@ -4,6 +4,7 @@
  */
 
 (function() {
+    "use strict";
     const themeCheckboxId = 'theme-checkbox';
     const storageKey = 'theme';
     const root = document.documentElement;

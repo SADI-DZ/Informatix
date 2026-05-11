@@ -1,3 +1,4 @@
+"use strict";
 // Polyfill for roundRect if not available
 if (!CanvasRenderingContext2D.prototype.roundRect) {
     CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {

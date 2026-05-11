@@ -1,5 +1,6 @@
-// Installer simulator
+// Installer simulator — loaded but requires #installer-steps DOM in the page
 (function() {
+    "use strict";
     document.addEventListener('DOMContentLoaded', () => {
         const installSteps = [
             { icon: '💾', title: 'التحضير', text: 'تحميل ملفات التثبيت...' },

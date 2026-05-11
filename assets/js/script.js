@@ -1,3 +1,4 @@
+"use strict";
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize particles animation
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

@@ -1,5 +1,6 @@
 // HTML Editor Advanced
 (function() {
+    "use strict";
     document.addEventListener('DOMContentLoaded', () => {
 
         // ==================== CONSTANTS ====================
@@ -486,7 +487,8 @@
             htmlShowToast('تم مسح الكود', 'info');
         }
 
-        function htmlRunCode() {
+        /** تشغيل كود HTML في iframe المعاينة */
+    function htmlRunCode() {
             htmlUpdatePreview();
             htmlRunErrorCheck();
             htmlShowToast('🔄 تم تحديث المعاينة!', 'info');

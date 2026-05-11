@@ -1,5 +1,6 @@
 // Typing effect for lab subtitle
 (function() {
+    "use strict";
     const typingEl = document.getElementById('lab-typing');
     let typingTimeout = null;
     let typingTextIdx = 0;

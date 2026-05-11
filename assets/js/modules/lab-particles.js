@@ -1,5 +1,6 @@
 // Particles animation + theme listener + scroll-to-top
 (function() {
+    "use strict";
     document.addEventListener('DOMContentLoaded', () => {
         // Particles animation
         const particleAnimations = [];

@@ -1,5 +1,6 @@
 // Workshop Navigation Logic - Robust Version
 (function() {
+    "use strict";
     // Initial Fallback Data in case JSON fetch fails
     const fallbackData = {
         "env": [
