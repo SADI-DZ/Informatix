@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
+    <script src="../assets/js/theme-manager.js"></script>
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -581,6 +582,7 @@
             font-size: 0.9rem;
         }
 
+        .algo-btn-run,
         .btn-run {
             background: var(--success-color);
             color: white;
@@ -609,6 +611,7 @@
             transform: none;
         }
 
+        .algo-btn-reset,
         .btn-reset {
             background: transparent;
             color: var(--text-muted);
@@ -850,6 +853,7 @@
             white-space: pre-wrap;
         }
 
+        .algo-input-modal-overlay,
         .input-modal-overlay {
             position: fixed;
             inset: 0;
@@ -862,6 +866,7 @@
             padding: 1rem;
         }
 
+        .algo-input-modal,
         .input-modal {
             background: var(--surface-color);
             border: 1px solid var(--border-color);
@@ -874,12 +879,14 @@
             gap: 1rem;
         }
 
+        .algo-input-modal-label,
         .input-modal-label {
             font-weight: 700;
             font-size: 1.05rem;
             color: var(--text-main);
         }
 
+        .algo-input-modal-field,
         .input-modal-field {
             border: 2px solid var(--border-color);
             border-radius: var(--radius-md);
@@ -896,6 +903,7 @@
             border-color: var(--primary-color);
         }
 
+        .algo-input-modal-actions,
         .input-modal-actions {
             display: flex;
             gap: 0.75rem;
@@ -1135,862 +1143,36 @@
         </div>
     </footer>
 
+    <!-- محرك الخوارزميات - يستخدم الوحدة النمطية المشتركة -->
+    <script src="../assets/js/modules/lab-algo-engine.js"></script>
+    <!-- ربط زر السمة بالـ theme-manager -->
     <script>
-        // ===== showInputModal (from main.js) =====
-        function showInputModal(label) {
-            return new Promise((resolve) => {
-                const overlay = document.createElement('div');
-                overlay.className = 'input-modal-overlay';
-                overlay.innerHTML =
-                    `<div class="input-modal" role="dialog" aria-modal="true">
-                <label class="input-modal-label">${label}</label>
-                <input class="input-modal-field" type="text" autocomplete="off" dir="auto" />
-                <div class="input-modal-actions">
-                  <button class="btn-run input-modal-confirm">تأكيد</button>
-                  <button class="btn-reset input-modal-cancel">إلغاء</button>
-                </div>
-              </div>`;
-                document.body.appendChild(overlay);
-                const field = overlay.querySelector('.input-modal-field');
-                const confirm = overlay.querySelector('.input-modal-confirm');
-                const cancel = overlay.querySelector('.input-modal-cancel');
-                requestAnimationFrame(() => field?.focus());
-                const done = (val) => { overlay.remove();
-                    resolve(val); };
-                if (confirm) confirm.onclick = () => done(field ? field.value : '');
-                if (cancel) cancel.onclick = () => done('');
-                field?.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') done(field.value);
-                    if (e.key === 'Escape') done('');
-                });
+    document.addEventListener('DOMContentLoaded', () => {
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const newTheme = isDark ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                window.dispatchEvent(new CustomEvent('change', {
+                    detail: { target: { id: 'theme-checkbox', checked: newTheme === 'light' } }
+                }));
+                // تطبيق مباشر
+                if (newTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.body.classList.add('light-mode');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.body.classList.remove('light-mode');
+                }
             });
         }
-
-        // ===== Theme Toggle =====
-        function toggleTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            if (isDark) {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
-                document.getElementById('themeToggle').querySelector('i').className = 'ph ph-moon-stars';
-                document.getElementById('themeToggle').setAttribute('aria-label', 'تفعيل الوضع الليلي');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-                document.getElementById('themeToggle').querySelector('i').className = 'ph ph-sun';
-                document.getElementById('themeToggle').setAttribute('aria-label', 'تفعيل الوضع النهاري');
-            }
+        // محاذاة الأيقونة مع الحالة المحفوظة
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
         }
-
-        // ===== Font Size Toggle =====
-        function toggleFontSize() {
-            const currentSize = localStorage.getItem('fontSize') || 'medium';
-            let newSize;
-            if (currentSize === 'small') newSize = 'medium';
-            else if (currentSize === 'medium') newSize = 'large';
-            else newSize = 'small';
-            document.documentElement.classList.remove('font-small', 'font-medium', 'font-large');
-            document.documentElement.classList.add('font-' + newSize);
-            localStorage.setItem('fontSize', newSize);
-        }
-
-        // ===== Navbar scroll =====
-        document.addEventListener('DOMContentLoaded', () => {
-            const navbar = document.querySelector('.navbar');
-            if (navbar) {
-                let ticking = false;
-                window.addEventListener('scroll', () => {
-                    if (!ticking) {
-                        requestAnimationFrame(() => {
-                            navbar.classList.toggle('scrolled', window.scrollY > 50);
-                            ticking = false;
-                        });
-                        ticking = true;
-                    }
-                }, { passive: true });
-            }
-
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            if (savedTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.getElementById('themeToggle').querySelector('i').className = 'ph ph-sun';
-                document.getElementById('themeToggle').setAttribute('aria-label', 'تفعيل الوضع النهاري');
-            }
-
-            const savedFont = localStorage.getItem('fontSize') || 'medium';
-            document.documentElement.classList.add('font-' + savedFont);
-
-            // Nav toggle
-            const navToggle = document.getElementById('navToggle');
-            const navLinks = document.getElementById('primaryNav');
-            if (navToggle && navLinks) {
-                navToggle.addEventListener('click', () => {
-                    const isOpen = navLinks.classList.toggle('is-open');
-                    navToggle.setAttribute('aria-expanded', String(isOpen));
-                    navToggle.innerHTML = isOpen ? '<i class="ph ph-x"></i>' : '<i class="ph ph-list"></i>';
-                });
-                document.addEventListener('click', (e) => {
-                    if (!navLinks.contains(e.target) && !navToggle.contains(e.target)) {
-                        navLinks.classList.remove('is-open');
-                        navToggle.setAttribute('aria-expanded', 'false');
-                        navToggle.innerHTML = '<i class="ph ph-list"></i>';
-                    }
-                });
-            }
-
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-            document.getElementById('fontToggle').addEventListener('click', toggleFontSize);
-        });
-
-        // ===== Algorithm Lab Engine =====
-        document.addEventListener('DOMContentLoaded', () => {
-            const editor = document.getElementById('algoEditor');
-            const highlight = document.getElementById('algoHighlight');
-            const varsBody = document.getElementById('algoVarsBody');
-            const outputEl = document.getElementById('algoOutput');
-            const runBtn = document.getElementById('algoRunBtn');
-            const stepBtn = document.getElementById('algoStepBtn');
-            const resetBtn = document.getElementById('algoResetBtn');
-            const langToggle = document.getElementById('algoLangToggle');
-
-            if (!editor || !highlight || !varsBody || !outputEl || !runBtn || !stepBtn || !resetBtn) return;
-
-            let currentLang = 'en';
-            let isRunning = false;
-
-            const DEFAULT_PROGRAMS = {
-                en: `Algorithm example\nstart\n  Write("Hello World!");\nend`,
-                fr: `Algorithme exemple\nDebut\n  Ecrire("Hello World!");\nFin`
-            };
-
-            const EXAMPLES = {
-                en: {
-                    hello: `Algorithm HelloWorld\nstart\n  Write("Hello World!");\nend`,
-                    sum: `Algorithm Summation\nvar a, b, s : integer\nstart\n  a \u2190 10\n  b \u2190 20\n  s \u2190 a + b\n  Write("The sum is:");\n  Write(s);\nend`,
-                    condition: `Algorithm Grades\nvar score : integer\nstart\n  score \u2190 85\n  if score >= 90 then\n    Write("Excellent");\n  else if score >= 80 then\n    Write("Very Good");\n  else if score >= 70 then\n    Write("Good");\n  else\n    Write("Needs improvement");\n  end\nend`,
-                    loop: `Algorithm Counting\nvar i : integer\nstart\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  end\nend`
-                },
-                fr: {
-                    hello: `Algorithme HelloWorld\nDebut\n  Ecrire("Bonjour tout le monde!");\nFin`,
-                    sum: `Algorithme Somme\nvar a, b, s : entier\nDebut\n  a \u2190 10\n  b \u2190 20\n  s \u2190 a + b\n  Ecrire("La somme est:");\n  Ecrire(s);\nFin`,
-                    condition: `Algorithme Notes\nvar score : entier\nDebut\n  score \u2190 85\n  Si score >= 90 Alors\n    Ecrire("Excellent");\n  Sinon si score >= 80 Alors\n    Ecrire("Tr\u00e8s bien");\n  Sinon si score >= 70 Alors\n    Ecrire("Bien");\n  Sinon\n    Ecrire("Am\u00e9lioration n\u00e9cessaire");\n  FinSi\nFin`,
-                    loop: `Algorithme Comptage\nvar i : entier\nDebut\n  Pour i = 1 a 5 Faire\n    Ecrire("Nombre:");\n    Ecrire(i);\n  FinPour\nFin`
-                }
-            };
-
-            const KW_ALGORITHM = ['algorithm', 'algorithme'];
-            const KW_VAR = ['var', 'variable', 'variables'];
-            const KW_START = ['start', 'debut', 'd\u00e9but'];
-            const KW_END = ['end', 'fin', 'finsi', 'fintantque'];
-            const KW_IF_START = ['if', 'si'];
-            const KW_ELSE_IF = ['else if', 'sinon si'];
-            const KW_THEN = ['then', 'alors'];
-            const KW_ELSE = ['else', 'sinon'];
-            const KW_WHILE_START = ['while', 'tantque'];
-            const KW_FOR_START = ['for', 'pour'];
-            const KW_TO = ['to', 'a', '\u00e0'];
-            const KW_DO = ['do', 'faire'];
-            const KW_READ = ['read', 'lire'];
-            const KW_WRITE = ['write', 'ecrire', '\u00e9crire'];
-
-            const HL_KEYWORDS = [...KW_ALGORITHM, ...KW_VAR, ...KW_START, ...KW_END];
-            const HL_CONTROL = [...KW_IF_START, ...KW_THEN, ...KW_ELSE, ...KW_WHILE_START, ...KW_FOR_START, ...KW_TO,
-                ...KW_DO, 'finsi', 'fintantque', 'finpour', 'else if', 'sinon si'
-            ];
-            const HL_IO = [...KW_READ, ...KW_WRITE, 'print', 'let'];
-            const HL_TYPES = ['integer', 'real', 'string', 'boolean', 'char', 'entier', 'reel', 'r\u00e9el', 'chaine',
-                'cha\u00eene', 'booleen', 'bool\u00e9en', 'caractere', 'caract\u00e8re'
-            ];
-            const HL_LOGIC = ['and', 'or', 'not', 'true', 'false', 'et', 'ou', 'non', 'vrai', 'faux'];
-
-            let vm = {
-                lines: [],
-                blocks: [],
-                pc: 0,
-                vars: {},
-                out: [],
-                halted: false
-            };
-
-            const safeEval = (expr, vars) => {
-                const s = String(expr ?? '').trim();
-                if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) throw new Error('\u062A\u0639\u0628\u064A\u0631 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
-                const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval', 'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require', 'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'];
-                const lower = s.toLowerCase();
-                if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) throw new Error('\u0645\u062D\u0627\u0648\u0644\u0629 \u0648\u0635\u0648\u0644 \u063A\u064A\u0631 \u0645\u0635\u0631\u062D \u0628\u0647\u0627.');
-                if (/\w+\s*\(/.test(s)) throw new Error('\u0627\u0633\u062A\u062F\u0639\u0627\u0621 \u062F\u0648\u0627\u0644 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
-
-                let pos = 0;
-                function peek() { return pos < s.length ? s[pos] : null; }
-                function consume() { return pos < s.length ? s[pos++] : null; }
-                function skipWS() { while (pos < s.length && s[pos] === ' ') pos++; }
-                function parseExpr() { skipWS(); return parseOr(); }
-                function parseOr() {
-                    let left = parseAnd(); skipWS();
-                    while (peek() === '|' && s[pos + 1] === '|') { pos += 2; const right = parseAnd(); left = Boolean(left) || Boolean(right); skipWS(); }
-                    return left;
-                }
-                function parseAnd() {
-                    let left = parseComparison(); skipWS();
-                    while (peek() === '&' && s[pos + 1] === '&') { pos += 2; const right = parseComparison(); left = Boolean(left) && Boolean(right); skipWS(); }
-                    return left;
-                }
-                function parseComparison() {
-                    let left = parseAddSub(); skipWS(); const op = peek();
-                    if (op === '<' || op === '>' || op === '=' || op === '!') {
-                        let fullOp = consume();
-                        if ((fullOp === '<' || fullOp === '>') && peek() === '=') { fullOp += consume(); }
-                        if (fullOp === '<>' && peek() === '=') { fullOp += consume(); }
-                        const right = parseAddSub();
-                        if (fullOp === '==') return left == right;
-                        if (fullOp === '!=' || fullOp === '<>') return left != right;
-                        if (fullOp === '<') return left < right;
-                        if (fullOp === '>') return left > right;
-                        if (fullOp === '<=') return left <= right;
-                        if (fullOp === '>=') return left >= right;
-                    }
-                    return left;
-                }
-                function parseAddSub() {
-                    let left = parseMulDiv(); skipWS();
-                    while (peek() === '+' || peek() === '-') {
-                        const op = consume(); const right = parseMulDiv(); skipWS();
-                        if (op === '+') left = (typeof left === 'number' && typeof right === 'number') ? left + right : (left != null ? String(left) : '') + (right != null ? String(right) : '');
-                        else left = left - right;
-                    }
-                    return left;
-                }
-                function parseMulDiv() {
-                    let left = parseUnary(); skipWS();
-                    while (peek() === '*' || peek() === '/' || peek() === '%') {
-                        const op = consume(); const right = parseUnary(); skipWS();
-                        if (op === '*') left = left * right;
-                        else if (op === '/') left = left / right;
-                        else left = left % right;
-                    }
-                    return left;
-                }
-                function parseUnary() {
-                    skipWS();
-                    if (peek() === '!') { consume(); const val = parseUnary(); return !Boolean(val); }
-                    if (peek() === '-') { consume(); const val = parseUnary(); return -val; }
-                    return parsePrimary();
-                }
-                function parsePrimary() {
-                    skipWS();
-                    if (peek() === '(') { consume(); const val = parseExpr(); skipWS(); if (peek() === ')') consume(); return val; }
-                    if (peek() === '"' || peek() === "'") {
-                        const quote = consume(); let str = '';
-                        while (pos < s.length && peek() !== quote) str += consume();
-                        if (peek() === quote) consume();
-                        return str;
-                    }
-                    let word = '';
-                    while (pos < s.length && /[a-zA-Z0-9_.]/.test(peek())) word += consume();
-                    if (!word) throw new Error('\u062A\u0639\u0628\u064A\u0631 \u063A\u064A\u0631 \u0645\u062A\u0648\u0642\u0639 \u0641\u064A \u0627\u0644\u0645\u0648\u0642\u0639 ' + pos);
-                    if (word === 'true') return true;
-                    if (word === 'false') return false;
-                    if (word in vars) return vars[word];
-                    const num = Number(word);
-                    if (!isNaN(num) && word !== '') return num;
-                    return word;
-                }
-                const result = parseExpr();
-                if (pos < s.length) throw new Error('\u064A\u0648\u062C\u062F \u0645\u062D\u062A\u0648\u0649 \u0625\u0636\u0627\u0641\u064A \u0628\u0639\u062F \u0627\u0644\u062A\u0639\u0628\u064A\u0631 \u0641\u064A \u0627\u0644\u0645\u0648\u0642\u0639 ' + pos);
-                return result;
-            };
-
-            const evalExpr = (expr, vars) => {
-                const safe = expr
-                    .replace(/\b(?:and|et)\b/gi, '&&')
-                    .replace(/\b(?:or|ou)\b/gi, '||')
-                    .replace(/\b(?:not|non)\b/gi, '!')
-                    .replace(/\b(?:vrai|true)\b/gi, 'true')
-                    .replace(/\b(?:faux|false)\b/gi, 'false');
-                try {
-                    return safeEval(safe, vars);
-                } catch (e) {
-                    throw new Error('\u062E\u0637\u0623 \u0641\u064A \u062A\u0642\u064A\u064A\u0645 \u0627\u0644\u062A\u0639\u0628\u064A\u0631: ' + e.message);
-                }
-            };
-
-            const stripComments = (line) => {
-                let s = line;
-                const hash = s.indexOf('#');
-                const slashes = s.indexOf('//');
-                const cut = [hash, slashes].filter(i => i >= 0).sort((a, b) => a - b)[0];
-                if (cut !== undefined) s = s.slice(0, cut);
-                return s.trimEnd();
-            };
-
-            const normalizeLine = (line) => {
-                let s = stripComments(line);
-                s = s.replace(/\s*;\s*$/, '');
-                return s;
-            };
-
-            const startsWithAny = (low, prefixes) => {
-                for (const p of prefixes) {
-                    if (low.startsWith(p + ' ') || low.startsWith(p + '(')) return p;
-                }
-                return null;
-            };
-
-            const endsWithAny = (low, suffixes) => {
-                for (const s of suffixes) {
-                    if (low.endsWith(' ' + s)) return s;
-                }
-                return null;
-            };
-
-            const rebuildBlocks = (lines) => {
-                const blocks = [];
-                const stack = [];
-
-                const pushBlock = (b) => {
-                    blocks.push(b);
-                    stack.push(b);
-                };
-
-                lines.forEach((raw, i) => {
-                    const line = normalizeLine(raw).trim();
-                    if (!line) return;
-                    const low = line.toLowerCase();
-
-                    const ifPrefix = startsWithAny(low, KW_IF_START);
-                    const thenSuffix = endsWithAny(low, KW_THEN);
-                    if (ifPrefix && thenSuffix) {
-                        const cond = line.slice(ifPrefix.length + 1, -(thenSuffix.length + 1)).trim();
-                        pushBlock({ type: 'if', line: i, cond, elseLine: null, endLine: null });
-                        return;
-                    }
-
-                    const elseifPrefix = startsWithAny(low, KW_ELSE_IF);
-                    if (elseifPrefix && thenSuffix) {
-                        const top = stack[stack.length - 1];
-                        if (!top || top.type !== 'if') throw new Error(
-                            'else if/sinon si \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (i + 1) + ')');
-                        const cond = line.slice(elseifPrefix.length + 1, -(thenSuffix.length + 1)).trim();
-                        if (!top.elseIfs) top.elseIfs = [];
-                        top.elseIfs.push({ line: i, cond });
-                        return;
-                    }
-
-                    if (KW_ELSE.includes(low)) {
-                        const top = stack[stack.length - 1];
-                        if (!top || top.type !== 'if') throw new Error(
-                            'else/sinon \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (i + 1) + ')');
-                        top.elseLine = i;
-                        return;
-                    }
-
-                    const whilePrefix = startsWithAny(low, KW_WHILE_START);
-                    const doSuffix = endsWithAny(low, KW_DO);
-                    if (whilePrefix && doSuffix) {
-                        const cond = line.slice(whilePrefix.length + 1, -(doSuffix.length + 1)).trim();
-                        pushBlock({ type: 'while', line: i, cond, endLine: null });
-                        return;
-                    }
-
-                    const forPrefix = startsWithAny(low, KW_FOR_START);
-                    if (forPrefix && doSuffix) {
-                        const middle = line.slice(forPrefix.length + 1, -(doSuffix.length + 1)).trim();
-                        let toIdx = -1;
-                        let toLen = 0;
-                        for (const kwTo of KW_TO) {
-                            const idx = middle.toLowerCase().indexOf(' ' + kwTo + ' ');
-                            if (idx >= 0) { toIdx = idx;
-                                toLen = kwTo.length; break; }
-                        }
-                        if (toIdx < 0) throw new Error(
-                            '\u0635\u06CC\u063A\u0629 for \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629: \u0645\u0641\u0642\u0648\u062F to/a (\u0633\u0637\u0631 ' +
-                            (i + 1) + ')');
-
-                        const left = middle.slice(0, toIdx).trim();
-                        const endExpr = middle.slice(toIdx + toLen + 2).trim();
-                        const m = left.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
-                        if (!m) throw new Error(
-                            '\u0635\u06CC\u063A\u0629 for \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629: \u0627\u0644\u0645\u062A\u063A\u06CC\u0631 \u0648\u0627\u0644\u0628\u062F\u0627\u06CC\u0629 (\u0633\u0637\u0631 ' +
-                            (i + 1) + ')');
-                        const [, name, startExpr] = m;
-                        pushBlock({ type: 'for', line: i, varName: name, startExpr, endExpr, endLine: null });
-                        return;
-                    }
-
-                    if (KW_END.includes(low) || low === 'finpour') {
-                        if (!stack.length) {
-                            if (low === 'end' || low === 'fin') return;
-                            throw new Error('\u0641\u064A\u0646/finsi/fintantque/finpour \u0625\u0636\u0627\u0641\u064A \u0628\u062F\u0648\u0646 \u0643\u062A\u0644\u0629 \u0645\u0641\u062A\u0648\u062D\u0629 (\u0633\u0637\u0631 ' + (i + 1) + ')');
-                        }
-                        const top = stack[stack.length - 1];
-                        const isFinSi = low === 'finsi';
-                        const isFinTantQue = low === 'fintantque';
-                        const isFinPour = low === 'finpour';
-                        if (isFinSi && top.type !== 'if') throw new Error('finsi \u064A\u063A\u0644\u0642 ' + top.type + ' \u0628\u062F\u0644\u0627\u064B \u0645\u0646 if (\u0633\u0637\u0631 ' + (i + 1) + ')');
-                        if (isFinTantQue && top.type !== 'while') throw new Error('fintantque \u064A\u063A\u0644\u0642 ' + top.type + ' \u0628\u062F\u0644\u0627\u064B \u0645\u0646 while (\u0633\u0637\u0631 ' + (i + 1) + ')');
-                        if (isFinPour && top.type !== 'for') throw new Error('finpour \u064A\u063A\u0644\u0642 ' + top.type + ' \u0628\u062F\u0644\u0627\u064B \u0645\u0646 for (\u0633\u0637\u0631 ' + (i + 1) + ')');
-                        stack.pop();
-                        top.endLine = i;
-                        return;
-                    }
-                });
-
-                if (stack.length) {
-                    const top = stack[stack.length - 1];
-                    throw new Error(
-                        '\u06A9\u062A\u0644\u0629 \u063A\u06CC\u0631 \u0645\u063A\u0644\u0642\u0629 \u0628\u062F\u0623\u062A \u0641\u06CC \u0633\u0637\u0631 ' +
-                        (top.line + 1));
-                }
-
-                const mapIfByLine = new Map();
-                const mapWhileByLine = new Map();
-                const mapForByLine = new Map();
-                blocks.forEach(b => {
-                    if (b.type === 'if') mapIfByLine.set(b.line, b);
-                    if (b.type === 'while') mapWhileByLine.set(b.line, b);
-                    if (b.type === 'for') mapForByLine.set(b.line, b);
-                });
-
-                return { blocks, mapIfByLine, mapWhileByLine, mapForByLine };
-            };
-
-            const getLineKind = (line) => {
-                const s = normalizeLine(line).trim();
-                const low = s.toLowerCase();
-                if (!s) return { kind: 'empty' };
-
-                if (startsWithAny(low, KW_ALGORITHM)) return { kind: 'algorithm', text: s };
-                if (startsWithAny(low, KW_VAR)) return { kind: 'var', text: s };
-                if (KW_START.includes(low)) return { kind: 'start', text: s };
-                if (low.startsWith('let ')) return { kind: 'let', text: s };
-                if (low.startsWith('print ')) return { kind: 'print', text: s };
-
-                const readP = startsWithAny(low, KW_READ);
-                if (readP) return { kind: 'read', text: s };
-
-                const writeP = startsWithAny(low, KW_WRITE);
-                if (writeP) return { kind: 'write', text: s };
-
-                const ifP = startsWithAny(low, KW_IF_START);
-                const thenS = endsWithAny(low, KW_THEN);
-                if (ifP && thenS) return { kind: 'if', text: s };
-
-                const elseifP = startsWithAny(low, KW_ELSE_IF);
-                if (elseifP && thenS) return { kind: 'elseif', text: s };
-
-                if (KW_ELSE.includes(low)) return { kind: 'else', text: s };
-
-                const whP = startsWithAny(low, KW_WHILE_START);
-                const doS = endsWithAny(low, KW_DO);
-                if (whP && doS) return { kind: 'while', text: s };
-
-                const forP = startsWithAny(low, KW_FOR_START);
-                if (forP && doS) return { kind: 'for', text: s };
-
-                if (KW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') return { kind: 'end',
-                    text: s };
-
-                if (s.includes('\u2190')) return { kind: 'assign', text: s };
-
-                return { kind: 'unknown', text: s };
-            };
-
-            const renderVars = () => {
-                const entries = Object.entries(vm.vars).filter(([k]) => !k.startsWith('__'));
-                if (!entries.length) {
-                    varsBody.innerHTML =
-                        '<tr><td colspan="2" class="algo-empty">\u0644\u0627 \u062A\u0648\u062C\u062F \u0645\u062A\u063A\u06CC\u0631\u0627\u062A \u0628\u0639\u062F</td></tr>';
-                    return;
-                }
-                varsBody.innerHTML = entries
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([k, v]) => {
-                        const value = typeof v === 'string' ? JSON.stringify(v) : String(v);
-                        return '<tr><td>' + escapeHtml(k) + '</td><td dir="ltr" style="text-align:left;">' + escapeHtml(
-                            value) + '</td></tr>';
-                    })
-                    .join('');
-            };
-
-            const renderOutput = () => {
-                outputEl.textContent = vm.out.join('\n');
-            };
-
-            const escapeHtml = (text) => {
-                const div = document.createElement('div');
-                div.textContent = String(text ?? '');
-                return div.innerHTML;
-            };
-
-            const highlightLine = (raw) => {
-                if (!raw.trim()) return '&nbsp;';
-
-                let mainPart = raw;
-                let commentPart = '';
-                const hashIdx = raw.indexOf('#');
-                const slashIdx = raw.indexOf('//');
-                let commentStart = -1;
-                if (hashIdx >= 0 && (slashIdx < 0 || hashIdx <= slashIdx)) commentStart = hashIdx;
-                else if (slashIdx >= 0) commentStart = slashIdx;
-                if (commentStart >= 0) {
-                    mainPart = raw.slice(0, commentStart);
-                    commentPart = raw.slice(commentStart);
-                }
-
-                const tokens = [];
-                const tokenRe =
-                    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\d+(?:\.\d+)?)|([A-Za-z\u00C0-\u00FF_]\w*)|(\u2190|:=|<=|>=|<>|!=|&&|\|\||[+\-*/%<>=!(),;:])|(\s+)|(.)/g;
-                let m;
-                while ((m = tokenRe.exec(mainPart)) !== null) {
-                    if (m[1] !== undefined) {
-                        tokens.push('<span class="algo-tok-string">' + escapeHtml(m[1]) + '</span>');
-                    } else if (m[2] !== undefined) {
-                        tokens.push('<span class="algo-tok-number">' + escapeHtml(m[2]) + '</span>');
-                    } else if (m[3] !== undefined) {
-                        const word = m[3];
-                        const low = word.toLowerCase();
-                        if (HL_KEYWORDS.includes(low)) {
-                            tokens.push('<span class="algo-tok-keyword">' + escapeHtml(word) + '</span>');
-                        } else if (HL_CONTROL.includes(low)) {
-                            tokens.push('<span class="algo-tok-control">' + escapeHtml(word) + '</span>');
-                        } else if (HL_IO.includes(low)) {
-                            tokens.push('<span class="algo-tok-io">' + escapeHtml(word) + '</span>');
-                        } else if (HL_TYPES.includes(low)) {
-                            tokens.push('<span class="algo-tok-type">' + escapeHtml(word) + '</span>');
-                        } else if (HL_LOGIC.includes(low)) {
-                            tokens.push('<span class="algo-tok-logic">' + escapeHtml(word) + '</span>');
-                        } else {
-                            tokens.push('<span class="algo-tok-var">' + escapeHtml(word) + '</span>');
-                        }
-                    } else if (m[4] !== undefined) {
-                        tokens.push('<span class="algo-tok-op">' + escapeHtml(m[4]) + '</span>');
-                    } else if (m[5] !== undefined) {
-                        tokens.push(m[5]);
-                    } else {
-                        tokens.push(escapeHtml(m[6]));
-                    }
-                }
-
-                if (commentPart) {
-                    tokens.push('<span class="algo-tok-comment">' + escapeHtml(commentPart) + '</span>');
-                }
-
-                return tokens.join('');
-            };
-
-            const renderHighlight = () => {
-                const lines = vm.lines;
-                const cur = vm.pc;
-                const html = lines.map((ln, idx) => {
-                    const colored = highlightLine(ln);
-                    const num = String(idx + 1).padStart(2, '0');
-                    const isCur = idx === cur && !vm.halted;
-                    return '<div class="algo-line ' + (isCur ? 'is-current' : '') + '">' +
-                        '<span class="algo-ln" aria-hidden="true">' + num + '</span>' +
-                        '<span class="algo-code">' + colored + '</span>' +
-                        '</div>';
-                }).join('');
-                highlight.innerHTML = html + '\n';
-                const curEl = highlight.querySelector('.algo-line.is-current');
-                if (curEl) {
-                    const top = curEl.offsetTop;
-                    const h = highlight.clientHeight;
-                    if (top < highlight.scrollTop || top > highlight.scrollTop + h - 48) {
-                        highlight.scrollTop = Math.max(0, top - Math.floor(h / 3));
-                    }
-                }
-            };
-
-            const resetVM = () => {
-                vm.lines = editor.value.replace(/\r\n/g, '\n').split('\n');
-                const result = rebuildBlocks(vm.lines);
-                vm.blocks = result.blocks;
-                vm._ifMap = result.mapIfByLine;
-                vm._whileMap = result.mapWhileByLine;
-                vm._forMap = result.mapForByLine;
-                vm.pc = 0;
-                vm.vars = {};
-                vm.out = [];
-                vm.halted = false;
-                renderVars();
-                renderOutput();
-                renderHighlight();
-            };
-
-            const jumpToNextExecutable = () => {
-                while (vm.pc < vm.lines.length) {
-                    const { kind } = getLineKind(vm.lines[vm.pc]);
-                    if (kind === 'empty') {
-                        vm.pc += 1;
-                        continue;
-                    }
-                    return;
-                }
-            };
-
-            const stepOnce = async () => {
-                if (vm.halted) return;
-                jumpToNextExecutable();
-                if (vm.pc >= vm.lines.length) {
-                    vm.halted = true;
-                    renderHighlight();
-                    return;
-                }
-
-                const lineIdx = vm.pc;
-                const raw = vm.lines[lineIdx];
-                const s = normalizeLine(raw).trim();
-                const { kind } = getLineKind(raw);
-
-                try {
-                    vm._lastPC = vm.pc;
-                    if (kind === 'algorithm' || kind === 'start') {
-                        vm.pc += 1;
-                    } else if (kind === 'var') {
-                        const low = s.toLowerCase();
-                        let rest;
-                        for (const kw of KW_VAR) {
-                            if (low.startsWith(kw + ' ')) { rest = s.slice(kw.length + 1).trim(); break; }
-                        }
-                        if (!rest) rest = s.slice(3).trim();
-                        const beforeType = rest.split(':')[0].trim();
-                        const names = beforeType.split(',').map(x => x.trim()).filter(Boolean);
-                        names.forEach(n => {
-                            if (/^[A-Za-z_]\w*$/.test(n)) {
-                                if (!(n in vm.vars)) vm.vars[n] = null;
-                            }
-                        });
-                        vm.pc += 1;
-                    } else if (kind === 'let') {
-                        const rest = s.slice(4).trim();
-                        const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
-                        if (!m) throw new Error(
-                            '\u0635\u06CC\u063A\u0629 let \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
-                            (lineIdx + 1) + ')');
-                        const [, name, expr] = m;
-                        vm.vars[name] = evalExpr(expr, vm.vars);
-                        vm.pc += 1;
-                    } else if (kind === 'assign') {
-                        const m = s.match(/^([A-Za-z_]\w*)\s*\u2190\s*(.+)$/);
-                        if (!m) throw new Error(
-                            '\u0635\u06CC\u063A\u0629 \u0627\u0644\u0625\u0633\u0646\u0627\u062F \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
-                            (lineIdx + 1) + ')');
-                        const [, name, expr] = m;
-                        vm.vars[name] = evalExpr(expr, vm.vars);
-                        vm.pc += 1;
-                    } else if (kind === 'read') {
-                        const m = s.match(/^(?:read|lire)\s*\(\s*([A-Za-z_]\w*)\s*\)\s*$/i);
-                        if (!m) throw new Error(
-                            '\u0635\u06CC\u063A\u0629 Read/Lire \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
-                            (lineIdx + 1) + ')');
-                        const name = m[1];
-                        const rawVal = await showInputModal(
-                        '\u0623\u062F\u062E\u0644 \u0642\u06CC\u0645\u0629 \u0627\u0644\u0645\u062A\u063A\u06CC\u0631: ' +
-                            name);
-                        const v = rawVal == null ? '' : String(rawVal);
-                        const num = Number(v);
-                        vm.vars[name] = Number.isFinite(num) && v.trim() !== '' ? num : v;
-                        vm.pc += 1;
-                    } else if (kind === 'write') {
-                        const m = s.match(/^(?:write|ecrire|\u00e9crire)\s*\(\s*(.+)\s*\)\s*$/i);
-                        if (!m) throw new Error(
-                            '\u0635\u06CC\u063A\u0629 Write/Ecrire \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
-                            (lineIdx + 1) + ')');
-                        const val = evalExpr(m[1], vm.vars);
-                        vm.out.push(String(val));
-                        vm.pc += 1;
-                    } else if (kind === 'print') {
-                        const expr = s.slice(6).trim();
-                        const val = evalExpr(expr, vm.vars);
-                        vm.out.push(String(val));
-                        vm.pc += 1;
-                    } else if (kind === 'if') {
-                        const b = vm._ifMap.get(lineIdx);
-                        if (!b) throw new Error(
-                            'if/si \u063A\u06CC\u0631 \u0645\u0639\u0631\u0648\u0641 (\u0633\u0637\u0631 ' + (lineIdx +
-                                1) + ')');
-                        const ok = Boolean(evalExpr(b.cond, vm.vars));
-                        if (ok) {
-                            vm.pc += 1;
-                        } else {
-                            let handled = false;
-                            if (b.elseIfs) {
-                                for (const ei of b.elseIfs) {
-                                    if (Boolean(evalExpr(ei.cond, vm.vars))) {
-                                        vm.pc = ei.line + 1;
-                                        handled = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!handled) {
-                                vm.pc = (b.elseLine != null ? b.elseLine + 1 : b.endLine + 1);
-                            }
-                        }
-                    } else if (kind === 'elseif') {
-                        const match = vm.blocks.find(b => b.type === 'if' && b.elseIfs && b.elseIfs.some(ei => ei
-                        .line === lineIdx));
-                        if (!match) throw new Error(
-                            'else if/sinon si \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (lineIdx + 1) +
-                            ')');
-                        vm.pc = match.endLine + 1;
-                    } else if (kind === 'else') {
-                        const match = vm.blocks.find(b => b.type === 'if' && b.elseLine === lineIdx);
-                        if (!match) throw new Error(
-                            'else/sinon \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (lineIdx + 1) + ')');
-                        vm.pc = match.endLine + 1;
-                    } else if (kind === 'while') {
-                        const b = vm._whileMap.get(lineIdx);
-                        if (!b) throw new Error(
-                            'while/tantque \u063A\u06CC\u0631 \u0645\u0639\u0631\u0648\u0641 (\u0633\u0637\u0631 ' + (
-                                lineIdx + 1) + ')');
-                        const ok = Boolean(evalExpr(b.cond, vm.vars));
-                        if (ok) {
-                            vm.pc += 1;
-                        } else {
-                            vm.pc = b.endLine + 1;
-                        }
-                    } else if (kind === 'for') {
-                        const b = vm._forMap.get(lineIdx);
-                        if (!b) throw new Error(
-                            'for/pour \u063A\u06CC\u0631 \u0645\u0639\u0631\u0648\u0641 (\u0633\u0637\u0631 ' + (lineIdx +
-                                1) + ')');
-                        const loopKey = '__for_' + lineIdx;
-                        if (!vm.vars[loopKey]) {
-                            vm.vars[b.varName] = evalExpr(b.startExpr, vm.vars);
-                            vm.vars[loopKey] = true;
-                        } else {
-                            vm.vars[b.varName] = (Number(vm.vars[b.varName]) || 0) + 1;
-                        }
-                        const currentVal = Number(vm.vars[b.varName]);
-                        const endVal = Number(evalExpr(b.endExpr, vm.vars));
-                        if (currentVal <= endVal) {
-                            vm.pc += 1;
-                        } else {
-                            delete vm.vars[loopKey];
-                            vm.pc = b.endLine + 1;
-                        }
-                    } else if (kind === 'end') {
-                        const whileBlock = vm.blocks.find(b => b.type === 'while' && b.endLine === lineIdx);
-                        const forBlock = vm.blocks.find(b => b.type === 'for' && b.endLine === lineIdx);
-                        if (whileBlock) {
-                            vm.pc = whileBlock.line;
-                        } else if (forBlock) {
-                            vm.pc = forBlock.line;
-                        } else {
-                            vm.pc += 1;
-                        }
-                    } else {
-                        throw new Error('\u0633\u0637\u0631 \u063A\u06CC\u0631 \u0645\u062F\u0639\u0648\u0645 (\u0633\u0637\u0631 ' + (
-                            lineIdx + 1) + ')');
-                    }
-                } catch (e) {
-                    vm.out.push('\u062E\u0637\u0623: ' + (e && e.message ? e.message : String(e)));
-                    vm.halted = true;
-                }
-
-                renderVars();
-                renderOutput();
-                renderHighlight();
-            };
-
-            const runAll = async () => {
-                const CHUNK = 500;
-                let steps = 0;
-                const runChunk = async () => {
-                    let i = 0;
-                    while (!vm.halted && i < CHUNK) {
-                        await stepOnce();
-                        i++;
-                        steps++;
-                    }
-                    if (!vm.halted && steps < 10000) {
-                        setTimeout(() => { runChunk(); }, 0);
-                    } else if (steps >= 10000) {
-                        vm.out.push(
-                            '\u062A\u0645 \u0625\u06CC\u0642\u0627\u0641 \u0627\u0644\u062A\u0634\u063A\u06CC\u0644: \u062A\u062C\u0627\u0648\u0632 \u0627\u0644\u062D\u062F \u0627\u0644\u0623\u0642\u0635\u0649 \u0644\u0644\u062E\u0637\u0648\u0627\u062A.'
-                            );
-                        vm.halted = true;
-                        renderOutput();
-                        renderHighlight();
-                    }
-                };
-                await runChunk();
-            };
-
-            const syncScroll = () => {
-                highlight.scrollTop = editor.scrollTop;
-                highlight.scrollLeft = editor.scrollLeft;
-            };
-
-            editor.addEventListener('input', () => {
-                vm.lines = editor.value.replace(/\r\n/g, '\n').split('\n');
-                try {
-                    const result = rebuildBlocks(vm.lines);
-                    vm.blocks = result.blocks;
-                    vm._ifMap = result.mapIfByLine;
-                    vm._whileMap = result.mapWhileByLine;
-                    vm._forMap = result.mapForByLine;
-                } catch (e) {}
-                renderHighlight();
-            });
-            editor.addEventListener('scroll', syncScroll);
-
-            runBtn.addEventListener('click', async () => {
-                if (isRunning) return;
-                isRunning = true;
-                runBtn.disabled = true;
-                stepBtn.disabled = true;
-                try {
-                    resetVM();
-                    await runAll();
-                } finally {
-                    isRunning = false;
-                    runBtn.disabled = false;
-                    stepBtn.disabled = false;
-                }
-            });
-            stepBtn.addEventListener('click', async () => {
-                if (isRunning) return;
-                if (!vm.blocks?.length && editor.value.trim()) {
-                    resetVM();
-                }
-                await stepOnce();
-            });
-            resetBtn.addEventListener('click', () => {
-                editor.value = DEFAULT_PROGRAMS[currentLang];
-                resetVM();
-            });
-
-            if (langToggle) {
-                const langBtns = langToggle.querySelectorAll('.algo-lang-btn');
-                langBtns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const lang = btn.dataset.lang;
-                        if (lang === currentLang) return;
-                        currentLang = lang;
-                        langBtns.forEach(b => b.classList.remove('is-active'));
-                        btn.classList.add('is-active');
-                        editor.value = DEFAULT_PROGRAMS[currentLang];
-                        resetVM();
-                    });
-                });
-            }
-
-            const exampleBtns = document.querySelectorAll('.example-item');
-            exampleBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const type = btn.dataset.example;
-                    if (EXAMPLES[currentLang] && EXAMPLES[currentLang][type]) {
-                        editor.value = EXAMPLES[currentLang][type];
-                        resetVM();
-                    }
-                });
-            });
-
-            if (!editor.value.trim()) editor.value = DEFAULT_PROGRAMS[currentLang];
-            resetVM();
-        });
+    });
     </script>
 </body>
 

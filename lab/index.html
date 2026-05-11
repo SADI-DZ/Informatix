@@ -11,6 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="../assets/js/theme-manager.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
 </head>
 
@@ -439,7 +440,7 @@
                         </div>
                         <div class="station-body">
                             <div class="station-workspace">
-                                <div class="main-container html-editor-advanced">
+                                <div class="main-container html-editor-advanced" id="subtab-web-editor">
                                     <div class="editor-panel">
                                         <div class="panel-header">
                                             <span>📝 المحرر</span>
@@ -562,6 +563,16 @@
     </div>
 
 
+    <!-- Lab modules — split from lab.js for maintainability -->
+    <script src="../assets/js/modules/lab-polyfill.js"></script>
+    <script src="../assets/js/modules/lab-particles.js"></script>
+    <script src="../assets/js/modules/lab-typing.js"></script>
+    <script src="../assets/js/modules/lab-networksim.js"></script>
+    <!-- lab-installer.js مُعلق: عناصر DOM المقابلة غير موجودة في هذه الصفحة -->
+    <script src="../assets/js/modules/lab-flowchart.js"></script>
+    <script src="../assets/js/modules/lab-html-editor.js"></script>
+    <script src="../assets/js/modules/lab-algo-engine.js"></script>
+    <script src="../assets/js/modules/lab-workshop.js"></script>
     <script src="../assets/js/lab.js"></script>
 </body>
 

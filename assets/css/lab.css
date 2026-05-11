@@ -66,7 +66,7 @@ body {
     display: flex;
     flex-direction: column;
     padding: 1.5rem 0;
-    z-index: 10;
+    z-index: 101;
     overflow: hidden;
     /* No scroll in sidebar */
 }
@@ -234,6 +234,9 @@ body {
     font-weight: 600;
     font-size: 0.9rem;
     margin-bottom: 0.4rem;
+    position: relative;
+    z-index: 5;
+    pointer-events: auto;
 }
 
 .sidebar-nav li svg {
@@ -2664,19 +2667,22 @@ body.light-mode .loop-text {
    ========================================================================== */
 
 .html-editor-advanced {
-    display: flex;
-    height: 500px;
-    direction: ltr;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    height: 650px;
+    direction: ltr !important;
+    gap: 0;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    overflow: hidden;
 }
 .html-editor-advanced .editor-panel {
-    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    border-left: 1px solid #2a2a4a;
+    border-right: 1px solid #2a2a4a;
 }
 .html-editor-advanced .preview-panel {
-    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -3119,7 +3125,7 @@ body.light-mode .loop-text {
 
 /* Light mode overrides for HTML editor */
 .light-mode .html-editor-advanced .editor-panel {
-    border-left-color: var(--card-border);
+    border-right-color: var(--card-border);
 }
 .light-mode .html-editor-advanced .panel-header {
     background: var(--sidebar-bg);
