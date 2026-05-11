@@ -3112,8 +3112,9 @@ body.light-mode .loop-text {
 
 @media (max-width: 768px) {
     .html-editor-advanced {
-        flex-direction: column;
-        height: auto;
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
     }
     .html-editor-advanced .editor-panel,
     .html-editor-advanced .preview-panel {
