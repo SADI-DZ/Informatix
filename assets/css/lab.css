@@ -1629,6 +1629,14 @@ h3 {
     font-weight: 600;
 }
 
+.typing-line {
+    font-size: inherit;
+    color: inherit;
+    font-weight: inherit;
+    min-height: 1.5em;
+    display: inline-block;
+}
+
 .cursor-blink {
     animation: blink 0.8s infinite;
     color: var(--blue-primary);
@@ -3866,6 +3874,13 @@ body.light-mode .ns-modal {
 }
 body.light-mode .ns-zoom-bar button {
     border-color: #e2e8f0;
+}
+body.light-mode .ns-mode-bar {
+    color: #fff;
+}
+body.light-mode .ns-conn-picker .tool-btn.active {
+    background: #0ea5e9;
+    color: #fff;
 }
 
 /* Fullscreen adaptation */

@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'بيئة التعامل مع الحاسوب',
             units: [
                 { id: '01', title: 'تقنية المعلومات', desc: 'مفهوم تقنية المعلومات (IT) وأهميتها في حياتنا اليومية ومجالات استخدامها.',tags: ['تقنية', 'معلومات', 'أساسيات'], file: 'content/1- بيئة التعامل مع الحاسوب/01_تقنية_المعلومات.md', bg: 'linear-gradient(135deg, #0c0c1d 0%, #1a1a4e 30%, #2d1b69 70%, #1a1a4e 100%)', image: 'assets/images/lessons/IT.avif' },
-                { id: '02', title: 'تجميع الحاسوب', desc: 'تالتعرف على المكونات المادية (Hardware) وكيفية تجميعها لعمل حاسوب متكامل.', tags: ['هاردوير', 'تركيب', 'عتاد'], file: 'content/1- بيئة التعامل مع الحاسوب/02_تجميع_الحاسوب.md', bg: 'linear-gradient(135deg, #0d1117 0%, #1a2332 30%, #2d3748 70%, #1a2332 100%)', image: 'assets/images/lessons/PC.avif' },
+                { id: '02', title: 'تجميع الحاسوب', desc: 'التعرف على المكونات المادية (Hardware) وكيفية تجميعها لعمل حاسوب متكامل.', tags: ['هاردوير', 'تركيب', 'عتاد'], file: 'content/1- بيئة التعامل مع الحاسوب/02_تجميع_الحاسوب.md', bg: 'linear-gradient(135deg, #0d1117 0%, #1a2332 30%, #2d3748 70%, #1a2332 100%)', image: 'assets/images/lessons/PC.avif' },
                 { id: '03', title: 'نظام التشغيل', desc: 'مفهوم نظام التشغيل، أنواعه، ودوره الأساسي كحلقة وصل بين المستخدم والعتاد.', tags: ['ويندوز', 'برمجيات', 'نظام'], file: 'content/1- بيئة التعامل مع الحاسوب/03_نظام_التشغيل.md', bg: 'linear-gradient(135deg, #0a1628 0%, #1a365d 30%, #2a4365 70%, #1a365d 100%)', image: 'assets/images/lessons/OS.avif' },
                 { id: '04', title: 'لوحة التحكم', desc: 'تخصيص إعدادات النظام وإدارة الأجهزة والبرامج.', tags: ['إعدادات', 'نظام', 'تحكم'], file: 'content/1- بيئة التعامل مع الحاسوب/04_لوحة_التحكم.md', bg: 'linear-gradient(135deg, #111827 0%, #1f2937 30%, #374151 70%, #1f2937 100%)', image: 'assets/images/lessons/PC.avif' },
                 { id: '05', title: 'حماية الحاسوب', desc: 'طرق تأمين البيانات والحماية من الفيروسات والبرمجيات الضارة.', tags: ['أمن', 'حماية', 'فيروسات'], file: 'content/1- بيئة التعامل مع الحاسوب/05_حماية_الحاسوب.md', bg: 'linear-gradient(135deg, #0a1a0f 0%, #1a3a2a 30%, #22543d 70%, #1a3a2a 100%)', image: 'assets/images/lessons/Security.avif' },
@@ -182,9 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 { id: '01', title: 'معالج النصوص 1 (الأنماط والمقاطع)', desc: 'أتنسيق المستندات المتقدم باستخدام الأنماط (Styles) وتقسيم المستند إلى مقاطع (Sections).', file: 'content/4- المكتبية/معالج_النصوص_1.md', image: 'assets/images/lessons/word.svg'},
                 { id: '02', title: 'معالج النصوص 2 (دمج المراسلات)', desc: 'استخدام خاصية دمج المراسلات (Mail Merge) لإنشاء رسائل وشهادات متعددة آلياً.', file: 'content/4- المكتبية/معالج_النصوص_2.md', image: 'assets/images/lessons/word.svg' },
                 { id: '03', title: 'المجدول 1 (الصيغ والدوال)', desc: 'إجراء العمليات الحسابية في Excel باستخدام الصيغ الرياضية والدوال الجاهزة (Functions).', file: 'content/4- المكتبية/المجدول_1.md', image: 'assets/images/lessons/excel.svg' },
-                { id: '04', title: 'المجدول 2 (فرز البيانات)', desc: 'اكيفية ترتيب البيانات وفرزها (Sorting & Filtering) لتسهيل استخراج المعلومات.', file: 'content/4- المكتبية/المجدول_2.md', image: 'assets/images/lessons/excel.svg' },
-                { id: '05', title: 'االعروض التقديمية 1 (أساسيات PowerPoint)', desc: 'إعداد شرائح العرض، إدراج النصوص والصور، واختيار التصميم المناسب.', file: 'content/4- المكتبية/العروض_التقديمية_1.md', image: 'assets/images/lessons/ppt.svg' },
-                { id: '06', title: 'العروض التقديمية 2 (الحركات والارتباط التشعبي)', desc: 'إإضافة حركات انتقالية ومخصصة، واستخدام الارتباط التشعبي لإنشاء عروض تفاعلية.', file: 'content/4- المكتبية/العروض_التقديمية_2.md', image: 'assets/images/lessons/ppt.svg' }
+                { id: '04', title: 'المجدول 2 (فرز البيانات)', desc: 'كيفية ترتيب البيانات وفرزها (Sorting & Filtering) لتسهيل استخراج المعلومات.', file: 'content/4- المكتبية/المجدول_2.md', image: 'assets/images/lessons/excel.svg' },
+                { id: '05', title: 'العروض التقديمية 1 (أساسيات PowerPoint)', desc: 'إعداد شرائح العرض، إدراج النصوص والصور، واختيار التصميم المناسب.', file: 'content/4- المكتبية/العروض_التقديمية_1.md', image: 'assets/images/lessons/ppt.svg' },
+                { id: '06', title: 'العروض التقديمية 2 (الحركات والارتباط التشعبي)', desc: 'إضافة حركات انتقالية ومخصصة، واستخدام الارتباط التشعبي لإنشاء عروض تفاعلية.', file: 'content/4- المكتبية/العروض_التقديمية_2.md', image: 'assets/images/lessons/ppt.svg' }
             ]
         }
     };
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         viewerContent.innerHTML = `
             <div class="units-grid">
                 ${data.units.map(unit => `
-                    <div class="unit-card" onclick="openLesson('${unit.file}', '${unit.title}', '${fieldId}')">
+                    <div class="unit-card" onclick="openLesson('${esc(unit.file)}', '${esc(unit.title)}', '${esc(fieldId)}')">
                         <div class="unit-card-image" style="background: ${unit.bg || 'var(--card-bg)'}">
                             ${unit.image ? `<img src="${unit.image}" alt="${unit.title}" class="unit-card-img" loading="lazy">` : ''}
                             <div class="badge badge-lesson">درس</div>
@@ -245,10 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = 'hidden';
     }
 
+    function esc(s) { return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
     function getLessonContent(filePath) {
         if (window.LESSON_CONTENT && window.LESSON_CONTENT[filePath]) {
             return window.LESSON_CONTENT[filePath];
         }
+        console.warn('informatix: لم يتم العثور على محتوى الدرس:', filePath);
         return null;
     }
 
@@ -279,6 +282,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
          try {
+            if (typeof marked === 'undefined') {
+                await new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/marked/9.0.3/marked.min.js';
+                    s.onload = resolve; s.onerror = () => reject(new Error('فشل تحميل مكتبة المحتوى'));
+                    document.head.appendChild(s);
+                });
+            }
             let htmlContent = marked.parse(mdText);
             
             htmlContent = htmlContent.replace(
@@ -307,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const progressFill = document.getElementById('reading-progress-fill');
             if (progressFill) progressFill.style.width = '0%';
         } catch (err) {
-            viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: ${err.message}</div>`;
+            viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: ${esc(err.message)}</div>`;
         }
     };
 
@@ -383,8 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     showUnits(fieldId);
                     // Wait for units to render, then open the lesson
                     setTimeout(() => {
-                        openLesson(data.file, data.title, data.fieldId);
-                    }, 300);
+                        openLesson(data.file, data.title, data.fieldId).catch(e => console.warn('informatix: فشل فتح الدرس', e));
+                    }, 100);
                 }
             });
 

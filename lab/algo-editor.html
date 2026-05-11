@@ -1312,40 +1312,105 @@
                 halted: false
             };
 
-            const sanitizeExpr = (expr) => {
+            const safeEval = (expr, vars) => {
                 const s = String(expr ?? '').trim();
-                if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) {
-                    throw new Error('\u062A\u0639\u0628\u064A\u0631 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
-                }
-                const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval',
-                    'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require',
-                    'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'
-                ];
+                if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) throw new Error('\u062A\u0639\u0628\u064A\u0631 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
+                const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval', 'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require', 'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'];
                 const lower = s.toLowerCase();
-                if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) {
-                    throw new Error('\u0645\u062D\u0627\u0648\u0644\u0629 \u0648\u0635\u0648\u0644 \u063A\u064A\u0631 \u0645\u0635\u0631\u062D \u0628\u0647\u0627.');
+                if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) throw new Error('\u0645\u062D\u0627\u0648\u0644\u0629 \u0648\u0635\u0648\u0644 \u063A\u064A\u0631 \u0645\u0635\u0631\u062D \u0628\u0647\u0627.');
+                if (/\w+\s*\(/.test(s)) throw new Error('\u0627\u0633\u062A\u062F\u0639\u0627\u0621 \u062F\u0648\u0627\u0644 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
+
+                let pos = 0;
+                function peek() { return pos < s.length ? s[pos] : null; }
+                function consume() { return pos < s.length ? s[pos++] : null; }
+                function skipWS() { while (pos < s.length && s[pos] === ' ') pos++; }
+                function parseExpr() { skipWS(); return parseOr(); }
+                function parseOr() {
+                    let left = parseAnd(); skipWS();
+                    while (peek() === '|' && s[pos + 1] === '|') { pos += 2; const right = parseAnd(); left = Boolean(left) || Boolean(right); skipWS(); }
+                    return left;
                 }
-                if (/\w+\s*\(/.test(s)) {
-                    throw new Error('\u0627\u0633\u062A\u062F\u0639\u0627\u0621 \u062F\u0648\u0627\u0644 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
+                function parseAnd() {
+                    let left = parseComparison(); skipWS();
+                    while (peek() === '&' && s[pos + 1] === '&') { pos += 2; const right = parseComparison(); left = Boolean(left) && Boolean(right); skipWS(); }
+                    return left;
                 }
-                return s;
+                function parseComparison() {
+                    let left = parseAddSub(); skipWS(); const op = peek();
+                    if (op === '<' || op === '>' || op === '=' || op === '!') {
+                        let fullOp = consume();
+                        if ((fullOp === '<' || fullOp === '>') && peek() === '=') { fullOp += consume(); }
+                        if (fullOp === '<>' && peek() === '=') { fullOp += consume(); }
+                        const right = parseAddSub();
+                        if (fullOp === '==') return left == right;
+                        if (fullOp === '!=' || fullOp === '<>') return left != right;
+                        if (fullOp === '<') return left < right;
+                        if (fullOp === '>') return left > right;
+                        if (fullOp === '<=') return left <= right;
+                        if (fullOp === '>=') return left >= right;
+                    }
+                    return left;
+                }
+                function parseAddSub() {
+                    let left = parseMulDiv(); skipWS();
+                    while (peek() === '+' || peek() === '-') {
+                        const op = consume(); const right = parseMulDiv(); skipWS();
+                        if (op === '+') left = (typeof left === 'number' && typeof right === 'number') ? left + right : (left != null ? String(left) : '') + (right != null ? String(right) : '');
+                        else left = left - right;
+                    }
+                    return left;
+                }
+                function parseMulDiv() {
+                    let left = parseUnary(); skipWS();
+                    while (peek() === '*' || peek() === '/' || peek() === '%') {
+                        const op = consume(); const right = parseUnary(); skipWS();
+                        if (op === '*') left = left * right;
+                        else if (op === '/') left = left / right;
+                        else left = left % right;
+                    }
+                    return left;
+                }
+                function parseUnary() {
+                    skipWS();
+                    if (peek() === '!') { consume(); const val = parseUnary(); return !Boolean(val); }
+                    if (peek() === '-') { consume(); const val = parseUnary(); return -val; }
+                    return parsePrimary();
+                }
+                function parsePrimary() {
+                    skipWS();
+                    if (peek() === '(') { consume(); const val = parseExpr(); skipWS(); if (peek() === ')') consume(); return val; }
+                    if (peek() === '"' || peek() === "'") {
+                        const quote = consume(); let str = '';
+                        while (pos < s.length && peek() !== quote) str += consume();
+                        if (peek() === quote) consume();
+                        return str;
+                    }
+                    let word = '';
+                    while (pos < s.length && /[a-zA-Z0-9_.]/.test(peek())) word += consume();
+                    if (!word) throw new Error('\u062A\u0639\u0628\u064A\u0631 \u063A\u064A\u0631 \u0645\u062A\u0648\u0642\u0639 \u0641\u064A \u0627\u0644\u0645\u0648\u0642\u0639 ' + pos);
+                    if (word === 'true') return true;
+                    if (word === 'false') return false;
+                    if (word in vars) return vars[word];
+                    const num = Number(word);
+                    if (!isNaN(num) && word !== '') return num;
+                    return word;
+                }
+                const result = parseExpr();
+                if (pos < s.length) throw new Error('\u064A\u0648\u062C\u062F \u0645\u062D\u062A\u0648\u0649 \u0625\u0636\u0627\u0641\u064A \u0628\u0639\u062F \u0627\u0644\u062A\u0639\u0628\u064A\u0631 \u0641\u064A \u0627\u0644\u0645\u0648\u0642\u0639 ' + pos);
+                return result;
             };
 
             const evalExpr = (expr, vars) => {
-                const safe = sanitizeExpr(expr)
+                const safe = expr
                     .replace(/\b(?:and|et)\b/gi, '&&')
                     .replace(/\b(?:or|ou)\b/gi, '||')
                     .replace(/\b(?:not|non)\b/gi, '!')
                     .replace(/\b(?:vrai|true)\b/gi, 'true')
                     .replace(/\b(?:faux|false)\b/gi, 'false');
                 try {
-                    const keys = Object.keys(vars);
-                    const values = keys.map(k => vars[k]);
-                    const fn = new Function(...keys, 'return (' + safe + ');');
-                    return fn(...values);
+                    return safeEval(safe, vars);
                 } catch (e) {
-                    throw new Error('\u062E\u0637\u0623 \u0641\u064A \u062A\u0642\u064A\u064A\u0645 \u0627\u0644\u062A\u0639\u0628\u064A\u0631: ' + e
-                        .message);
+                    throw new Error('\u062E\u0637\u0623 \u0641\u064A \u062A\u0642\u064A\u064A\u0645 \u0627\u0644\u062A\u0639\u0628\u064A\u0631: ' + e.message);
                 }
             };
 
@@ -1452,9 +1517,20 @@
                         return;
                     }
 
-                    if (KW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') {
-                        const top = stack.pop();
-                        if (top) top.endLine = i;
+                    if (KW_END.includes(low) || low === 'finpour') {
+                        if (!stack.length) {
+                            if (low === 'end' || low === 'fin') return;
+                            throw new Error('\u0641\u064A\u0646/finsi/fintantque/finpour \u0625\u0636\u0627\u0641\u064A \u0628\u062F\u0648\u0646 \u0643\u062A\u0644\u0629 \u0645\u0641\u062A\u0648\u062D\u0629 (\u0633\u0637\u0631 ' + (i + 1) + ')');
+                        }
+                        const top = stack[stack.length - 1];
+                        const isFinSi = low === 'finsi';
+                        const isFinTantQue = low === 'fintantque';
+                        const isFinPour = low === 'finpour';
+                        if (isFinSi && top.type !== 'if') throw new Error('finsi \u064A\u063A\u0644\u0642 ' + top.type + ' \u0628\u062F\u0644\u0627\u064B \u0645\u0646 if (\u0633\u0637\u0631 ' + (i + 1) + ')');
+                        if (isFinTantQue && top.type !== 'while') throw new Error('fintantque \u064A\u063A\u0644\u0642 ' + top.type + ' \u0628\u062F\u0644\u0627\u064B \u0645\u0646 while (\u0633\u0637\u0631 ' + (i + 1) + ')');
+                        if (isFinPour && top.type !== 'for') throw new Error('finpour \u064A\u063A\u0644\u0642 ' + top.type + ' \u0628\u062F\u0644\u0627\u064B \u0645\u0646 for (\u0633\u0637\u0631 ' + (i + 1) + ')');
+                        stack.pop();
+                        top.endLine = i;
                         return;
                     }
                 });

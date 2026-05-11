@@ -38,6 +38,10 @@
     --btn-text: #0f172a;
     --floating-bg: rgba(255, 255, 255, 0.9);
     --code-color: #334155;
+    --glow-purple: rgba(124, 58, 237, 0.3);
+    --glow-green: rgba(16, 185, 129, 0.3);
+    --glow-yellow: rgba(245, 158, 11, 0.3);
+    --glow-pink: rgba(236, 72, 153, 0.3);
 }
 
 /* التنسيقات العامة للصفحة */

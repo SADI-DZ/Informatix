@@ -135,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (labHero) labHero.style.display = 'none';
         if (labStationsSection) labStationsSection.style.display = 'none';
         workshopSelection.style.display = 'block';
+        stopTypingEffect();
 
         // التمرير للأعلى
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -230,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labHero.classList.remove('fadeIn');
                 void labHero.offsetWidth; // Force reflow
                 labHero.classList.add('fadeIn');
+                if (typingEl) typeLoop();
             }
             if (labStationsSection) labStationsSection.style.display = 'none';
             
@@ -655,6 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('ns-connectionMode').classList.remove('show');
                 document.getElementById('ns-connTypePicker').classList.remove('show');
             }
+            nsRender();
         });
     });
 
@@ -723,6 +726,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         nsState.connectPendingSecond = d.id;
                         document.getElementById('ns-connTypePicker').classList.add('show');
                     }
+                } else {
+                    nsState.connectFirst = null;
+                    nsState.connectPendingSecond = null;
+                    document.getElementById('ns-connectionMode').classList.remove('show');
+                    document.getElementById('ns-connTypePicker').classList.remove('show');
                 }
                 return;
             }
@@ -820,9 +828,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return;
         }
-        const c = { from: fromId, to: toId, active: false, type };
+        const c = { from: fromId, to: toId, active: true, type };
         nsState.connections.push(c);
-        setTimeout(() => { c.active = true; nsRender(); }, 500);
         nsRender();
     }
 
@@ -835,14 +842,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 nsState.connectFirst = null;
                 nsState.connectPendingSecond = null;
                 const connMode = document.getElementById('ns-connectionMode');
-                if (connMode) connMode.classList.remove('show');
-                const picker = document.getElementById('ns-connTypePicker');
-                if (picker) picker.classList.remove('show');
-            }
+                    if (connMode) { connMode.classList.remove('show'); connMode.textContent = ''; }
+                    const picker = document.getElementById('ns-connTypePicker');
+                    if (picker) picker.classList.remove('show');
+                }
+            });
         });
-    });
 
-    function nsRemoveDevice(id) {
+        function nsRemoveDevice(id) {
         nsState.devices = nsState.devices.filter(d => d.id !== id);
         nsState.connections = nsState.connections.filter(c => c.from !== id && c.to !== id);
         if (nsState.selectedId === id) nsState.selectedId = null;
@@ -894,7 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nsState.connectFirst = null;
             nsState.connectPendingSecond = null;
             const connMode = document.getElementById('ns-connectionMode');
-            if (connMode) connMode.classList.remove('show');
+            if (connMode) { connMode.classList.remove('show'); connMode.textContent = ''; }
             const picker = document.getElementById('ns-connTypePicker');
             if (picker) picker.classList.remove('show');
             const overlay = document.getElementById('ns-modalOverlay');
@@ -1910,7 +1917,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!isNaN(num) && word !== '') return num;
                 return word;
             }
-            return parseExpr();
+            const result = parseExpr();
+            if (pos < s.length) throw new Error('يوجد محتوى إضافي بعد التعبير في الموقع ' + pos);
+            return result;
         }
 
         function algoEvalExpr(expr, vars) {
@@ -2000,9 +2009,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     pushBlock({ type: 'for', line: i, varName: name, startExpr, endExpr, endLine: null });
                     return;
                 }
-                if (algoKW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') {
-                    const top = stack.pop();
-                    if (top) top.endLine = i;
+                if (algoKW_END.includes(low) || low === 'finpour') {
+                    if (!stack.length) {
+                        if (low === 'end' || low === 'fin') return;
+                        throw new Error('fin/finsi/fintantque/finpour إضافي بدون كتلة مفتوحة (سطر ' + (i + 1) + ')');
+                    }
+                    const top = stack[stack.length - 1];
+                    const isFinSi = low === 'finsi';
+                    const isFinTantQue = low === 'fintantque';
+                    const isFinPour = low === 'finpour';
+                    if (isFinSi && top.type !== 'if') throw new Error('finsi يغلق ' + top.type + ' بدلاً من if (سطر ' + (i + 1) + ')');
+                    if (isFinTantQue && top.type !== 'while') throw new Error('fintantque يغلق ' + top.type + ' بدلاً من while (سطر ' + (i + 1) + ')');
+                    if (isFinPour && top.type !== 'for') throw new Error('finpour يغلق ' + top.type + ' بدلاً من for (سطر ' + (i + 1) + ')');
+                    stack.pop();
+                    top.endLine = i;
                     return;
                 }
             });
@@ -2253,10 +2273,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         algoStepBtn.addEventListener('click', async () => {
             if (algoIsRunning) return;
-            if (!algoVM.blocks?.length && algoEditorEl.value.trim()) algoResetVM();
+            if (!algoVM.blocks?.length && algoEditorEl.value.trim()) {
+                try { algoResetVM(); } catch (e) { algoVM.out.push('خطأ: ' + e.message); algoVM.halted = true; algoRenderOutput(); }
+            }
             await algoStepOnce();
         });
-        algoResetBtn.addEventListener('click', () => { algoEditorEl.value = algoDefaultPrograms[algoCurrentLang]; algoResetVM(); });
+        algoResetBtn.addEventListener('click', () => {
+            if (confirm('هل تريد تحميل المثال الافتراضي؟ ستفقد الكود الحالي.')) {
+                algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
+            }
+            algoResetVM();
+        });
 
         if (algoLangToggle) {
             const langBtns = algoLangToggle.querySelectorAll('.algo-lang-btn');
@@ -2291,39 +2318,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Typing effect for lab subtitle
     const typingEl = document.getElementById('lab-typing');
-    if (typingEl) {
-        const texts = [
-            'بيئة تفاعلية لتجربة المفاهيم البرمجية',
-            'حيث تلتقي النظرية بالتطبيق',
-            'مختبر رقمي لاستكشاف عالم المعلوماتية'
-        ];
-        let textIdx = 0;
-        let charIdx = 0;
-        let isDeleting = false;
+    let typingTimeout = null;
+    let typingTextIdx = 0;
+    let typingCharIdx = 0;
+    let typingIsDeleting = false;
+    const typingTexts = [
+        'بيئة تفاعلية لتجربة المفاهيم البرمجية',
+        'حيث تلتقي النظرية بالتطبيق',
+        'مختبر رقمي لاستكشاف عالم المعلوماتية'
+    ];
 
-        function typeLoop() {
-            const current = texts[textIdx];
-            if (!isDeleting) {
-                typingEl.textContent = current.substring(0, charIdx + 1);
-                charIdx++;
-                if (charIdx === current.length) {
-                    isDeleting = true;
-                    setTimeout(typeLoop, 2000);
-                } else {
-                    setTimeout(typeLoop, 50);
-                }
+    function typeLoop() {
+        if (!typingEl || labHero && labHero.style.display === 'none') return;
+        const current = typingTexts[typingTextIdx];
+        if (!typingIsDeleting) {
+            typingEl.textContent = current.substring(0, typingCharIdx + 1);
+            typingCharIdx++;
+            if (typingCharIdx === current.length) {
+                typingIsDeleting = true;
+                typingTimeout = setTimeout(typeLoop, 2000);
             } else {
-                typingEl.textContent = current.substring(0, charIdx);
-                charIdx--;
-                if (charIdx < 0) {
-                    isDeleting = false;
-                    textIdx = (textIdx + 1) % texts.length;
-                    setTimeout(typeLoop, 500);
-                } else {
-                    setTimeout(typeLoop, 30);
-                }
+                typingTimeout = setTimeout(typeLoop, 50);
+            }
+        } else {
+            typingEl.textContent = current.substring(0, typingCharIdx);
+            typingCharIdx--;
+            if (typingCharIdx < 0) {
+                typingIsDeleting = false;
+                typingTextIdx = (typingTextIdx + 1) % typingTexts.length;
+                typingTimeout = setTimeout(typeLoop, 500);
+            } else {
+                typingTimeout = setTimeout(typeLoop, 30);
             }
         }
-        typeLoop();
     }
+
+    function stopTypingEffect() {
+        if (typingTimeout) { clearTimeout(typingTimeout); typingTimeout = null; }
+    }
+
+    if (typingEl) typeLoop();
 });

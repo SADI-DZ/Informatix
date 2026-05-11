@@ -1193,19 +1193,26 @@ function validateProductKey() {
   } else {
     input.style.borderColor = '#ff4444';
     input.style.boxShadow = '0 0 10px rgba(255,68,68,0.5)';
-    setTimeout(() => { input.style.borderColor = ''; input.style.boxShadow = ''; }, 2000);
+    _st(() => { input.style.borderColor = ''; input.style.boxShadow = ''; }, 2000);
   }
 }
 
+// ===== TIMER MANAGEMENT =====
+const _winTimers = [];
+function _st(fn, ms) { const id = setTimeout(fn, ms); _winTimers.push(id); return id; }
+function _si(fn, ms) { const id = setInterval(fn, ms); _winTimers.push(id); return id; }
+function clearAllTimers() { _winTimers.forEach(id => { clearTimeout(id); clearInterval(id); }); _winTimers.length = 0; }
+
 // ===== SCREEN NAVIGATION =====
 function goTo(id) {
+  clearAllTimers();
   document.getElementById(currentScreen).classList.remove('active');
   document.getElementById(id).classList.add('active');
   currentScreen = id;
-  if (id === 'boot-windows') setTimeout(() => goTo('setup-language'), 3000);
+  if (id === 'boot-windows') _st(() => goTo('setup-language'), 3000);
   if (id === 'setup-language') {}
   if (id === 'installing') startInstall();
-  if (id === 'restart-screen') setTimeout(() => goTo('oobe-hi'), 4000);
+  if (id === 'restart-screen') _st(() => goTo('oobe-hi'), 4000);
   if (id === 'oobe-hi') {}
   if (id === 'oobe-setup') startOobeSetup();
   if (id === 'desktop') startDesktop();
@@ -1225,7 +1232,7 @@ function startBios() {
   ];
   let i = 0;
   const el = document.getElementById('bios-text');
-  const iv = setInterval(() => {
+  const iv = _si(() => {
     if (i < lines.length) {
       const d = document.createElement('div');
       d.className = 'line';
@@ -1234,7 +1241,7 @@ function startBios() {
       i++;
     } else {
       clearInterval(iv);
-      setTimeout(checkBoot, 800);
+      _st(checkBoot, 800);
     }
   }, 400);
 }
@@ -1338,13 +1345,13 @@ function startInstall() {
   const fill = document.getElementById('install-fill');
   const pctEl = document.getElementById('install-pct');
   const phaseEl = document.getElementById('install-phase');
-  const iv = setInterval(() => {
+  const iv = _si(() => {
     if (phase < phases.length) {
       pct++;
       fill.style.width = pct + '%';
       pctEl.textContent = pct + '%';
       if (pct >= phases[phase].pct) { phaseEl.textContent = phases[phase].text; phase++; }
-      if (pct >= 100) { clearInterval(iv); setTimeout(() => goTo('restart-screen'), 1000); }
+      if (pct >= 100) { clearInterval(iv); _st(() => goTo('restart-screen'), 1000); }
     }
   }, 80);
 }
@@ -1399,11 +1406,11 @@ function startOobeSetup() {
   let pct = 0;
   const fill = document.getElementById('oobe-fill');
   const pctEl = document.getElementById('oobe-pct');
-  const iv = setInterval(() => {
+  const iv = _si(() => {
     pct += 2;
     fill.style.width = pct + '%';
     pctEl.textContent = pct + '%';
-    if (pct >= 100) { clearInterval(iv); setTimeout(() => goTo('desktop'), 500); }
+    if (pct >= 100) { clearInterval(iv); _st(() => goTo('desktop'), 500); }
   }, 60);
 }
 
@@ -1413,7 +1420,7 @@ function startDesktop() {
   document.getElementById('desktop-username').textContent = name;
   document.getElementById('desktop-avatar').textContent = name[0].toUpperCase();
   updateClock();
-  setInterval(updateClock, 1000);
+  _si(updateClock, 1000);
 }
 
 function updateClock() {
