@@ -206,6 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentWorkshopElement.id === 'subtab-network') {
                 setTimeout(() => { nsRender(); }, 150);
             }
+            // تنظيف المراقبين لتجنب تسرب الذاكرة
+            if (currentWorkshopElement.id === 'subtab-network' && typeof nsDisconnectObservers === 'function') {
+                nsDisconnectObservers();
+            }
         }
 
         wsFullscreen.classList.remove('active');
@@ -405,8 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Polyfill for roundRect if not available
     if (!CanvasRenderingContext2D.prototype.roundRect) {
         CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-            if (typeof r === 'number') r = [r];
-            const radii = r.map(v => Math.min(v, Math.min(Math.abs(w), Math.abs(h)) / 2));
+            if (r == null) r = [];
+            else if (typeof r === 'number') r = [r];
+            const radii = (r || []).map(v => Math.min(v, Math.min(Math.abs(w), Math.abs(h)) / 2));
             const tl = radii[0] || 0;
             this.moveTo(x + tl, y);
             this.lineTo(x + w - tl, y);
@@ -766,14 +771,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // قائمة السياق
     document.addEventListener('click', () => {
-        document.getElementById('ns-contextMenu').classList.remove('show');
-        document.getElementById('ns-infoPanel').classList.remove('show');
+        const nsCtxMenu = document.getElementById('ns-contextMenu');
+        if (nsCtxMenu) nsCtxMenu.classList.remove('show');
+        const nsInfoPanel = document.getElementById('ns-infoPanel');
+        if (nsInfoPanel) nsInfoPanel.classList.remove('show');
     });
 
-    document.getElementById('ns-contextMenu').addEventListener('click', e => {
+    const nsCtxMenuEl = document.getElementById('ns-contextMenu');
+    if (nsCtxMenuEl) {
+        nsCtxMenuEl.addEventListener('click', e => {
         const btn = e.target.closest('button');
         if (!btn) return;
-        const id = parseInt(document.getElementById('ns-contextMenu').dataset.deviceId);
+        const ctxMenu = document.getElementById('ns-contextMenu');
+        if (!ctxMenu) return;
+        const id = parseInt(ctxMenu.dataset.deviceId);
         const d = nsState.devices.find(dd => dd.id === id);
         if (!d) return;
 
@@ -782,56 +793,31 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'info': nsShowInfo(d); break;
             case 'delete': nsRemoveDevice(d.id); break;
         }
-        document.getElementById('ns-contextMenu').classList.remove('show');
-    });
-
-    function nsShowInfo(d) {
-        const panel = document.getElementById('ns-infoPanel');
-        document.getElementById('ns-infoTitle').textContent = `${NS_DEVICE_ICONS[d.type]} ${d.name}`;
-        const conns = nsState.connections.filter(c => c.from === d.id || c.to === d.id);
-        const connList = conns.map(c => {
-            const other = nsState.devices.find(dev => dev.id === (c.from === d.id ? c.to : c.from));
-            const typeLabel = c.type === 'wireless' ? '📶 لاسلكي' : '🔌 سلكي';
-            return other ? `<li>${other.name} (${typeLabel})</li>` : '';
-        }).join('');
-        document.getElementById('ns-infoContent').innerHTML = `
-            <p>النوع: ${NS_DEVICE_NAMES[d.type]}</p>
-            <p>${d.type === 'cloud' ? 'IP: عام' : 'IP: ' + d.ip}</p>
-            <p>المنافذ: ${d.ports.length || 'غير معروف'}</p>
-            <p>رقم: #${d.id}</p>
-            ${conns.length ? `<p>التوصيلات (${conns.length}):</p><ul>${connList}</ul>` : '<p>لا توجد توصيلات</p>'}
-        `;
-        panel.classList.add('show');
-        setTimeout(() => { panel.classList.remove('show'); }, 5000);
+            const nsCtxMenuEl2 = document.getElementById('ns-contextMenu');
+            if (nsCtxMenuEl2) nsCtxMenuEl2.classList.remove('show');
+        });
     }
-
-    // تعديل الجهاز
-    let nsEditingDevice = null;
-    function nsOpenModal(d) {
-        nsEditingDevice = d;
-        document.getElementById('ns-modalTitle').textContent = `✏️ تعديل ${NS_DEVICE_NAMES[d.type]}`;
-        document.getElementById('ns-editName').value = d.name;
-        document.getElementById('ns-editIP').value = d.ip;
-        document.getElementById('ns-modalOverlay').classList.add('show');
+    const nsModalSave2 = document.getElementById('ns-modalSave');
+    if (nsModalSave2) {
+        nsModalSave2.addEventListener('click', () => {
+            if (!nsEditingDevice) return;
+            nsEditingDevice.name = (document.getElementById('ns-editName')?.value) || nsEditingDevice.name;
+            nsEditingDevice.ip = (document.getElementById('ns-editIP')?.value) || nsEditingDevice.ip;
+            const overlay = document.getElementById('ns-modalOverlay');
+            if (overlay) overlay.classList.remove('show');
+            nsEditingDevice = null;
+            nsRender();
+        });
     }
-    document.getElementById('ns-modalCancel').addEventListener('click', () => {
-        document.getElementById('ns-modalOverlay').classList.remove('show');
-        nsEditingDevice = null;
-    });
-    document.getElementById('ns-modalSave').addEventListener('click', () => {
-        if (!nsEditingDevice) return;
-        nsEditingDevice.name = document.getElementById('ns-editName').value || nsEditingDevice.name;
-        nsEditingDevice.ip = document.getElementById('ns-editIP').value || nsEditingDevice.ip;
-        document.getElementById('ns-modalOverlay').classList.remove('show');
-        nsEditingDevice = null;
-        nsRender();
-    });
 
     // الاتصالات
     function nsAddConnection(fromId, toId, type = 'wired') {
         if (nsState.connections.some(c => (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId))) {
-            document.getElementById('ns-connectionMode').textContent = '⚠️ يوجد اتصال مسبق';
-            setTimeout(() => { document.getElementById('ns-connectionMode').classList.remove('show'); }, 1500);
+            const connMode = document.getElementById('ns-connectionMode');
+            if (connMode) {
+                connMode.textContent = '⚠️ يوجد اتصال مسبق';
+                setTimeout(() => { connMode.classList.remove('show'); }, 1500);
+            }
             return;
         }
         const c = { from: fromId, to: toId, active: false, type };
@@ -848,53 +834,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 nsAddConnection(nsState.connectFirst, secondId, type);
                 nsState.connectFirst = null;
                 nsState.connectPendingSecond = null;
-                document.getElementById('ns-connectionMode').classList.remove('show');
-                document.getElementById('ns-connTypePicker').classList.remove('show');
+                const connMode = document.getElementById('ns-connectionMode');
+                if (connMode) connMode.classList.remove('show');
+                const picker = document.getElementById('ns-connTypePicker');
+                if (picker) picker.classList.remove('show');
             }
         });
     });
 
-    // إزالة
     function nsRemoveDevice(id) {
         nsState.devices = nsState.devices.filter(d => d.id !== id);
         nsState.connections = nsState.connections.filter(c => c.from !== id && c.to !== id);
         if (nsState.selectedId === id) nsState.selectedId = null;
-        if (nsState.connectFirst === id) { nsState.connectFirst = null; nsState.connectPendingSecond = null; document.getElementById('ns-connTypePicker').classList.remove('show'); }
+        if (nsState.connectFirst === id) { nsState.connectFirst = null; nsState.connectPendingSecond = null; const picker = document.getElementById('ns-connTypePicker'); if (picker) picker.classList.remove('show'); }
+        nsRender();
+    }
+
+    function nsUpdateZoom() {
+        const zl = document.getElementById('ns-zoomLevel');
+        if (zl) zl.textContent = Math.round(nsState.zoom * 100) + '%';
         nsRender();
     }
 
     // تكبير/تصغير
-    document.getElementById('ns-zoomIn').addEventListener('click', () => {
-        nsState.zoom = Math.min(3, nsState.zoom + 0.1);
-        nsUpdateZoom();
-    });
-    document.getElementById('ns-zoomOut').addEventListener('click', () => {
-        nsState.zoom = Math.max(0.2, nsState.zoom - 0.1);
-        nsUpdateZoom();
-    });
-    document.getElementById('ns-zoomReset').addEventListener('click', () => {
-        nsState.zoom = 1;
-        nsState.pan = { x: 0, y: 0 };
-        nsUpdateZoom();
-    });
-    function nsUpdateZoom() {
-        document.getElementById('ns-zoomLevel').textContent = Math.round(nsState.zoom * 100) + '%';
-        nsRender();
-    }
+    const nsZoomInBtn = document.getElementById('ns-zoomIn');
+    if (nsZoomInBtn) nsZoomInBtn.addEventListener('click', () => { nsState.zoom = Math.min(3, nsState.zoom + 0.1); nsUpdateZoom(); });
+    const nsZoomOutBtn = document.getElementById('ns-zoomOut');
+    if (nsZoomOutBtn) nsZoomOutBtn.addEventListener('click', () => { nsState.zoom = Math.max(0.2, nsState.zoom - 0.1); nsUpdateZoom(); });
+    const nsZoomResetBtn = document.getElementById('ns-zoomReset');
+    if (nsZoomResetBtn) nsZoomResetBtn.addEventListener('click', () => { nsState.zoom = 1; nsState.pan = { x: 0, y: 0 }; nsUpdateZoom(); });
 
     // مسح الكل
-    document.getElementById('ns-clearAll').addEventListener('click', () => {
-        if (nsState.devices.length === 0) return;
-        if (confirm('هل أنت متأكد من مسح جميع العناصر؟')) {
-            nsState.devices = [];
-            nsState.connections = [];
-            nsState.selectedId = null;
-            nsState.connectFirst = null;
-            nsState.connectPendingSecond = null;
-            document.getElementById('ns-connTypePicker').classList.remove('show');
-            nsRender();
-        }
-    });
+    const nsClearAllBtn = document.getElementById('ns-clearAll');
+    if (nsClearAllBtn) {
+        nsClearAllBtn.addEventListener('click', () => {
+            if (nsState.devices.length === 0) return;
+            if (confirm('هل أنت متأكد من مسح جميع العناصر؟')) {
+                nsState.devices = [];
+                nsState.connections = [];
+                nsState.selectedId = null;
+                nsState.connectFirst = null;
+                nsState.connectPendingSecond = null;
+                const picker = document.getElementById('ns-connTypePicker');
+                if (picker) picker.classList.remove('show');
+                nsRender();
+            }
+        });
+    }
 
     // اختصارات لوحة المفاتيح
     document.addEventListener('keydown', e => {
@@ -907,10 +893,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             nsState.connectFirst = null;
             nsState.connectPendingSecond = null;
-            document.getElementById('ns-connectionMode').classList.remove('show');
-            document.getElementById('ns-connTypePicker').classList.remove('show');
-            if (document.getElementById('ns-modalOverlay').classList.contains('show')) {
-                document.getElementById('ns-modalOverlay').classList.remove('show');
+            const connMode = document.getElementById('ns-connectionMode');
+            if (connMode) connMode.classList.remove('show');
+            const picker = document.getElementById('ns-connTypePicker');
+            if (picker) picker.classList.remove('show');
+            const overlay = document.getElementById('ns-modalOverlay');
+            if (overlay && overlay.classList.contains('show')) {
+                overlay.classList.remove('show');
                 nsEditingDevice = null;
             }
         }
@@ -949,22 +938,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // تشغيل المثال عند أول ظهور للتبويب
-    const nsSubtabObserver = new MutationObserver(() => {
-        const st = document.getElementById('subtab-network');
-        if (st && st.classList.contains('active') && !nsInitialized) nsInit();
-    });
+    let nsSubtabObserver = null;
     const nsSubtab = document.getElementById('subtab-network');
     if (nsSubtab) {
+        nsSubtabObserver = new MutationObserver(() => {
+            const st = document.getElementById('subtab-network');
+            if (st && st.classList.contains('active') && !nsInitialized) nsInit();
+        });
         nsSubtabObserver.observe(nsSubtab, { attributes: true, attributeFilter: ['class'] });
         if (nsSubtab.classList.contains('active')) nsInit();
     }
 
     // إعادة الرسم عند تغيير حجم الحاوية
+    let nsResizeObserver = null;
     if (nsCanvas) {
-        const nsRo = new ResizeObserver(() => {
+        nsResizeObserver = new ResizeObserver(() => {
             if (nsInitialized) nsRender();
         });
-        nsRo.observe(nsCanvas.parentElement);
+        nsResizeObserver.observe(nsCanvas.parentElement);
+    }
+
+    function nsDisconnectObservers() {
+        if (nsSubtabObserver) { nsSubtabObserver.disconnect(); nsSubtabObserver = null; }
+        if (nsResizeObserver) { nsResizeObserver.disconnect(); nsResizeObserver = null; }
     }
 
     // Flowchart designer setup
@@ -1827,6 +1823,96 @@ document.addEventListener('DOMContentLoaded', () => {
             return s;
         }
 
+        function algoSafeEval(expr, vars) {
+            let pos = 0;
+            const s = expr.trim();
+            function peek() { return pos < s.length ? s[pos] : null; }
+            function consume() { return pos < s.length ? s[pos++] : null; }
+            function skipWS() { while (pos < s.length && s[pos] === ' ') pos++; }
+            function parseExpr() { skipWS(); return parseOr(); }
+            function parseOr() {
+                let left = parseAnd();
+                skipWS();
+                while (peek() === '|' && s[pos + 1] === '|') { pos += 2; const right = parseAnd(); left = Boolean(left) || Boolean(right); skipWS(); }
+                return left;
+            }
+            function parseAnd() {
+                let left = parseComparison();
+                skipWS();
+                while (peek() === '&' && s[pos + 1] === '&') { pos += 2; const right = parseComparison(); left = Boolean(left) && Boolean(right); skipWS(); }
+                return left;
+            }
+            function parseComparison() {
+                let left = parseAddSub();
+                skipWS();
+                const op = peek();
+                if (op === '<' || op === '>' || op === '=' || op === '!') {
+                    let fullOp = consume();
+                    if ((fullOp === '<' || fullOp === '>') && peek() === '=') { fullOp += consume(); }
+                    if (fullOp === '<>' && peek() === '=') { fullOp += consume(); }
+                    const right = parseAddSub();
+                    if (fullOp === '==') return left == right;
+                    if (fullOp === '!=' || fullOp === '<>') return left != right;
+                    if (fullOp === '<') return left < right;
+                    if (fullOp === '>') return left > right;
+                    if (fullOp === '<=') return left <= right;
+                    if (fullOp === '>=') return left >= right;
+                }
+                return left;
+            }
+            function parseAddSub() {
+                let left = parseMulDiv();
+                skipWS();
+                while (peek() === '+' || peek() === '-') {
+                    const op = consume();
+                    const right = parseMulDiv();
+                    skipWS();
+                    if (op === '+') left = (typeof left === 'number' && typeof right === 'number') ? left + right : (left != null ? String(left) : '') + (right != null ? String(right) : '');
+                    else left = left - right;
+                }
+                return left;
+            }
+            function parseMulDiv() {
+                let left = parseUnary();
+                skipWS();
+                while (peek() === '*' || peek() === '/' || peek() === '%') {
+                    const op = consume();
+                    const right = parseUnary();
+                    skipWS();
+                    if (op === '*') left = left * right;
+                    else if (op === '/') left = left / right;
+                    else left = left % right;
+                }
+                return left;
+            }
+            function parseUnary() {
+                skipWS();
+                if (peek() === '!') { consume(); const val = parseUnary(); return !Boolean(val); }
+                if (peek() === '-') { consume(); const val = parseUnary(); return -val; }
+                return parsePrimary();
+            }
+            function parsePrimary() {
+                skipWS();
+                if (peek() === '(') { consume(); const val = parseExpr(); skipWS(); if (peek() === ')') consume(); return val; }
+                if (peek() === '"' || peek() === "'") {
+                    const quote = consume(); let str = '';
+                    while (pos < s.length && peek() !== quote) str += consume();
+                    if (peek() === quote) consume();
+                    return str;
+                }
+                let word = '';
+                while (pos < s.length && /[a-zA-Z0-9_.]/.test(peek())) word += consume();
+                if (!word) throw new Error('تعبير غير متوقع في الموقع ' + pos);
+                if (word === 'true') return true;
+                if (word === 'false') return false;
+                if (word in vars) return vars[word];
+                const num = Number(word);
+                if (!isNaN(num) && word !== '') return num;
+                return word;
+            }
+            return parseExpr();
+        }
+
         function algoEvalExpr(expr, vars) {
             const safe = algoSanitizeExpr(expr)
                 .replace(/\b(?:and|et)\b/gi, '&&')
@@ -1835,10 +1921,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/\b(?:vrai|true)\b/gi, 'true')
                 .replace(/\b(?:faux|false)\b/gi, 'false');
             try {
-                const keys = Object.keys(vars);
-                const values = keys.map(k => vars[k]);
-                const fn = new Function(...keys, 'return (' + safe + ');');
-                return fn(...values);
+                return algoSafeEval(safe, vars);
             } catch (e) { throw new Error('خطأ في تقييم التعبير: ' + e.message); }
         }
 
@@ -2159,7 +2242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         algoEditorEl.addEventListener('input', () => {
             algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
-            try { const result = algoRebuildBlocks(algoVM.lines); algoVM.blocks = result.blocks; algoVM._ifMap = result.mapIfByLine; algoVM._whileMap = result.mapWhileByLine; algoVM._forMap = result.mapForByLine; } catch (e) {}
+            try { const result = algoRebuildBlocks(algoVM.lines); algoVM.blocks = result.blocks; algoVM._ifMap = result.mapIfByLine; algoVM._whileMap = result.mapWhileByLine; algoVM._forMap = result.mapForByLine; } catch (e) { console.warn('خوارزمية: خطأ في تحليل الكود', e); }
             algoRenderHighlight();
         });
         algoEditorEl.addEventListener('scroll', algoSyncScroll);

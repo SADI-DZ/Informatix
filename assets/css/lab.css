@@ -3109,6 +3109,95 @@ body.light-mode .loop-text {
     .html-editor-advanced .line-numbers { display: none; }
 }
 
+/* Light mode overrides for HTML editor */
+.light-mode .html-editor-advanced .editor-panel {
+    border-left-color: var(--card-border);
+}
+.light-mode .html-editor-advanced .panel-header {
+    background: var(--sidebar-bg);
+    border-bottom-color: var(--card-border);
+    color: var(--text-secondary);
+}
+.light-mode .html-editor-advanced .panel-header .badge {
+    background: var(--card-border);
+    color: var(--text-secondary);
+}
+.light-mode .html-editor-advanced .html-editor-toolbar-btn {
+    background: var(--card-border);
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .html-editor-toolbar-btn:hover {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .editor-container {
+    background: var(--bg-dark);
+}
+.light-mode .html-editor-advanced .line-numbers {
+    background: var(--bg-dark);
+    color: var(--text-secondary);
+}
+.light-mode .html-editor-advanced .code-wrapper .code-textarea {
+    caret-color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .browser-window {
+    background: var(--card-bg);
+}
+.light-mode .html-editor-advanced .browser-titlebar {
+    background: var(--sidebar-bg);
+}
+.light-mode .html-editor-advanced .browser-tab {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .browser-navbar {
+    background: var(--card-bg);
+}
+.light-mode .html-editor-advanced .browser-nav-btn {
+    background: var(--sidebar-bg);
+    color: var(--text-secondary);
+}
+.light-mode .html-editor-advanced .browser-nav-btn:hover {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .browser-address-bar {
+    background: var(--sidebar-bg);
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .browser-address-bar:focus {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .browser-content iframe {
+    background: #fff;
+}
+.light-mode .html-editor-advanced .suggestions-box {
+    background: var(--sidebar-bg);
+    border-color: var(--card-border);
+}
+.light-mode .html-editor-advanced .suggestions-box .sug-item {
+    color: var(--text-primary);
+}
+.light-mode .html-editor-advanced .suggestions-box .sug-item:hover {
+    background: var(--input-bg);
+}
+.light-mode .html-editor-advanced .suggestions-box .sug-item .sug-desc {
+    color: var(--text-secondary);
+}
+.light-mode .html-editor-advanced .error-panel {
+    background: var(--sidebar-bg);
+    border-top-color: var(--card-border);
+}
+.light-mode .html-editor-advanced .error-panel .error-item {
+    border-top-color: var(--card-border);
+}
+.light-mode .html-editor-advanced .status-bar {
+    background: var(--bg-dark);
+    border-top-color: var(--card-border);
+    color: var(--text-secondary);
+}
+
 /* ==========================================================================
    Algorithm Editor (دمج من algo-editor.html)
    ========================================================================== */

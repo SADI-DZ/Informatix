@@ -956,8 +956,8 @@
   <div class="setup-box">
     <h1>Activate Windows</h1>
     <div class="sub">Enter your product key to activate Windows.</div>
-    <input type="text" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" style="text-align:center;font-size:16px;letter-spacing:3px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;padding:10px;width:100%;outline:none;margin-bottom:20px;font-family:'Inter',sans-serif">
-    <button class="btn-next" style="width:100%" onclick="goTo('setup-license')">Next</button>
+    <input type="text" id="productKeyInput" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" style="text-align:center;font-size:16px;letter-spacing:3px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;padding:10px;width:100%;outline:none;margin-bottom:20px;font-family:'Inter',sans-serif" maxlength="29">
+    <button class="btn-next" style="width:100%" onclick="validateProductKey()">Next</button>
     <button class="btn-link" style="display:block;margin:20px auto 0" onclick="goTo('setup-license')">I don't have a product key</button>
   </div>
 </div>
@@ -1181,6 +1181,21 @@ let bootOrder = [
   { id:'network', label:'Network Boot: Realtek PXE', type:'Network', enabled:false },
 ];
 let privacyState = { location:true, findDevice:true, diagnosticData:true, tailoredExperiences:true, advertisingId:true };
+
+// ===== PRODUCT KEY VALIDATION =====
+function validateProductKey() {
+  const input = document.getElementById('productKeyInput');
+  if (!input) { goTo('setup-license'); return; }
+  const key = input.value.trim();
+  if (key === '') { goTo('setup-license'); return; }
+  if (/^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(key)) {
+    goTo('setup-license');
+  } else {
+    input.style.borderColor = '#ff4444';
+    input.style.boxShadow = '0 0 10px rgba(255,68,68,0.5)';
+    setTimeout(() => { input.style.borderColor = ''; input.style.boxShadow = ''; }, 2000);
+  }
+}
 
 // ===== SCREEN NAVIGATION =====
 function goTo(id) {

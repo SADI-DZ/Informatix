@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: unitTitle,
                 file: filePath
             }));
-        } catch (e) { /* ignore */ }
+        } catch (e) { console.warn('informatix: فشل حفظ آخر درس', e); }
 
         let mdText = getLessonContent(filePath);
 
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 banner.remove();
                 localStorage.removeItem('informatix_last_lesson');
             });
-        } catch (e) { /* ignore */ }
+        } catch (e) { console.warn('informatix: فشل استعادة آخر درس', e); }
     })();
 });
 
