@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محرر HTML التفاعلي</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0d1117;color:#e2e8f0;height:100vh;overflow:hidden;direction:ltr}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#1a1a2e}
+::-webkit-scrollbar-thumb{background:#3b3b5c;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#5c5c8a}
+
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-bottom:1px solid #2a2a4a;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;direction:rtl}
+.header .logo{display:flex;align-items:center;gap:12px}
+.header .logo svg{width:36px;height:36px;flex-shrink:0}
+.header .logo h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header .logo span{font-size:12px;color:#8b8fa3;-webkit-text-fill-color:#8b8fa3}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
+.toolbar button{display:flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.toolbar .btn-primary{background:linear-gradient(135deg,#7c3aed,#3b82f6);color:#fff}
+.toolbar .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(124,58,237,.4)}
+.toolbar .btn-secondary{background:#2a2a4a;color:#c4c8d4}
+.toolbar .btn-secondary:hover{background:#3a3a5a;transform:translateY(-1px)}
+.toolbar .btn-danger{background:#dc2626;color:#fff}
+.toolbar .btn-danger:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(220,38,38,.4)}
+.toolbar .btn-success{background:#059669;color:#fff}
+.toolbar .btn-success:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(5,150,105,.4)}
+.toolbar button svg{width:16px;height:16px;flex-shrink:0}
+
+.main-container{display:flex;height:calc(100vh - 64px);direction:ltr}
+.editor-panel{flex:1;display:flex;flex-direction:column;min-width:0;border-left:1px solid #2a2a4a}
+.preview-panel{flex:1;display:flex;flex-direction:column;min-width:0}
+.panel-header{padding:8px 16px;background:#1a1a2e;border-bottom:1px solid #2a2a4a;font-size:13px;font-weight:600;color:#8b8fa3;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;direction:rtl}
+.panel-header .badge{font-size:11px;background:#2a2a4a;padding:2px 10px;border-radius:10px;color:#8b8fa3}
+
+.editor-container{flex:1;display:flex;overflow:hidden;position:relative;background:#0d1117}
+.line-numbers{padding:16px 8px;text-align:center;background:#0d1117;color:#3b3b5c;font-family:'Consolas','Courier New',monospace;font-size:14px;line-height:1.7;overflow:hidden;user-select:none;min-width:44px;border-left:1px solid #1e1e2e;white-space:pre;direction:ltr}
+.code-wrapper{flex:1;position:relative;overflow:hidden}
+.highlight-layer,.code-textarea{position:absolute;top:0;left:0;right:0;bottom:0;padding:16px;font-family:'Consolas','Courier New',monospace;font-size:14px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word;tab-size:2;border:none;overflow:auto;direction:ltr;text-align:left}
+.code-textarea{color:transparent;caret-color:#fff;background:transparent;resize:none;z-index:2;outline:none}
+.code-textarea::selection{background:rgba(124,58,237,.4)}
+.highlight-layer{z-index:1;pointer-events:none;color:#e2e8f0}.hl-tag-name{color:#f472b6;font-weight:600}.hl-attr{color:#34d399}.hl-string{color:#fbbf24}.hl-comment{color:#6b7280;font-style:italic}.hl-doctype{color:#f97316;font-weight:600}.hl-entity{color:#a78bfa}
+.line-numbers .error-line{color:#ef4444;font-weight:700;position:relative}
+.line-numbers .error-line::after{content:'⚠';position:absolute;right:-4px;top:0;font-size:12px}
+
+/* === Real Browser === */
+.browser-window{flex:1;display:flex;flex-direction:column;background:#1c1c2e;border-radius:0 0 8px 8px;overflow:hidden}
+.browser-titlebar{display:flex;align-items:center;padding:8px 12px;background:#2d2d44;gap:8px;flex-shrink:0}
+.browser-dots{display:flex;gap:6px;flex-shrink:0}
+.browser-dots span{width:12px;height:12px;border-radius:50%;display:inline-block}
+.browser-dots .dot-red{background:#ff5f57}
+.browser-dots .dot-yellow{background:#ffbd2e}
+.browser-dots .dot-green{background:#28c840}
+.browser-tab{display:flex;align-items:center;background:#1c1c2e;padding:4px 14px;border-radius:6px 6px 0 0;font-size:12px;color:#c4c8d4;gap:6px;margin-left:8px;flex-shrink:0;height:28px}
+.browser-tab svg{width:14px;height:14px;flex-shrink:0}
+.browser-tab span{white-space:nowrap}
+.browser-navbar{display:flex;align-items:center;padding:6px 12px;background:#1c1c2e;gap:6px;flex-shrink:0}
+.browser-nav-btn{background:#2d2d44;border:none;border-radius:5px;color:#8b8fa3;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.browser-nav-btn:hover{background:#3d3d54;color:#e2e8f0}
+.browser-nav-btn svg{width:14px;height:14px}
+.browser-address-bar{flex:1;background:#2d2d44;border:none;border-radius:5px;padding:5px 12px;font-size:12px;color:#c4c8d4;font-family:inherit;direction:ltr;text-align:left;outline:none;min-width:0}
+.browser-address-bar:focus{background:#3d3d54;color:#e2e8f0}
+.browser-content{flex:1;background:#fff;position:relative;overflow:hidden}
+.browser-content iframe{width:100%;height:100%;border:none;background:#fff}
+.browser-placeholder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#9ca3af;text-align:center;direction:rtl;font-size:14px}
+.browser-placeholder svg{width:48px;height:48px;margin-bottom:12px;opacity:.5}
+
+.suggestions-box{position:absolute;z-index:1000;background:#1e1e2e;border:1px solid #3a3a5a;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;max-height:260px;overflow-y:auto;min-width:200px;direction:ltr}
+.suggestions-box .sug-header{padding:6px 12px;font-size:11px;color:#6b7280;border-bottom:1px solid #2a2a4a}
+.suggestions-box .sug-item{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:'Consolas','Courier New',monospace;font-size:13px;transition:background .15s;color:#e2e8f0}
+.suggestions-box .sug-item:hover{background:#2a2a4a}
+.suggestions-box .sug-item.active{background:#7c3aed;color:#fff}
+.suggestions-box .sug-item .sug-tag{color:#f472b6;font-weight:600}
+.suggestions-box .sug-item .sug-desc{font-size:11px;color:#8b8fa3;margin-right:auto}
+.suggestions-box .sug-item.active .sug-desc{color:rgba(255,255,255,.7)}
+.suggestions-box .sug-empty{padding:12px;color:#6b7280;text-align:center;font-size:13px}
+
+.error-panel{background:#1a1a2e;border-top:1px solid #2a2a4a;max-height:0;overflow:hidden;transition:max-height .3s ease;flex-shrink:0;direction:rtl}
+.error-panel.open{max-height:200px;overflow-y:auto}
+.error-panel .error-header{padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer}
+.error-panel .error-header .error-count{color:#ef4444;font-weight:600}
+.error-panel .error-header .error-count.success{color:#10b981}
+.error-panel .error-item{padding:8px 16px 8px 24px;display:flex;align-items:center;gap:10px;font-size:13px;border-top:1px solid #2a2a4a;cursor:pointer;transition:background .15s}
+.error-panel .error-item:hover{background:#2a2a4a}
+.error-panel .error-item .err-icon{flex-shrink:0;font-size:16px}
+.error-panel .error-item .err-msg{color:#e2e8f0}
+.error-panel .error-item .err-msg code{background:#2a2a4a;padding:1px 6px;border-radius:4px;font-family:'Consolas',monospace;font-size:12px;color:#f472b6}
+.error-panel .error-item .err-line{color:#8b8fa3;margin-right:auto;font-size:12px}
+.error-panel .error-item.warning .err-icon{color:#fbbf24}
+.error-panel .error-item.error .err-icon{color:#ef4444}
+
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .4s ease;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:#059669;color:#fff}
+.toast.error{background:#dc2626;color:#fff}
+.toast.info{background:#3b82f6;color:#fff}
+
+.status-bar{height:24px;background:#0d1117;border-top:1px solid #1e1e2e;display:flex;align-items:center;padding:0 16px;font-size:11px;color:#6b7280;gap:16px;flex-shrink:0;direction:rtl}
+.status-bar .status-item{display:flex;align-items:center;gap:4px}
+.status-bar .status-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.status-bar .status-dot.green{background:#10b981}
+.status-bar .status-dot.yellow{background:#fbbf24}
+.status-bar .status-dot.red{background:#ef4444}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.suggestions-box.show{display:block;animation:fadeIn .15s ease}
+
+@media(max-width:768px){
+  .main-container{flex-direction:column}
+  .editor-panel,.preview-panel{flex:none;height:50%}
+  .header{flex-direction:column;gap:10px;padding:10px 16px}
+  .toolbar{width:100%;justify-content:center}
+  .toolbar button{font-size:12px;padding:6px 10px}
+  .header .logo h1{font-size:15px}
+}
+@media(max-width:480px){
+  .toolbar button span.btn-text{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <svg viewBox="0 0 36 36" fill="none"><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#g1)"/><path d="M12 12l-4 6 4 6M24 12l4 6-4 6M20 10l-6 16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="g1" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs></svg>
+    <div><h1>محرر HTML التفاعلي</h1><span>ابدأ بكتابة كود HTML وشاهد النتيجة مباشرة</span></div>
+  </div>
+  <div class="toolbar">
+    <button class="btn-primary" onclick="runCode()" title="تشغيل (Ctrl+Enter)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="btn-text">تشغيل</span>
+    </button>
+    <button class="btn-success" onclick="saveCode()" title="حفظ (Ctrl+S)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span class="btn-text">حفظ</span>
+    </button>
+    <button class="btn-secondary" onclick="document.getElementById('fileInput').click()" title="استيراد (Ctrl+O)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="btn-text">استيراد</span>
+    </button>
+    <button class="btn-secondary" onclick="exportCode()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span class="btn-text">تصدير</span>
+    </button>
+    <button class="btn-danger" onclick="clearCode()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span class="btn-text">مسح</span>
+    </button>
+  </div>
+</header>
+
+<div class="main-container">
+  <div class="editor-panel">
+    <div class="panel-header">
+      <span>📝 المحرر</span>
+      <span class="badge" id="lineInfo">السطر 1، العمود 1</span>
+    </div>
+    <div class="editor-container">
+      <div class="line-numbers" id="lineNumbers" aria-label="أرقام الأسطر">1</div>
+      <div class="code-wrapper">
+        <pre class="highlight-layer" id="highlightLayer" aria-hidden="true"></pre>
+        <textarea class="code-textarea" id="codeTextarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="اكتب كود HTML هنا..."></textarea>
+        <div class="suggestions-box" id="suggestionsBox"></div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <span class="status-item"><span class="status-dot green" id="statusDot"></span><span id="statusText">جاهز</span></span>
+      <span class="status-item" id="errorStatus">0 أخطاء</span>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="panel-header">
+      <span>🌐 المتصفح</span>
+      <button onclick="runCode()" style="background:none;border:none;color:#3b82f6;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">تحديث ↻</button>
+    </div>
+    <div class="browser-window" id="previewContainer">
+      <div class="browser-titlebar">
+        <div class="browser-dots">
+          <span class="dot-red"></span>
+          <span class="dot-yellow"></span>
+          <span class="dot-green"></span>
+        </div>
+        <div class="browser-tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="browserTabTitle">index.html</span>
+        </div>
+      </div>
+      <div class="browser-navbar">
+        <button class="browser-nav-btn" title="رجوع">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="browser-nav-btn" title="تقديم">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="browser-nav-btn" title="تحديث" onclick="runCode()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <input class="browser-address-bar" id="addressBar" type="text" value="about:blank" readonly spellcheck="false">
+      </div>
+      <div class="browser-content" id="browserContent">
+        <div class="browser-placeholder" id="previewPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <p>اكتب كود HTML لعرض الصفحة</p>
+        </div>
+        <iframe id="previewFrame" style="display:none" sandbox="allow-scripts allow-modals allow-same-origin" title="معاينة الصفحة"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="error-panel" id="errorPanel">
+  <div class="error-header" onclick="toggleErrors()">
+    <span>❌ <span id="errorTitle">الأخطاء</span></span>
+    <span class="error-count" id="errorCount">0</span>
+  </div>
+  <div id="errorList"></div>
+</div>
+
+<input type="file" id="fileInput" accept=".html,.htm,.txt" style="display:none" onchange="importCode(event)">
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== CONSTANTS ====================
+const HTML_TAGS = [
+  'html','head','body','title','meta','link','script',
+  'div','span','p','h1','h2','h3','h4','h5','h6',
+  'a','img','ul','ol','li','table','caption','colgroup','col','thead','tbody','tfoot','tr','td','th',
+  'form','input','button','select','option','optgroup','textarea','label','fieldset','legend',
+  'header','footer','nav','section','article','aside','main','figure','figcaption',
+  'mark','time','progress','meter','details','summary','dialog','data',
+  'video','audio','source','track','canvas','svg','iframe','embed','object','param',
+  'br','hr','strong','em','b','i','u','s','small','sub','sup','code','pre',
+  'blockquote','q','cite','dfn','abbr','kbd','samp','var','del','ins',
+  'dl','dt','dd','ruby','rt','rp','wbr',
+  'noscript','template','slot','address','hgroup','bdi','bdo',
+  'output','progress','meter','details','summary','menu'
+].sort();
+
+const VOID_ELEMENTS = new Set([
+  'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'
+]);
+
+const ATTRS_BY_TAG = {
+  a:['href','target','rel','download','hreflang','type'],
+  img:['src','alt','width','height'],
+  input:['type','name','value','placeholder','required','disabled','readonly','min','max','step','pattern','autocomplete'],
+  form:['action','method','enctype','target','novalidate'],
+  link:['rel','href','type'],
+  script:['src','type','defer','async'],
+  meta:['name','content','charset','http-equiv'],
+  video:['src','controls','autoplay','loop','muted','poster','width','height'],
+  audio:['src','controls','autoplay','loop','muted'],
+  td:['colspan','rowspan','headers'], th:['colspan','rowspan','headers','scope','abbr'],
+  iframe:['src','width','height','sandbox','allow','allowfullscreen','loading'],
+  canvas:['width','height'],   source:['src','type'],
+  track:['src','kind','srclang','label','default'],
+  label:['for','form'], textarea:['name','rows','cols','placeholder','required','disabled'],
+  select:['name','multiple','required','size'], option:['value','selected','disabled'],
+  button:['type','name','value','disabled','form'], optgroup:['label','disabled'],
+  ol:['type','start','reversed'], ul:['type'],
+  col:['span'], colgroup:['span'], table:['summary'],
+  details:['open'], dialog:['open'], progress:['value','max'], meter:['value','min','max','low','high','optimum']
+};
+const GLOBAL_ATTRS = ['id','title','lang','dir','hidden','tabindex','style'];
+
+// ==================== DOM REFS ====================
+const ta = document.getElementById('codeTextarea');
+const hl = document.getElementById('highlightLayer');
+const ln = document.getElementById('lineNumbers');
+const pf = document.getElementById('previewFrame');
+const pp = document.getElementById('previewPlaceholder');
+const sb = document.getElementById('suggestionsBox');
+const ep = document.getElementById('errorPanel');
+const el = document.getElementById('errorList');
+const ec = document.getElementById('errorCount');
+const et = document.getElementById('errorTitle');
+const li = document.getElementById('lineInfo');
+const st = document.getElementById('statusText');
+const sd = document.getElementById('statusDot');
+const es = document.getElementById('errorStatus');
+
+// ==================== STATE ====================
+let sugIndex = -1;
+let sugType = '';
+let sugActive = false;
+let isComposing = false;
+
+// ==================== SYNTAX HIGHLIGHTING ====================
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function highlight(code) {
+  if (!code) return '';
+  const escaped = escapeHtml(code);
+  // Single-pass: each alternative is mutually exclusive
+  return escaped.replace(
+    /(&lt;!--[\s\S]*?--&gt;)|(&lt;!DOCTYPE\s+html&gt;)|(&lt;\/?)([\w-]+)|(\s+)([\w-]+)(=)(?=&quot;|')|(&quot;(?:[^&]|&(?!quot;))*?&quot;|'[^']*?')|(&amp;\w+;)/gi,
+    (m, comment, doctype, tagStart, tagName, before, attr, eq, str, entity) => {
+      if (comment) return `<span class="hl-comment">${comment}</span>`;
+      if (doctype) return `<span class="hl-doctype">${doctype}</span>`;
+      if (tagStart && tagName) return `${tagStart}<span class="hl-tag-name">${tagName}</span>`;
+      if (attr && eq) return `${before}<span class="hl-attr">${attr}</span>${eq}`;
+      if (str) return `<span class="hl-string">${str}</span>`;
+      if (entity) return `<span class="hl-entity">${entity}</span>`;
+      return m;
+    }
+  );
+}
+
+function updateHighlight() {
+  hl.innerHTML = highlight(ta.value) + '\n';
+}
+
+function updateLineNumbers() {
+  const lines = ta.value.split('\n');
+  const nums = lines.map((_, i) => {
+    const n = i + 1;
+    return errorLines.has(n) ? `<span class="error-line">${n}</span>` : n;
+  }).join('\n');
+  ln.innerHTML = nums;
+}
+
+// ==================== CURSOR / CONTEXT ====================
+function updateCursorInfo() {
+  const pos = ta.selectionStart;
+  const before = ta.value.substring(0, pos);
+  const lines = before.split('\n');
+  li.textContent = `السطر ${lines.length}، العمود ${lines[lines.length-1].length + 1}`;
+}
+
+function getTagContext() {
+  const pos = ta.selectionStart;
+  const before = ta.value.substring(0, pos);
+  const lastOpen = before.lastIndexOf('<');
+  const lastClose = before.lastIndexOf('>');
+  if (lastOpen === -1 || lastOpen < lastClose) return null;
+  const inside = before.substring(lastOpen);
+  const m = inside.match(/^<\s*([\w-]*)$/);
+  return m ? m[1] : null;
+}
+
+function isInsideString(tagContent) {
+  let inStr = false, strChar = '';
+  for (const ch of tagContent) {
+    if (inStr) { if (ch === strChar) { inStr = false; strChar = ''; } }
+    else if (ch === '"' || ch === "'") { inStr = true; strChar = ch; }
+  }
+  return inStr;
+}
+
+function getAttrContext() {
+  const pos = ta.selectionStart;
+  const before = ta.value.substring(0, pos);
+  const lastOpen = before.lastIndexOf('<');
+  const lastClose = before.lastIndexOf('>');
+  if (lastOpen === -1 || lastOpen < lastClose) return null;
+  const inside = before.substring(lastOpen);
+  const tagMatch = inside.match(/^<\s*(\w[\w-]*)/);
+  if (!tagMatch) return null;
+  const tagName = tagMatch[1].toLowerCase();
+  const afterTag = inside.substring(tagMatch[0].length);
+  if (!/\S/.test(afterTag.trimLeft())) return null; // still typing tag name
+  if (isInsideString(afterTag)) return null;        // inside a string value
+  const attrPrefix = (afterTag.match(/\s+([\w-]*)$/) || [,''])[1];
+  // Don't suggest when cursor is after a completed value (e.g. class=""|)
+  if (attrPrefix === '' && afterTag.trim().length > 0 && !afterTag.endsWith(' ')) return null;
+  return { tagName, attrPrefix };
+}
+
+function getCursorCoords() {
+  const s = getComputedStyle(ta);
+  const lh = parseFloat(s.lineHeight);
+  const fs = parseFloat(s.fontSize);
+  const cw = fs * 0.61;
+  const pos = ta.selectionStart;
+  const before = ta.value.substring(0, pos);
+  const lines = before.split('\n');
+  const line = lines.length;
+  const col = lines[lines.length - 1].length;
+  return {
+    top: (line - 1) * lh + 16 - ta.scrollTop,
+    left: col * cw + 16 - ta.scrollLeft,
+    line, col
+  };
+}
+
+// ==================== SUGGESTIONS ====================
+function showSuggestions() {
+  const tagPrefix = getTagContext();
+  const attrCtx = tagPrefix === null ? getAttrContext() : null;
+
+  let items = [], type = '';
+
+  if (tagPrefix !== null) {
+    type = 'tag';
+    items = HTML_TAGS.filter(t => t.startsWith(tagPrefix.toLowerCase())).slice(0, 25);
+  } else if (attrCtx) {
+    type = 'attr';
+    const specific = ATTRS_BY_TAG[attrCtx.tagName] || [];
+    const all = [...new Set([...specific, ...GLOBAL_ATTRS])];
+    items = all.filter(a => a.startsWith(attrCtx.attrPrefix)).slice(0, 20);
+  }
+
+  if (!items.length) { hideSuggestions(); return; }
+
+  sb.innerHTML = `<div class="sug-header">${type === 'tag' ? 'الوسوم المقترحة' : 'الخصائص المقترحة'}</div>`;
+  const frag = document.createDocumentFragment();
+  items.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'sug-item' + (i === 0 ? ' active' : '');
+    div.dataset.value = item; div.dataset.type = type;
+    div.innerHTML = type === 'tag'
+      ? `<span class="sug-tag">&lt;${item}&gt;</span><span class="sug-desc">وسم HTML</span>`
+      : `<span class="sug-tag">${item}</span><span class="sug-desc">خاصية</span>`;
+    div.onclick = () => insertSuggestion(item, type);
+    div.onmouseenter = () => {
+      sb.querySelectorAll('.sug-item').forEach(e => e.classList.remove('active'));
+      div.classList.add('active'); sugIndex = i;
+    };
+    frag.appendChild(div);
+  });
+  sb.appendChild(frag);
+
+  sugIndex = 0; sugType = type; sugActive = true;
+  sb.classList.add('show');
+
+  const coords = getCursorCoords();
+  const wrapper = ta.closest('.code-wrapper');
+  sb.style.left = Math.min(coords.left, wrapper.clientWidth - 230) + 'px';
+  sb.style.top = Math.max(0, coords.top + parseFloat(getComputedStyle(ta).lineHeight)) + 'px';
+}
+
+function hideSuggestions() {
+  sb.classList.remove('show');
+  sugActive = false; sugIndex = -1; sugType = '';
+}
+
+function insertSuggestion(value, type) {
+  const pos = ta.selectionStart;
+  const val = ta.value;
+  const before = val.substring(0, pos);
+  const after = val.substring(pos);
+
+  if (type === 'tag') {
+    const m = before.match(/(<[\w-]*)$/);
+    if (m) {
+      const newBefore = before.substring(0, before.length - m[0].length) + '<' + value;
+      ta.value = newBefore + after;
+      const newPos = newBefore.length;
+      ta.setSelectionRange(newPos, newPos);
+      if (!VOID_ELEMENTS.has(value)) {
+        const ins = '></' + value + '>';
+        ta.value = ta.value.substring(0, newPos) + ins + ta.value.substring(newPos);
+        ta.setSelectionRange(newPos, newPos);
+      }
+      triggerUpdate();
+    }
+  } else if (type === 'attr') {
+    const m = before.match(/([\w-]*)$/);
+    if (m) {
+      const newBefore = before.substring(0, before.length - m[1].length) + value + '=""';
+      ta.value = newBefore + after;
+      ta.setSelectionRange(newBefore.length - 1, newBefore.length - 1);
+      ta.focus();
+      triggerUpdate();
+    }
+  }
+  hideSuggestions();
+}
+
+// ==================== AUTO-CLOSE & INDENT ====================
+function handleAutoClose() {
+  const pos = ta.selectionStart;
+  const before = ta.value.substring(0, pos);
+  const m = before.match(/<(\w[\w-]*)([\s>])$/);
+  if (m && m[2] === '>' && !VOID_ELEMENTS.has(m[1].toLowerCase())) {
+    const tagName = m[1].toLowerCase();
+    const after = ta.value.substring(pos);
+    ta.value = before + '</' + tagName + '>' + after;
+    ta.setSelectionRange(pos, pos);
+    triggerUpdate();
+    return true;
+  }
+  return false;
+}
+
+function handleAutoIndent(e) {
+  const pos = ta.selectionStart;
+  const val = ta.value;
+  const lines = val.substring(0, pos).split('\n');
+  const currentLine = lines[lines.length - 1];
+  const indent = currentLine.match(/^(\s*)/)[1];
+  const above = lines.length >= 2 ? lines[lines.length - 2].trim() : '';
+
+  let extra = '';
+  if (above.endsWith('>') && !above.startsWith('</') && !above.endsWith('/>') && !above.endsWith('-->')) {
+    extra = '  ';
+  }
+
+  e.preventDefault();
+  const end = ta.selectionEnd;
+  ta.value = val.substring(0, pos) + '\n' + indent + extra + val.substring(end);
+  ta.setSelectionRange(pos + 1 + indent.length + extra.length, pos + 1 + indent.length + extra.length);
+  triggerUpdate();
+}
+
+// ==================== COMMENT TOGGLE ====================
+function handleSlash() {
+  const pos = ta.selectionStart;
+  if (pos < 1) return;
+  const before = ta.value.substring(0, pos);
+  if (before.endsWith('<')) {
+    ta.value = ta.value.substring(0, pos - 1) + '<!--  -->' + ta.value.substring(pos);
+    ta.setSelectionRange(pos + 4, pos + 4);
+    triggerUpdate();
+  }
+}
+
+// ==================== ERROR CHECKING ====================
+let errorLines = new Set();
+
+function checkErrors(code) {
+  const errors = [];
+  const tagRegex = /<\/?(\w[\w-]*)([\s\S]*?)>/g;
+  const stack = [];
+
+  // Unclosed attributes
+  code.split('\n').forEach((line, i) => {
+    const s = line.trim();
+    if ((s.match(/"/g) || []).length % 2 !== 0 && /</.test(s) && />/.test(s)) {
+      errors.push({ line: i + 1, msg: 'عدد علامات الاقتباس غير زوجي', type: 'warning' });
+    }
+  });
+
+  let match;
+  while ((match = tagRegex.exec(code)) !== null) {
+    const full = match[0];
+    const tagName = match[1].toLowerCase();
+    const isClosing = full.startsWith('</');
+    const isSelfClose = full.endsWith('/>') || VOID_ELEMENTS.has(tagName);
+    const lineNum = code.substring(0, match.index).split('\n').length;
+
+    if (isClosing) {
+      if (stack.length === 0) {
+        errors.push({ line: lineNum, msg: `وسم إغلاق غير متوقع: <code>&lt;/${tagName}&gt;</code>`, type: 'error' });
+      } else {
+        const expected = stack.pop();
+        if (expected !== tagName) {
+          errors.push({ line: lineNum, msg: `وسم غير متطابق: الإغلاق <code>&lt;/${tagName}&gt;</code> لكن التوقع <code>&lt;/${expected}&gt;</code>`, type: 'error' });
+        }
+      }
+    } else if (!isSelfClose) {
+      stack.push(tagName);
+    }
+  }
+
+  stack.forEach(t => {
+    errors.push({ line: 0, msg: `وسم غير مغلق: <code>&lt;${t}&gt;</code>`, type: 'error' });
+  });
+
+  return errors;
+}
+
+function displayErrors(errors) {
+  el.innerHTML = '';
+  errorLines.clear();
+
+  if (errors.length === 0) {
+    ec.textContent = '0'; ec.className = 'error-count success';
+    et.textContent = 'لا توجد أخطاء ✓';
+    ep.classList.remove('open');
+    es.textContent = '0 أخطاء';
+    sd.className = 'status-dot green';
+    st.textContent = 'لا توجد أخطاء';
+    return;
+  }
+
+  ec.textContent = errors.length;
+  ec.className = 'error-count';
+  et.textContent = 'الأخطاء والتحذيرات';
+  ep.classList.add('open');
+  es.textContent = errors.length + ' أخطاء';
+  sd.className = 'status-dot ' + (errors.some(e => e.type === 'error') ? 'red' : 'yellow');
+  st.textContent = errors.length + ' مشكلة';
+
+  errors.forEach((err) => {
+    const div = document.createElement('div');
+    div.className = 'error-item ' + err.type;
+    div.innerHTML = `
+      <span class="err-icon">${err.type === 'warning' ? '⚠️' : '❌'}</span>
+      <span class="err-msg">${err.msg}</span>
+      <span class="err-line">${err.line > 0 ? 'السطر ' + err.line : ''}</span>`;
+    if (err.line > 0) {
+      errorLines.add(err.line);
+      div.onclick = () => {
+        const lines = ta.value.split('\n');
+        let pos = 0;
+        for (let j = 0; j < Math.min(err.line - 1, lines.length); j++) pos += lines[j].length + 1;
+        ta.focus(); ta.setSelectionRange(pos, pos);
+        ta.scrollTop = Math.max(0, (err.line - 3)) * parseFloat(getComputedStyle(ta).lineHeight);
+      };
+    }
+    el.appendChild(div);
+  });
+}
+
+function runErrorCheck() {
+  const errors = checkErrors(ta.value);
+  displayErrors(errors);
+  updateLineNumbers();
+}
+
+function triggerUpdate() {
+  clearTimeout(window._hlDebounce);
+  window._hlDebounce = setTimeout(() => {
+    updateHighlight();
+    runErrorCheck();
+    updateLineNumbers();
+    updateCursorInfo();
+    updatePreview();
+  }, 80);
+}
+
+// ==================== PREVIEW ====================
+function getPageTitle(code) {
+  const m = code.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return m ? m[1].trim() : 'untitled';
+}
+
+function updatePreview() {
+  const code = ta.value.trim();
+  const addr = document.getElementById('addressBar');
+  const tab = document.getElementById('browserTabTitle');
+  if (!code) {
+    pf.style.display = 'none';
+    pp.style.display = 'block';
+    addr.value = 'about:blank';
+    tab.textContent = 'index.html';
+    return;
+  }
+  pf.srcdoc = code;
+  pf.style.display = 'block';
+  pp.style.display = 'none';
+  const title = getPageTitle(code);
+  addr.value = 'http://localhost/index.html';
+  tab.textContent = title || 'untitled';
+}
+
+// ==================== SAVE / IMPORT ====================
+function saveCode() {
+  const blob = new Blob([ta.value], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✅ تم حفظ الملف بنجاح!', 'success');
+}
+
+function exportCode() {
+  const blob = new Blob([ta.value], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'code.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✅ تم تصدير الكود بنجاح!', 'success');
+}
+
+function importCode(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    ta.value = ev.target.result;
+    triggerUpdate();
+    runCode();
+    showToast('✅ تم استيراد الملف بنجاح!', 'success');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function clearCode() {
+  if (ta.value.trim() && !confirm('هل أنت متأكد من مسح كل الكود؟')) return;
+  ta.value = '';
+  triggerUpdate();
+  pf.style.display = 'none';
+  pp.style.display = 'block';
+  showToast('تم مسح الكود', 'info');
+}
+
+function runCode() {
+  updatePreview();
+  runErrorCheck();
+  showToast('🔄 تم تحديث المعاينة!', 'info');
+}
+
+// ==================== TOAST ====================
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ==================== TOGGLE ERRORS ====================
+function toggleErrors() {
+  ep.classList.toggle('open');
+}
+
+// ==================== EVENT HANDLERS ====================
+ta.addEventListener('input', () => {
+  if (isComposing) return;
+  triggerUpdate();
+  const tagPrefix = getTagContext();
+  if (tagPrefix !== null) { showSuggestions(); }
+  else { const ac = getAttrContext(); if (ac) showSuggestions(); else hideSuggestions(); }
+  updateCursorInfo();
+});
+
+ta.addEventListener('scroll', () => {
+  hl.scrollTop = ta.scrollTop;
+  hl.scrollLeft = ta.scrollLeft;
+  ln.scrollTop = ta.scrollTop;
+});
+
+ta.addEventListener('keydown', (e) => {
+  if (sugActive && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab' || e.key === 'Escape')) {
+    const items = sb.querySelectorAll('.sug-item:not(.sug-header)');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      sugIndex = Math.min(sugIndex + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('active', i === sugIndex));
+      items[sugIndex]?.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      sugIndex = Math.max(sugIndex - 1, 0);
+      items.forEach((el, i) => el.classList.toggle('active', i === sugIndex));
+      items[sugIndex]?.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      const active = sb.querySelector('.sug-item.active');
+      if (active) insertSuggestion(active.dataset.value, active.dataset.type);
+      return;
+    }
+    if (e.key === 'Escape') { hideSuggestions(); return; }
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    handleAutoIndent(e);
+    hideSuggestions();
+    return;
+  }
+
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + '  ' + ta.value.substring(end);
+    ta.setSelectionRange(start + 2, start + 2);
+    triggerUpdate();
+    return;
+  }
+
+  if (e.key === '>' && !e.ctrlKey && !e.metaKey) {
+    setTimeout(() => { handleAutoClose(); triggerUpdate(); }, 0);
+  }
+
+  if (e.key === '/') {
+    setTimeout(handleSlash, 0);
+  }
+});
+
+ta.addEventListener('compositionstart', () => { isComposing = true; });
+ta.addEventListener('compositionend', () => { isComposing = false; triggerUpdate(); });
+
+ta.addEventListener('blur', () => setTimeout(hideSuggestions, 200));
+ta.addEventListener('click', () => {
+  updateCursorInfo();
+  const tagPrefix = getTagContext();
+  if (tagPrefix !== null) showSuggestions();
+  else { const ac = getAttrContext(); if (ac) showSuggestions(); else hideSuggestions(); }
+});
+
+// ==================== KEYBOARD SHORTCUTS ====================
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCode(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runCode(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'o') { e.preventDefault(); document.getElementById('fileInput').click(); }
+});
+
+// ==================== INIT ====================
+const defaultCode = `<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>رحلتي مع HTML</title>
+</head>
+<body>
+  <h1 align="center"><font color="green">مرحباً بالعالم!</font></h1>
+  <p>هذه بداية رحلتي في تعلم HTML. كل يوم أتعلم شيئاً جديداً وأتقدم خطوة نحو الاحتراف.</p>
+  <p>التعلم المستمر هو مفتاح النجاح في عالم البرمجة.</p>
+</body>
+</html>`;
+
+ta.value = defaultCode;
+triggerUpdate();
+setTimeout(updatePreview, 400);
+
+window.addEventListener('resize', () => {
+  if (sugActive) { const tp = getTagContext(); if (tp !== null) showSuggestions(); }
+});
+</script>
+</body>
+</html>

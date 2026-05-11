@@ -360,34 +360,82 @@ S ← A + B
                         </div>
                         <div class="station-body">
                             <div class="station-workspace">
-                                <div class="html-editor-container">
-                                    <div class="html-editor-pane">
-                                        <div class="html-editor-header">
-                                            <span class="code-dot red"></span>
-                                            <span class="code-dot yellow"></span>
-                                            <span class="code-dot green"></span>
-                                            <span class="code-label-text">index.html</span>
-                                            <button id="html-run-btn" class="code-run-btn">▶ تشغيل</button>
+                                <div class="main-container html-editor-advanced">
+                                    <div class="editor-panel">
+                                        <div class="panel-header">
+                                            <span>📝 المحرر</span>
+                                            <div class="html-editor-toolbar">
+                                                <button class="html-editor-toolbar-btn" id="html-saveBtn" title="حفظ (Ctrl+S)">💾 حفظ</button>
+                                                <button class="html-editor-toolbar-btn" id="html-importBtn" title="استيراد (Ctrl+O)">📂 استيراد</button>
+                                                <button class="html-editor-toolbar-btn" id="html-exportBtn" title="تصدير">📤 تصدير</button>
+                                                <button class="html-editor-toolbar-btn danger" id="html-clearBtn" title="مسح">🗑️ مسح</button>
+                                            </div>
+                                            <span class="badge" id="html-lineInfo">السطر 1، العمود 1</span>
                                         </div>
-                                        <textarea id="html-editor-textarea" class="code-editor-textarea" dir="ltr"
-                                            spellcheck="false" aria-label="محرر HTML">&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;صفحتي الأولى&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;مرحباً بالعالم!&lt;/h1&gt;
-    &lt;p&gt;هذه صفحة HTML بسيطة.&lt;/p&gt;
-&lt;/body&gt;
-&lt;/html&gt;</textarea>
+                                        <div class="editor-container">
+                                            <div class="line-numbers" id="html-lineNumbers">1</div>
+                                            <div class="code-wrapper">
+                                                <pre class="highlight-layer" id="html-highlightLayer" aria-hidden="true"></pre>
+                                                <textarea class="code-textarea" id="html-codeTextarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="اكتب كود HTML هنا..." dir="ltr"></textarea>
+                                                <div class="suggestions-box" id="html-suggestionsBox"></div>
+                                            </div>
+                                        </div>
+                                        <div class="status-bar">
+                                            <span class="status-item"><span class="status-dot green" id="html-statusDot"></span><span id="html-statusText">جاهز</span></span>
+                                            <span class="status-item" id="html-errorStatus">0 أخطاء</span>
+                                        </div>
                                     </div>
-                                    <div class="html-preview-pane">
-                                        <div class="html-preview-header">
-                                            <span class="code-label-text">🔍 المعاينة الحية</span>
+
+                                    <div class="preview-panel">
+                                        <div class="panel-header">
+                                            <span>🌐 المتصفح</span>
+                                            <button id="html-refreshBtn" style="background:none;border:none;color:#3b82f6;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">تحديث ↻</button>
                                         </div>
-                                        <iframe id="html-preview-iframe" class="html-preview-iframe"></iframe>
+                                        <div class="browser-window" id="html-previewContainer">
+                                            <div class="browser-titlebar">
+                                                <div class="browser-dots">
+                                                    <span class="dot-red"></span>
+                                                    <span class="dot-yellow"></span>
+                                                    <span class="dot-green"></span>
+                                                </div>
+                                                <div class="browser-tab">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                                    <span id="html-browserTabTitle">index.html</span>
+                                                </div>
+                                            </div>
+                                            <div class="browser-navbar">
+                                                <button class="browser-nav-btn" title="رجوع">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                                                </button>
+                                                <button class="browser-nav-btn" title="تقديم">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                                </button>
+                                                <button class="browser-nav-btn" title="تحديث" id="html-navRefresh">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                                </button>
+                                                <input class="browser-address-bar" id="html-addressBar" type="text" value="about:blank" readonly spellcheck="false">
+                                            </div>
+                                            <div class="browser-content" id="html-browserContent">
+                                                <div class="browser-placeholder" id="html-previewPlaceholder">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                                    <p>اكتب كود HTML لعرض الصفحة</p>
+                                                </div>
+                                                <iframe id="html-previewFrame" style="display:none" sandbox="allow-scripts allow-modals allow-same-origin" title="معاينة الصفحة"></iframe>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+
+                                <div class="error-panel html-error-panel" id="html-errorPanel">
+                                    <div class="error-header" id="html-errorToggle">
+                                        <span>❌ <span id="html-errorTitle">الأخطاء</span></span>
+                                        <span class="error-count" id="html-errorCount">0</span>
+                                    </div>
+                                    <div id="html-errorList"></div>
+                                </div>
+
+                                <input type="file" id="htmlEditorFileInput" accept=".html,.htm,.txt" style="display:none">
+                                <div class="html-editor-toast" id="htmlEditorToast"></div>
                             </div>
 
                         </div>
