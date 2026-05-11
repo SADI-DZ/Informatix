@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محرر الخوارزميات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --accent-color: #06b6d4;
+            --accent-secondary: #f59e0b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.3);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+            --transition-fast: 0.15s ease;
+            --transition: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #818cf8;
+            --primary-light: #a5b4fc;
+            --primary-dark: #4f46e5;
+            --accent-color: #22d3ee;
+            --accent-secondary: #fbbf24;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #b0bec5;
+            --border-color: #334155;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -50px;
+            right: 1rem;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            transition: top var(--transition-fast);
+        }
+
+        .skip-link:focus {
+            top: 0.75rem;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .navbar.scrolled {
+            box-shadow: var(--shadow-md);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        [data-theme="dark"] .navbar {
+            background: rgba(30, 41, 59, 0.85);
+        }
+
+        [data-theme="dark"] .navbar.scrolled {
+            background: rgba(30, 41, 59, 0.98);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo i {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            font-weight: 600;
+            color: var(--text-muted);
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: var(--radius-full);
+            transition: width var(--transition);
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .icon-btn:focus-visible {
+            outline: 3px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: var(--surface-color);
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: var(--transition);
+        }
+
+        .nav-toggle:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .nav-toggle {
+                display: flex;
+            }
+
+            .nav-content {
+                position: relative;
+            }
+
+            .nav-links {
+                position: absolute;
+                top: calc(100% + 0.5rem);
+                left: 1rem;
+                right: 1rem;
+                background: var(--surface-color);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-xl);
+                padding: 1rem;
+                display: none;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.25rem;
+            }
+
+            .nav-links.is-open {
+                display: flex;
+            }
+
+            .nav-links a {
+                padding: 0.75rem 1rem;
+                border-radius: var(--radius-md);
+            }
+
+            .nav-links a:hover,
+            .nav-links a.active {
+                background: var(--bg-color);
+            }
+
+            .nav-actions {
+                padding-top: 0.5rem;
+                border-top: 1px solid var(--border-color);
+                justify-content: center;
+            }
+        }
+
+        .lab-section {
+            padding: 8rem 0 4rem;
+            background: var(--bg-color);
+            background-image: linear-gradient(rgba(79, 70, 229, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 70, 229, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .lab-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: calc(var(--radius-xl) + 0.25rem);
+            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.10));
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            margin-bottom: 2.25rem;
+            isolation: isolate;
+        }
+
+        [data-theme="dark"] .lab-hero {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.18), rgba(34, 211, 238, 0.12));
+        }
+
+        .lab-hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 780px;
+        }
+
+        .lab-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        [data-theme="dark"] .lab-hero-badge {
+            background: rgba(15, 23, 42, 0.55);
+            border-color: rgba(51, 65, 85, 0.9);
+            color: var(--primary-light);
+        }
+
+        .lab-hero-title {
+            font-size: 2.15rem;
+            line-height: 1.2;
+            margin: 0.9rem 0 0.75rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lab-hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 62ch;
+        }
+
+        .lab-hero-tips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            margin-top: 1.15rem;
+        }
+
+        .lab-hero-tips .tip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            padding: 0.45rem 0.9rem;
+            color: var(--text-main);
+            box-shadow: var(--shadow-sm);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .lab-hero-orb {
+            position: absolute;
+            border-radius: 9999px;
+            filter: blur(18px);
+            opacity: 0.75;
+            z-index: 0;
+            animation: labOrbFloat 7s ease-in-out infinite;
+        }
+
+        .lab-hero-orb.orb-1 {
+            width: 240px;
+            height: 240px;
+            top: -70px;
+            right: -70px;
+            background: radial-gradient(circle at 30% 30%, rgba(79, 70, 229, 0.65), rgba(79, 70, 229, 0));
+        }
+
+        .lab-hero-orb.orb-2 {
+            width: 280px;
+            height: 280px;
+            bottom: -90px;
+            left: -90px;
+            background: radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.55), rgba(6, 182, 212, 0));
+            animation-delay: 1.1s;
+        }
+
+        .lab-hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+            background-size: 36px 36px;
+            opacity: 0.15;
+            z-index: 1;
+            mask-image: radial-gradient(circle at 30% 30%, black 0%, transparent 60%);
+        }
+
+        @keyframes labOrbFloat {
+            0%,
+            100% {
+                transform: translateY(0) translateX(0);
+            }
+            50% {
+                transform: translateY(12px) translateX(-10px);
+            }
+        }
+
+        .algo-examples-top {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .algo-examples-top .sidebar-header h3 {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .algo-examples-list.horizontal {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .algo-examples-list.horizontal .example-item {
+            padding: 0.75rem 1rem;
+        }
+
+        .example-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: right;
+            width: 100%;
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .example-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+            transform: translateX(-5px);
+        }
+
+        .example-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--surface-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        .example-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .example-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .algo-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .algo-grid {
+                grid-template-columns: 1fr 320px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .algo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lab-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lab-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 10%, rgba(79, 70, 229, 0.10), transparent 45%),
+                radial-gradient(circle at 80% 0%, rgba(6, 182, 212, 0.08), transparent 40%);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .lab-card:hover::after {
+            opacity: 1;
+        }
+
+        .lab-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.9rem;
+        }
+
+        .lab-card-header h3 {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1.15rem;
+            color: var(--text-main);
+        }
+
+        .lab-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .lab-note {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-run {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .btn-run:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-run:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .btn-reset:hover {
+            background: var(--bg-color);
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        .btn-reset:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .algo-lang-toggle {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            padding: 2px;
+        }
+
+        .algo-lang-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+        }
+
+        .algo-lang-btn:hover {
+            color: var(--text-main);
+        }
+
+        .algo-lang-btn.is-active {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.85), rgba(6, 182, 212, 0.85));
+            color: white;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        .algo-editor-wrap {
+            position: relative;
+            min-height: 420px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: #0f172a;
+        }
+
+        .algo-highlight,
+        .algo-editor {
+            display: block;
+            margin: 0;
+            width: 100%;
+            min-height: 420px;
+            padding: 1rem;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.95rem;
+            line-height: 1.65;
+            white-space: pre;
+            direction: ltr;
+            text-align: left;
+            overflow: auto;
+        }
+
+        .algo-highlight {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            color: #e2e8f0;
+        }
+
+        .algo-editor {
+            position: relative;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            caret-color: #e2e8f0;
+            resize: vertical;
+            padding-left: calc(44px + 0.75rem + 1rem);
+        }
+
+        .algo-line {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .algo-ln {
+            width: 44px;
+            flex: 0 0 44px;
+            text-align: right;
+            color: #94a3b8;
+            opacity: 0.9;
+            user-select: none;
+        }
+
+        .algo-code {
+            flex: 1;
+            color: #e2e8f0;
+        }
+
+        .algo-line.is-current {
+            background: rgba(34, 211, 238, 0.10);
+            border-radius: 10px;
+            padding: 0.1rem 0.25rem;
+        }
+
+        .algo-tok-keyword {
+            color: #c084fc;
+            font-weight: 700;
+        }
+
+        .algo-tok-control {
+            color: #f472b6;
+            font-weight: 700;
+        }
+
+        .algo-tok-io {
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
+        .algo-tok-type {
+            color: #2dd4bf;
+            font-style: italic;
+        }
+
+        .algo-tok-var {
+            color: #e2e8f0;
+        }
+
+        .algo-tok-number {
+            color: #fbbf24;
+        }
+
+        .algo-tok-string {
+            color: #34d399;
+        }
+
+        .algo-tok-op {
+            color: #fb923c;
+        }
+
+        .algo-tok-logic {
+            color: #818cf8;
+            font-weight: 700;
+        }
+
+        .algo-tok-comment {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .algo-panels {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .algo-panel {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-color);
+            padding: 0.9rem;
+        }
+
+        .algo-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .algo-vars {
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-color);
+        }
+
+        .algo-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .algo-table th,
+        .algo-table td {
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .algo-table th {
+            background: var(--bg-color);
+            color: var(--text-muted);
+            font-weight: 800;
+            text-align: right;
+        }
+
+        .algo-empty {
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .algo-output {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 0.9rem;
+            min-height: 180px;
+            max-height: 260px;
+            overflow: auto;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        .input-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .input-modal {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            min-width: 320px;
+            box-shadow: var(--shadow-xl);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-modal-label {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-main);
+        }
+
+        .input-modal-field {
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-family: inherit;
+            background: var(--bg-color);
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-modal-field:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .footer {
+            background: var(--surface-color);
+            padding: 2.5rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: var(--radius-full);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        @media (max-width: 640px) {
+            .algo-editor {
+                padding-left: 1rem;
+                font-size: 0.85rem;
+            }
+            .algo-ln {
+                display: none;
+            }
+            .algo-highlight {
+                font-size: 0.85rem;
+            }
+            .algo-lang-toggle {
+                order: -1;
+                width: 100%;
+                justify-content: center;
+            }
+            .lab-card-header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .lab-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .lab-hero {
+                padding: 1.5rem;
+            }
+            .lab-hero-title {
+                font-size: 1.65rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .lab-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .lab-hero-orb {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a class="skip-link" href="#mainContent">تخطي إلى المحتوى</a>
+
+    <header class="navbar" id="top">
+        <div class="container nav-content">
+            <a href="#" class="logo" onclick="event.preventDefault();">
+                <i class="ph-fill ph-graduation-cap"></i>
+                <span>محرر الخوارزميات</span>
+            </a>
+            <button id="navToggle" class="nav-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false">
+                <i class="ph ph-list"></i>
+            </button>
+            <nav class="nav-links" id="primaryNav">
+                <div class="nav-actions">
+                    <button id="fontToggle" class="icon-btn" aria-label="تكبير الخط">
+                        <i class="ph ph-text-aa"></i>
+                    </button>
+                    <button id="themeToggle" class="icon-btn" aria-label="تفعيل الوضع الليلي">
+                        <i class="ph ph-moon-stars"></i>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main id="mainContent">
+        <section class="lab-section">
+            <div class="container">
+                <div class="lab-hero" aria-label="مقدمة محرر الخوارزميات">
+                    <div class="lab-hero-grid" aria-hidden="true"></div>
+                    <div class="lab-hero-orb orb-1" aria-hidden="true"></div>
+                    <div class="lab-hero-orb orb-2" aria-hidden="true"></div>
+                    <div class="lab-hero-content">
+                        <span class="lab-hero-badge"><i class="ph ph-brackets-curly"></i> خوارزميات</span>
+                        <h3 class="lab-hero-title">محرر الخوارزميات</h3>
+                        <p class="lab-hero-subtitle">اكتب خوارزمية بصيغة مبسطة ثم نفّذها وشاهد المتغيرات والمخرجات.</p>
+                        <div class="lab-hero-tips" aria-label="أوامر مدعومة">
+                            <span class="tip"><i class="ph ph-terminal-window"></i> let x = 5</span>
+                            <span class="tip"><i class="ph ph-terminal-window"></i> print x</span>
+                            <span class="tip"><i class="ph ph-terminal-window"></i> if x &gt; 3 then</span>
+                            <span class="tip"><i class="ph ph-terminal-window"></i> while x &lt; 10 do</span>
+                            <span class="tip"><i class="ph ph-terminal-window"></i> end</span>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="algo-examples-top">
+                    <div class="sidebar-header">
+                        <h3><i class="ph ph-lightbulb"></i> أمثلة جاهزة</h3>
+                    </div>
+                    <div class="algo-examples-list horizontal">
+                        <button class="example-item" data-example="hello">
+                            <span class="example-icon"><i class="ph ph-chat-centered-text"></i></span>
+                            <div class="example-info">
+                                <span class="example-name">مرحباً بالعالم</span>
+                            </div>
+                        </button>
+                        <button class="example-item" data-example="sum">
+                            <span class="example-icon"><i class="ph ph-plus-circle"></i></span>
+                            <div class="example-info">
+                                <span class="example-name">جمع عددين</span>
+                            </div>
+                        </button>
+                        <button class="example-item" data-example="condition">
+                            <span class="example-icon"><i class="ph ph-git-fork"></i></span>
+                            <div class="example-info">
+                                <span class="example-name">الشروط (Else If)</span>
+                            </div>
+                        </button>
+                        <button class="example-item" data-example="loop">
+                            <span class="example-icon"><i class="ph ph-arrows-clockwise"></i></span>
+                            <div class="example-info">
+                                <span class="example-name">حلقة تكرارية (For)</span>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="algo-grid">
+                    <article class="lab-card algo-editor-card">
+                        <div class="lab-card-header">
+                            <h3><i class="ph ph-pencil-line"></i> محرر الخوارزمية</h3>
+                            <div class="algo-lang-toggle" id="algoLangToggle">
+                                <button class="algo-lang-btn is-active" data-lang="en">EN</button>
+                                <button class="algo-lang-btn" data-lang="fr">FR</button>
+                            </div>
+                            <div class="lab-actions">
+                                <button id="algoRunBtn" class="btn-run" type="button">
+                                    <i class="ph ph-play"></i>
+                                    تشغيل
+                                </button>
+                                <button id="algoStepBtn" class="btn-reset" type="button">
+                                    <i class="ph ph-forward"></i>
+                                    خطوة
+                                </button>
+                                <button id="algoResetBtn" class="btn-reset" type="button">
+                                    <i class="ph ph-arrow-counter-clockwise"></i>
+                                    إعادة
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="algo-editor-wrap">
+                            <pre id="algoHighlight" class="algo-highlight" aria-hidden="true"></pre>
+                            <textarea id="algoEditor" class="algo-editor" spellcheck="false" aria-label="محرر الخوارزميات"></textarea>
+                        </div>
+                        <p class="lab-note" style="margin-top:0.75rem;">
+                            ملاحظة: هذه صيغة تعليمية مبسطة، وليست لغة برمجة كاملة.
+                        </p>
+                    </article>
+
+                    <article class="lab-card algo-results-card">
+                        <div class="lab-card-header">
+                            <h3><i class="ph ph-graph"></i> التتبع والنتائج</h3>
+                        </div>
+
+                        <div class="algo-panels">
+                            <div class="algo-panel">
+                                <h4 class="algo-panel-title"><i class="ph ph-database"></i> المتغيرات</h4>
+                                <div class="algo-vars" role="region" aria-label="جدول المتغيرات">
+                                    <table class="algo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>الاسم</th>
+                                                <th>القيمة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="algoVarsBody" aria-live="polite">
+                                            <tr><td colspan="2" class="algo-empty">لا توجد متغيرات بعد</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="algo-panel">
+                                <h4 class="algo-panel-title"><i class="ph ph-terminal"></i> الإخراج</h4>
+                                <pre id="algoOutput" class="algo-output" aria-label="مخرجات الخوارزمية" aria-live="polite" aria-atomic="false"></pre>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 منصتي التعليمية. صُممت بحب للطلاب.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ===== showInputModal (from main.js) =====
+        function showInputModal(label) {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'input-modal-overlay';
+                overlay.innerHTML =
+                    `<div class="input-modal" role="dialog" aria-modal="true">
+                <label class="input-modal-label">${label}</label>
+                <input class="input-modal-field" type="text" autocomplete="off" dir="auto" />
+                <div class="input-modal-actions">
+                  <button class="btn-run input-modal-confirm">تأكيد</button>
+                  <button class="btn-reset input-modal-cancel">إلغاء</button>
+                </div>
+              </div>`;
+                document.body.appendChild(overlay);
+                const field = overlay.querySelector('.input-modal-field');
+                const confirm = overlay.querySelector('.input-modal-confirm');
+                const cancel = overlay.querySelector('.input-modal-cancel');
+                requestAnimationFrame(() => field?.focus());
+                const done = (val) => { overlay.remove();
+                    resolve(val); };
+                if (confirm) confirm.onclick = () => done(field ? field.value : '');
+                if (cancel) cancel.onclick = () => done('');
+                field?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') done(field.value);
+                    if (e.key === 'Escape') done('');
+                });
+            });
+        }
+
+        // ===== Theme Toggle =====
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeToggle').querySelector('i').className = 'ph ph-moon-stars';
+                document.getElementById('themeToggle').setAttribute('aria-label', 'تفعيل الوضع الليلي');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeToggle').querySelector('i').className = 'ph ph-sun';
+                document.getElementById('themeToggle').setAttribute('aria-label', 'تفعيل الوضع النهاري');
+            }
+        }
+
+        // ===== Font Size Toggle =====
+        function toggleFontSize() {
+            const currentSize = localStorage.getItem('fontSize') || 'medium';
+            let newSize;
+            if (currentSize === 'small') newSize = 'medium';
+            else if (currentSize === 'medium') newSize = 'large';
+            else newSize = 'small';
+            document.documentElement.classList.remove('font-small', 'font-medium', 'font-large');
+            document.documentElement.classList.add('font-' + newSize);
+            localStorage.setItem('fontSize', newSize);
+        }
+
+        // ===== Navbar scroll =====
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) {
+                let ticking = false;
+                window.addEventListener('scroll', () => {
+                    if (!ticking) {
+                        requestAnimationFrame(() => {
+                            navbar.classList.toggle('scrolled', window.scrollY > 50);
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                }, { passive: true });
+            }
+
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('themeToggle').querySelector('i').className = 'ph ph-sun';
+                document.getElementById('themeToggle').setAttribute('aria-label', 'تفعيل الوضع النهاري');
+            }
+
+            const savedFont = localStorage.getItem('fontSize') || 'medium';
+            document.documentElement.classList.add('font-' + savedFont);
+
+            // Nav toggle
+            const navToggle = document.getElementById('navToggle');
+            const navLinks = document.getElementById('primaryNav');
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    const isOpen = navLinks.classList.toggle('is-open');
+                    navToggle.setAttribute('aria-expanded', String(isOpen));
+                    navToggle.innerHTML = isOpen ? '<i class="ph ph-x"></i>' : '<i class="ph ph-list"></i>';
+                });
+                document.addEventListener('click', (e) => {
+                    if (!navLinks.contains(e.target) && !navToggle.contains(e.target)) {
+                        navLinks.classList.remove('is-open');
+                        navToggle.setAttribute('aria-expanded', 'false');
+                        navToggle.innerHTML = '<i class="ph ph-list"></i>';
+                    }
+                });
+            }
+
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            document.getElementById('fontToggle').addEventListener('click', toggleFontSize);
+        });
+
+        // ===== Algorithm Lab Engine =====
+        document.addEventListener('DOMContentLoaded', () => {
+            const editor = document.getElementById('algoEditor');
+            const highlight = document.getElementById('algoHighlight');
+            const varsBody = document.getElementById('algoVarsBody');
+            const outputEl = document.getElementById('algoOutput');
+            const runBtn = document.getElementById('algoRunBtn');
+            const stepBtn = document.getElementById('algoStepBtn');
+            const resetBtn = document.getElementById('algoResetBtn');
+            const langToggle = document.getElementById('algoLangToggle');
+
+            if (!editor || !highlight || !varsBody || !outputEl || !runBtn || !stepBtn || !resetBtn) return;
+
+            let currentLang = 'en';
+            let isRunning = false;
+
+            const DEFAULT_PROGRAMS = {
+                en: `Algorithm example\nstart\n  Write("Hello World!");\nend`,
+                fr: `Algorithme exemple\nDebut\n  Ecrire("Hello World!");\nFin`
+            };
+
+            const EXAMPLES = {
+                en: {
+                    hello: `Algorithm HelloWorld\nstart\n  Write("Hello World!");\nend`,
+                    sum: `Algorithm Summation\nvar a, b, s : integer\nstart\n  a \u2190 10\n  b \u2190 20\n  s \u2190 a + b\n  Write("The sum is:");\n  Write(s);\nend`,
+                    condition: `Algorithm Grades\nvar score : integer\nstart\n  score \u2190 85\n  if score >= 90 then\n    Write("Excellent");\n  else if score >= 80 then\n    Write("Very Good");\n  else if score >= 70 then\n    Write("Good");\n  else\n    Write("Needs improvement");\n  end\nend`,
+                    loop: `Algorithm Counting\nvar i : integer\nstart\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  end\nend`
+                },
+                fr: {
+                    hello: `Algorithme HelloWorld\nDebut\n  Ecrire("Bonjour tout le monde!");\nFin`,
+                    sum: `Algorithme Somme\nvar a, b, s : entier\nDebut\n  a \u2190 10\n  b \u2190 20\n  s \u2190 a + b\n  Ecrire("La somme est:");\n  Ecrire(s);\nFin`,
+                    condition: `Algorithme Notes\nvar score : entier\nDebut\n  score \u2190 85\n  Si score >= 90 Alors\n    Ecrire("Excellent");\n  Sinon si score >= 80 Alors\n    Ecrire("Tr\u00e8s bien");\n  Sinon si score >= 70 Alors\n    Ecrire("Bien");\n  Sinon\n    Ecrire("Am\u00e9lioration n\u00e9cessaire");\n  FinSi\nFin`,
+                    loop: `Algorithme Comptage\nvar i : entier\nDebut\n  Pour i = 1 a 5 Faire\n    Ecrire("Nombre:");\n    Ecrire(i);\n  FinPour\nFin`
+                }
+            };
+
+            const KW_ALGORITHM = ['algorithm', 'algorithme'];
+            const KW_VAR = ['var', 'variable', 'variables'];
+            const KW_START = ['start', 'debut', 'd\u00e9but'];
+            const KW_END = ['end', 'fin', 'finsi', 'fintantque'];
+            const KW_IF_START = ['if', 'si'];
+            const KW_ELSE_IF = ['else if', 'sinon si'];
+            const KW_THEN = ['then', 'alors'];
+            const KW_ELSE = ['else', 'sinon'];
+            const KW_WHILE_START = ['while', 'tantque'];
+            const KW_FOR_START = ['for', 'pour'];
+            const KW_TO = ['to', 'a', '\u00e0'];
+            const KW_DO = ['do', 'faire'];
+            const KW_READ = ['read', 'lire'];
+            const KW_WRITE = ['write', 'ecrire', '\u00e9crire'];
+
+            const HL_KEYWORDS = [...KW_ALGORITHM, ...KW_VAR, ...KW_START, ...KW_END];
+            const HL_CONTROL = [...KW_IF_START, ...KW_THEN, ...KW_ELSE, ...KW_WHILE_START, ...KW_FOR_START, ...KW_TO,
+                ...KW_DO, 'finsi', 'fintantque', 'finpour', 'else if', 'sinon si'
+            ];
+            const HL_IO = [...KW_READ, ...KW_WRITE, 'print', 'let'];
+            const HL_TYPES = ['integer', 'real', 'string', 'boolean', 'char', 'entier', 'reel', 'r\u00e9el', 'chaine',
+                'cha\u00eene', 'booleen', 'bool\u00e9en', 'caractere', 'caract\u00e8re'
+            ];
+            const HL_LOGIC = ['and', 'or', 'not', 'true', 'false', 'et', 'ou', 'non', 'vrai', 'faux'];
+
+            let vm = {
+                lines: [],
+                blocks: [],
+                pc: 0,
+                vars: {},
+                out: [],
+                halted: false
+            };
+
+            const sanitizeExpr = (expr) => {
+                const s = String(expr ?? '').trim();
+                if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) {
+                    throw new Error('\u062A\u0639\u0628\u064A\u0631 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
+                }
+                const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval',
+                    'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require',
+                    'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'
+                ];
+                const lower = s.toLowerCase();
+                if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) {
+                    throw new Error('\u0645\u062D\u0627\u0648\u0644\u0629 \u0648\u0635\u0648\u0644 \u063A\u064A\u0631 \u0645\u0635\u0631\u062D \u0628\u0647\u0627.');
+                }
+                if (/\w+\s*\(/.test(s)) {
+                    throw new Error('\u0627\u0633\u062A\u062F\u0639\u0627\u0621 \u062F\u0648\u0627\u0644 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D.');
+                }
+                return s;
+            };
+
+            const evalExpr = (expr, vars) => {
+                const safe = sanitizeExpr(expr)
+                    .replace(/\b(?:and|et)\b/gi, '&&')
+                    .replace(/\b(?:or|ou)\b/gi, '||')
+                    .replace(/\b(?:not|non)\b/gi, '!')
+                    .replace(/\b(?:vrai|true)\b/gi, 'true')
+                    .replace(/\b(?:faux|false)\b/gi, 'false');
+                try {
+                    const keys = Object.keys(vars);
+                    const values = keys.map(k => vars[k]);
+                    const fn = new Function(...keys, 'return (' + safe + ');');
+                    return fn(...values);
+                } catch (e) {
+                    throw new Error('\u062E\u0637\u0623 \u0641\u064A \u062A\u0642\u064A\u064A\u0645 \u0627\u0644\u062A\u0639\u0628\u064A\u0631: ' + e
+                        .message);
+                }
+            };
+
+            const stripComments = (line) => {
+                let s = line;
+                const hash = s.indexOf('#');
+                const slashes = s.indexOf('//');
+                const cut = [hash, slashes].filter(i => i >= 0).sort((a, b) => a - b)[0];
+                if (cut !== undefined) s = s.slice(0, cut);
+                return s.trimEnd();
+            };
+
+            const normalizeLine = (line) => {
+                let s = stripComments(line);
+                s = s.replace(/\s*;\s*$/, '');
+                return s;
+            };
+
+            const startsWithAny = (low, prefixes) => {
+                for (const p of prefixes) {
+                    if (low.startsWith(p + ' ') || low.startsWith(p + '(')) return p;
+                }
+                return null;
+            };
+
+            const endsWithAny = (low, suffixes) => {
+                for (const s of suffixes) {
+                    if (low.endsWith(' ' + s)) return s;
+                }
+                return null;
+            };
+
+            const rebuildBlocks = (lines) => {
+                const blocks = [];
+                const stack = [];
+
+                const pushBlock = (b) => {
+                    blocks.push(b);
+                    stack.push(b);
+                };
+
+                lines.forEach((raw, i) => {
+                    const line = normalizeLine(raw).trim();
+                    if (!line) return;
+                    const low = line.toLowerCase();
+
+                    const ifPrefix = startsWithAny(low, KW_IF_START);
+                    const thenSuffix = endsWithAny(low, KW_THEN);
+                    if (ifPrefix && thenSuffix) {
+                        const cond = line.slice(ifPrefix.length + 1, -(thenSuffix.length + 1)).trim();
+                        pushBlock({ type: 'if', line: i, cond, elseLine: null, endLine: null });
+                        return;
+                    }
+
+                    const elseifPrefix = startsWithAny(low, KW_ELSE_IF);
+                    if (elseifPrefix && thenSuffix) {
+                        const top = stack[stack.length - 1];
+                        if (!top || top.type !== 'if') throw new Error(
+                            'else if/sinon si \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (i + 1) + ')');
+                        const cond = line.slice(elseifPrefix.length + 1, -(thenSuffix.length + 1)).trim();
+                        if (!top.elseIfs) top.elseIfs = [];
+                        top.elseIfs.push({ line: i, cond });
+                        return;
+                    }
+
+                    if (KW_ELSE.includes(low)) {
+                        const top = stack[stack.length - 1];
+                        if (!top || top.type !== 'if') throw new Error(
+                            'else/sinon \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (i + 1) + ')');
+                        top.elseLine = i;
+                        return;
+                    }
+
+                    const whilePrefix = startsWithAny(low, KW_WHILE_START);
+                    const doSuffix = endsWithAny(low, KW_DO);
+                    if (whilePrefix && doSuffix) {
+                        const cond = line.slice(whilePrefix.length + 1, -(doSuffix.length + 1)).trim();
+                        pushBlock({ type: 'while', line: i, cond, endLine: null });
+                        return;
+                    }
+
+                    const forPrefix = startsWithAny(low, KW_FOR_START);
+                    if (forPrefix && doSuffix) {
+                        const middle = line.slice(forPrefix.length + 1, -(doSuffix.length + 1)).trim();
+                        let toIdx = -1;
+                        let toLen = 0;
+                        for (const kwTo of KW_TO) {
+                            const idx = middle.toLowerCase().indexOf(' ' + kwTo + ' ');
+                            if (idx >= 0) { toIdx = idx;
+                                toLen = kwTo.length; break; }
+                        }
+                        if (toIdx < 0) throw new Error(
+                            '\u0635\u06CC\u063A\u0629 for \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629: \u0645\u0641\u0642\u0648\u062F to/a (\u0633\u0637\u0631 ' +
+                            (i + 1) + ')');
+
+                        const left = middle.slice(0, toIdx).trim();
+                        const endExpr = middle.slice(toIdx + toLen + 2).trim();
+                        const m = left.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                        if (!m) throw new Error(
+                            '\u0635\u06CC\u063A\u0629 for \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629: \u0627\u0644\u0645\u062A\u063A\u06CC\u0631 \u0648\u0627\u0644\u0628\u062F\u0627\u06CC\u0629 (\u0633\u0637\u0631 ' +
+                            (i + 1) + ')');
+                        const [, name, startExpr] = m;
+                        pushBlock({ type: 'for', line: i, varName: name, startExpr, endExpr, endLine: null });
+                        return;
+                    }
+
+                    if (KW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') {
+                        const top = stack.pop();
+                        if (top) top.endLine = i;
+                        return;
+                    }
+                });
+
+                if (stack.length) {
+                    const top = stack[stack.length - 1];
+                    throw new Error(
+                        '\u06A9\u062A\u0644\u0629 \u063A\u06CC\u0631 \u0645\u063A\u0644\u0642\u0629 \u0628\u062F\u0623\u062A \u0641\u06CC \u0633\u0637\u0631 ' +
+                        (top.line + 1));
+                }
+
+                const mapIfByLine = new Map();
+                const mapWhileByLine = new Map();
+                const mapForByLine = new Map();
+                blocks.forEach(b => {
+                    if (b.type === 'if') mapIfByLine.set(b.line, b);
+                    if (b.type === 'while') mapWhileByLine.set(b.line, b);
+                    if (b.type === 'for') mapForByLine.set(b.line, b);
+                });
+
+                return { blocks, mapIfByLine, mapWhileByLine, mapForByLine };
+            };
+
+            const getLineKind = (line) => {
+                const s = normalizeLine(line).trim();
+                const low = s.toLowerCase();
+                if (!s) return { kind: 'empty' };
+
+                if (startsWithAny(low, KW_ALGORITHM)) return { kind: 'algorithm', text: s };
+                if (startsWithAny(low, KW_VAR)) return { kind: 'var', text: s };
+                if (KW_START.includes(low)) return { kind: 'start', text: s };
+                if (low.startsWith('let ')) return { kind: 'let', text: s };
+                if (low.startsWith('print ')) return { kind: 'print', text: s };
+
+                const readP = startsWithAny(low, KW_READ);
+                if (readP) return { kind: 'read', text: s };
+
+                const writeP = startsWithAny(low, KW_WRITE);
+                if (writeP) return { kind: 'write', text: s };
+
+                const ifP = startsWithAny(low, KW_IF_START);
+                const thenS = endsWithAny(low, KW_THEN);
+                if (ifP && thenS) return { kind: 'if', text: s };
+
+                const elseifP = startsWithAny(low, KW_ELSE_IF);
+                if (elseifP && thenS) return { kind: 'elseif', text: s };
+
+                if (KW_ELSE.includes(low)) return { kind: 'else', text: s };
+
+                const whP = startsWithAny(low, KW_WHILE_START);
+                const doS = endsWithAny(low, KW_DO);
+                if (whP && doS) return { kind: 'while', text: s };
+
+                const forP = startsWithAny(low, KW_FOR_START);
+                if (forP && doS) return { kind: 'for', text: s };
+
+                if (KW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') return { kind: 'end',
+                    text: s };
+
+                if (s.includes('\u2190')) return { kind: 'assign', text: s };
+
+                return { kind: 'unknown', text: s };
+            };
+
+            const renderVars = () => {
+                const entries = Object.entries(vm.vars).filter(([k]) => !k.startsWith('__'));
+                if (!entries.length) {
+                    varsBody.innerHTML =
+                        '<tr><td colspan="2" class="algo-empty">\u0644\u0627 \u062A\u0648\u062C\u062F \u0645\u062A\u063A\u06CC\u0631\u0627\u062A \u0628\u0639\u062F</td></tr>';
+                    return;
+                }
+                varsBody.innerHTML = entries
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([k, v]) => {
+                        const value = typeof v === 'string' ? JSON.stringify(v) : String(v);
+                        return '<tr><td>' + escapeHtml(k) + '</td><td dir="ltr" style="text-align:left;">' + escapeHtml(
+                            value) + '</td></tr>';
+                    })
+                    .join('');
+            };
+
+            const renderOutput = () => {
+                outputEl.textContent = vm.out.join('\n');
+            };
+
+            const escapeHtml = (text) => {
+                const div = document.createElement('div');
+                div.textContent = String(text ?? '');
+                return div.innerHTML;
+            };
+
+            const highlightLine = (raw) => {
+                if (!raw.trim()) return '&nbsp;';
+
+                let mainPart = raw;
+                let commentPart = '';
+                const hashIdx = raw.indexOf('#');
+                const slashIdx = raw.indexOf('//');
+                let commentStart = -1;
+                if (hashIdx >= 0 && (slashIdx < 0 || hashIdx <= slashIdx)) commentStart = hashIdx;
+                else if (slashIdx >= 0) commentStart = slashIdx;
+                if (commentStart >= 0) {
+                    mainPart = raw.slice(0, commentStart);
+                    commentPart = raw.slice(commentStart);
+                }
+
+                const tokens = [];
+                const tokenRe =
+                    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\d+(?:\.\d+)?)|([A-Za-z\u00C0-\u00FF_]\w*)|(\u2190|:=|<=|>=|<>|!=|&&|\|\||[+\-*/%<>=!(),;:])|(\s+)|(.)/g;
+                let m;
+                while ((m = tokenRe.exec(mainPart)) !== null) {
+                    if (m[1] !== undefined) {
+                        tokens.push('<span class="algo-tok-string">' + escapeHtml(m[1]) + '</span>');
+                    } else if (m[2] !== undefined) {
+                        tokens.push('<span class="algo-tok-number">' + escapeHtml(m[2]) + '</span>');
+                    } else if (m[3] !== undefined) {
+                        const word = m[3];
+                        const low = word.toLowerCase();
+                        if (HL_KEYWORDS.includes(low)) {
+                            tokens.push('<span class="algo-tok-keyword">' + escapeHtml(word) + '</span>');
+                        } else if (HL_CONTROL.includes(low)) {
+                            tokens.push('<span class="algo-tok-control">' + escapeHtml(word) + '</span>');
+                        } else if (HL_IO.includes(low)) {
+                            tokens.push('<span class="algo-tok-io">' + escapeHtml(word) + '</span>');
+                        } else if (HL_TYPES.includes(low)) {
+                            tokens.push('<span class="algo-tok-type">' + escapeHtml(word) + '</span>');
+                        } else if (HL_LOGIC.includes(low)) {
+                            tokens.push('<span class="algo-tok-logic">' + escapeHtml(word) + '</span>');
+                        } else {
+                            tokens.push('<span class="algo-tok-var">' + escapeHtml(word) + '</span>');
+                        }
+                    } else if (m[4] !== undefined) {
+                        tokens.push('<span class="algo-tok-op">' + escapeHtml(m[4]) + '</span>');
+                    } else if (m[5] !== undefined) {
+                        tokens.push(m[5]);
+                    } else {
+                        tokens.push(escapeHtml(m[6]));
+                    }
+                }
+
+                if (commentPart) {
+                    tokens.push('<span class="algo-tok-comment">' + escapeHtml(commentPart) + '</span>');
+                }
+
+                return tokens.join('');
+            };
+
+            const renderHighlight = () => {
+                const lines = vm.lines;
+                const cur = vm.pc;
+                const html = lines.map((ln, idx) => {
+                    const colored = highlightLine(ln);
+                    const num = String(idx + 1).padStart(2, '0');
+                    const isCur = idx === cur && !vm.halted;
+                    return '<div class="algo-line ' + (isCur ? 'is-current' : '') + '">' +
+                        '<span class="algo-ln" aria-hidden="true">' + num + '</span>' +
+                        '<span class="algo-code">' + colored + '</span>' +
+                        '</div>';
+                }).join('');
+                highlight.innerHTML = html + '\n';
+                const curEl = highlight.querySelector('.algo-line.is-current');
+                if (curEl) {
+                    const top = curEl.offsetTop;
+                    const h = highlight.clientHeight;
+                    if (top < highlight.scrollTop || top > highlight.scrollTop + h - 48) {
+                        highlight.scrollTop = Math.max(0, top - Math.floor(h / 3));
+                    }
+                }
+            };
+
+            const resetVM = () => {
+                vm.lines = editor.value.replace(/\r\n/g, '\n').split('\n');
+                const result = rebuildBlocks(vm.lines);
+                vm.blocks = result.blocks;
+                vm._ifMap = result.mapIfByLine;
+                vm._whileMap = result.mapWhileByLine;
+                vm._forMap = result.mapForByLine;
+                vm.pc = 0;
+                vm.vars = {};
+                vm.out = [];
+                vm.halted = false;
+                renderVars();
+                renderOutput();
+                renderHighlight();
+            };
+
+            const jumpToNextExecutable = () => {
+                while (vm.pc < vm.lines.length) {
+                    const { kind } = getLineKind(vm.lines[vm.pc]);
+                    if (kind === 'empty') {
+                        vm.pc += 1;
+                        continue;
+                    }
+                    return;
+                }
+            };
+
+            const stepOnce = async () => {
+                if (vm.halted) return;
+                jumpToNextExecutable();
+                if (vm.pc >= vm.lines.length) {
+                    vm.halted = true;
+                    renderHighlight();
+                    return;
+                }
+
+                const lineIdx = vm.pc;
+                const raw = vm.lines[lineIdx];
+                const s = normalizeLine(raw).trim();
+                const { kind } = getLineKind(raw);
+
+                try {
+                    vm._lastPC = vm.pc;
+                    if (kind === 'algorithm' || kind === 'start') {
+                        vm.pc += 1;
+                    } else if (kind === 'var') {
+                        const low = s.toLowerCase();
+                        let rest;
+                        for (const kw of KW_VAR) {
+                            if (low.startsWith(kw + ' ')) { rest = s.slice(kw.length + 1).trim(); break; }
+                        }
+                        if (!rest) rest = s.slice(3).trim();
+                        const beforeType = rest.split(':')[0].trim();
+                        const names = beforeType.split(',').map(x => x.trim()).filter(Boolean);
+                        names.forEach(n => {
+                            if (/^[A-Za-z_]\w*$/.test(n)) {
+                                if (!(n in vm.vars)) vm.vars[n] = null;
+                            }
+                        });
+                        vm.pc += 1;
+                    } else if (kind === 'let') {
+                        const rest = s.slice(4).trim();
+                        const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                        if (!m) throw new Error(
+                            '\u0635\u06CC\u063A\u0629 let \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
+                            (lineIdx + 1) + ')');
+                        const [, name, expr] = m;
+                        vm.vars[name] = evalExpr(expr, vm.vars);
+                        vm.pc += 1;
+                    } else if (kind === 'assign') {
+                        const m = s.match(/^([A-Za-z_]\w*)\s*\u2190\s*(.+)$/);
+                        if (!m) throw new Error(
+                            '\u0635\u06CC\u063A\u0629 \u0627\u0644\u0625\u0633\u0646\u0627\u062F \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
+                            (lineIdx + 1) + ')');
+                        const [, name, expr] = m;
+                        vm.vars[name] = evalExpr(expr, vm.vars);
+                        vm.pc += 1;
+                    } else if (kind === 'read') {
+                        const m = s.match(/^(?:read|lire)\s*\(\s*([A-Za-z_]\w*)\s*\)\s*$/i);
+                        if (!m) throw new Error(
+                            '\u0635\u06CC\u063A\u0629 Read/Lire \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
+                            (lineIdx + 1) + ')');
+                        const name = m[1];
+                        const rawVal = await showInputModal(
+                        '\u0623\u062F\u062E\u0644 \u0642\u06CC\u0645\u0629 \u0627\u0644\u0645\u062A\u063A\u06CC\u0631: ' +
+                            name);
+                        const v = rawVal == null ? '' : String(rawVal);
+                        const num = Number(v);
+                        vm.vars[name] = Number.isFinite(num) && v.trim() !== '' ? num : v;
+                        vm.pc += 1;
+                    } else if (kind === 'write') {
+                        const m = s.match(/^(?:write|ecrire|\u00e9crire)\s*\(\s*(.+)\s*\)\s*$/i);
+                        if (!m) throw new Error(
+                            '\u0635\u06CC\u063A\u0629 Write/Ecrire \u063A\u06CC\u0631 \u0635\u062D\u06CC\u062D\u0629 (\u0633\u0637\u0631 ' +
+                            (lineIdx + 1) + ')');
+                        const val = evalExpr(m[1], vm.vars);
+                        vm.out.push(String(val));
+                        vm.pc += 1;
+                    } else if (kind === 'print') {
+                        const expr = s.slice(6).trim();
+                        const val = evalExpr(expr, vm.vars);
+                        vm.out.push(String(val));
+                        vm.pc += 1;
+                    } else if (kind === 'if') {
+                        const b = vm._ifMap.get(lineIdx);
+                        if (!b) throw new Error(
+                            'if/si \u063A\u06CC\u0631 \u0645\u0639\u0631\u0648\u0641 (\u0633\u0637\u0631 ' + (lineIdx +
+                                1) + ')');
+                        const ok = Boolean(evalExpr(b.cond, vm.vars));
+                        if (ok) {
+                            vm.pc += 1;
+                        } else {
+                            let handled = false;
+                            if (b.elseIfs) {
+                                for (const ei of b.elseIfs) {
+                                    if (Boolean(evalExpr(ei.cond, vm.vars))) {
+                                        vm.pc = ei.line + 1;
+                                        handled = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!handled) {
+                                vm.pc = (b.elseLine != null ? b.elseLine + 1 : b.endLine + 1);
+                            }
+                        }
+                    } else if (kind === 'elseif') {
+                        const match = vm.blocks.find(b => b.type === 'if' && b.elseIfs && b.elseIfs.some(ei => ei
+                        .line === lineIdx));
+                        if (!match) throw new Error(
+                            'else if/sinon si \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (lineIdx + 1) +
+                            ')');
+                        vm.pc = match.endLine + 1;
+                    } else if (kind === 'else') {
+                        const match = vm.blocks.find(b => b.type === 'if' && b.elseLine === lineIdx);
+                        if (!match) throw new Error(
+                            'else/sinon \u0628\u062F\u0648\u0646 if/si (\u0633\u0637\u0631 ' + (lineIdx + 1) + ')');
+                        vm.pc = match.endLine + 1;
+                    } else if (kind === 'while') {
+                        const b = vm._whileMap.get(lineIdx);
+                        if (!b) throw new Error(
+                            'while/tantque \u063A\u06CC\u0631 \u0645\u0639\u0631\u0648\u0641 (\u0633\u0637\u0631 ' + (
+                                lineIdx + 1) + ')');
+                        const ok = Boolean(evalExpr(b.cond, vm.vars));
+                        if (ok) {
+                            vm.pc += 1;
+                        } else {
+                            vm.pc = b.endLine + 1;
+                        }
+                    } else if (kind === 'for') {
+                        const b = vm._forMap.get(lineIdx);
+                        if (!b) throw new Error(
+                            'for/pour \u063A\u06CC\u0631 \u0645\u0639\u0631\u0648\u0641 (\u0633\u0637\u0631 ' + (lineIdx +
+                                1) + ')');
+                        const loopKey = '__for_' + lineIdx;
+                        if (!vm.vars[loopKey]) {
+                            vm.vars[b.varName] = evalExpr(b.startExpr, vm.vars);
+                            vm.vars[loopKey] = true;
+                        } else {
+                            vm.vars[b.varName] = (Number(vm.vars[b.varName]) || 0) + 1;
+                        }
+                        const currentVal = Number(vm.vars[b.varName]);
+                        const endVal = Number(evalExpr(b.endExpr, vm.vars));
+                        if (currentVal <= endVal) {
+                            vm.pc += 1;
+                        } else {
+                            delete vm.vars[loopKey];
+                            vm.pc = b.endLine + 1;
+                        }
+                    } else if (kind === 'end') {
+                        const whileBlock = vm.blocks.find(b => b.type === 'while' && b.endLine === lineIdx);
+                        const forBlock = vm.blocks.find(b => b.type === 'for' && b.endLine === lineIdx);
+                        if (whileBlock) {
+                            vm.pc = whileBlock.line;
+                        } else if (forBlock) {
+                            vm.pc = forBlock.line;
+                        } else {
+                            vm.pc += 1;
+                        }
+                    } else {
+                        throw new Error('\u0633\u0637\u0631 \u063A\u06CC\u0631 \u0645\u062F\u0639\u0648\u0645 (\u0633\u0637\u0631 ' + (
+                            lineIdx + 1) + ')');
+                    }
+                } catch (e) {
+                    vm.out.push('\u062E\u0637\u0623: ' + (e && e.message ? e.message : String(e)));
+                    vm.halted = true;
+                }
+
+                renderVars();
+                renderOutput();
+                renderHighlight();
+            };
+
+            const runAll = async () => {
+                const CHUNK = 500;
+                let steps = 0;
+                const runChunk = async () => {
+                    let i = 0;
+                    while (!vm.halted && i < CHUNK) {
+                        await stepOnce();
+                        i++;
+                        steps++;
+                    }
+                    if (!vm.halted && steps < 10000) {
+                        setTimeout(() => { runChunk(); }, 0);
+                    } else if (steps >= 10000) {
+                        vm.out.push(
+                            '\u062A\u0645 \u0625\u06CC\u0642\u0627\u0641 \u0627\u0644\u062A\u0634\u063A\u06CC\u0644: \u062A\u062C\u0627\u0648\u0632 \u0627\u0644\u062D\u062F \u0627\u0644\u0623\u0642\u0635\u0649 \u0644\u0644\u062E\u0637\u0648\u0627\u062A.'
+                            );
+                        vm.halted = true;
+                        renderOutput();
+                        renderHighlight();
+                    }
+                };
+                await runChunk();
+            };
+
+            const syncScroll = () => {
+                highlight.scrollTop = editor.scrollTop;
+                highlight.scrollLeft = editor.scrollLeft;
+            };
+
+            editor.addEventListener('input', () => {
+                vm.lines = editor.value.replace(/\r\n/g, '\n').split('\n');
+                try {
+                    const result = rebuildBlocks(vm.lines);
+                    vm.blocks = result.blocks;
+                    vm._ifMap = result.mapIfByLine;
+                    vm._whileMap = result.mapWhileByLine;
+                    vm._forMap = result.mapForByLine;
+                } catch (e) {}
+                renderHighlight();
+            });
+            editor.addEventListener('scroll', syncScroll);
+
+            runBtn.addEventListener('click', async () => {
+                if (isRunning) return;
+                isRunning = true;
+                runBtn.disabled = true;
+                stepBtn.disabled = true;
+                try {
+                    resetVM();
+                    await runAll();
+                } finally {
+                    isRunning = false;
+                    runBtn.disabled = false;
+                    stepBtn.disabled = false;
+                }
+            });
+            stepBtn.addEventListener('click', async () => {
+                if (isRunning) return;
+                if (!vm.blocks?.length && editor.value.trim()) {
+                    resetVM();
+                }
+                await stepOnce();
+            });
+            resetBtn.addEventListener('click', () => {
+                editor.value = DEFAULT_PROGRAMS[currentLang];
+                resetVM();
+            });
+
+            if (langToggle) {
+                const langBtns = langToggle.querySelectorAll('.algo-lang-btn');
+                langBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const lang = btn.dataset.lang;
+                        if (lang === currentLang) return;
+                        currentLang = lang;
+                        langBtns.forEach(b => b.classList.remove('is-active'));
+                        btn.classList.add('is-active');
+                        editor.value = DEFAULT_PROGRAMS[currentLang];
+                        resetVM();
+                    });
+                });
+            }
+
+            const exampleBtns = document.querySelectorAll('.example-item');
+            exampleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.example;
+                    if (EXAMPLES[currentLang] && EXAMPLES[currentLang][type]) {
+                        editor.value = EXAMPLES[currentLang][type];
+                        resetVM();
+                    }
+                });
+            });
+
+            if (!editor.value.trim()) editor.value = DEFAULT_PROGRAMS[currentLang];
+            resetVM();
+        });
+    </script>
+</body>
+
+</html>

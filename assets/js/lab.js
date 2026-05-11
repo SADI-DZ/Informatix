@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 html.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'dark');
             }
+            // إعادة رسم محاكي الشبكات عند تغيير السمة
+            if (nsInitialized) nsRender();
         });
     }
 
@@ -76,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         programming: [
             { id: 'flowchart', title: 'مصمم المخططات', desc: 'تحويل الخوارزميات المنطقية إلى مخططات انسيابية مرئية تفاعلية.', icon: '📊', category: 'مقدمة في البرمجة' },
-            { id: 'code-editor', title: 'محرر الأكواد', desc: 'كتابة وتنفيذ الكود الزائف (Pseudo-code) واختبار المنطق البرمجي.', icon: '⌨️', category: 'مقدمة في البرمجة' }
+            { id: 'algo-editor', title: 'محرر الخوارزميات', desc: 'محرر خوارزميات متقدم مع تنفيذ خطوة بخطوة وتتبع المتغيرات.', icon: '⚙️', category: 'مقدمة في البرمجة' }
         ],
         web: [
             { id: 'web-editor', title: 'محرر الويب', desc: 'بناء صفحات ويب حقيقية باستخدام HTML ومعاينتها بشكل مباشر.', icon: '🌐', category: 'تقنيات الويب' }
@@ -147,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ws.id === 'installer') targetId = 'subtab-installer';
         if (ws.id === 'network') targetId = 'subtab-network';
         if (ws.id === 'flowchart') targetId = 'subtab-flowchart';
-        if (ws.id === 'code-editor') targetId = 'subtab-code-editor';
         if (ws.id === 'web-editor') targetId = 'station-web'; // محطة الويب كاملة
+        if (ws.id === 'algo-editor') targetId = 'subtab-algo-editor';
 
 
 
@@ -178,6 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }, 100);
             }
+            // تحديث محاكي الشبكات عند فتحه في وضع ملء الشاشة
+            if (ws.id === 'network') {
+                setTimeout(() => { nsRender(); }, 150);
+            }
         }
     }
 
@@ -195,6 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (el && el.parentNode !== stationWs) stationWs.appendChild(el);
                     });
                 }
+            }
+            // إعادة رسم محاكي الشبكات عند الإغلاق
+            if (currentWorkshopElement.id === 'subtab-network') {
+                setTimeout(() => { nsRender(); }, 150);
             }
         }
 
@@ -272,6 +282,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const stationDots = document.querySelectorAll('.station-dot');
     stationDots.forEach(dot => {
         dot.addEventListener('click', () => activateStation(dot.dataset.station));
+    });
+
+    // Sub-tab switching داخل المحطات
+    const subTabs = document.querySelectorAll('.sub-tab');
+    subTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const parent = tab.closest('.station-workspace');
+            if (!parent) return;
+            const sub = tab.dataset.subtab;
+            parent.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            parent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
+            const target = parent.querySelector('#subtab-' + sub);
+            if (target) target.classList.add('active');
+            // تفعيل محاكي الشبكات عند التبديل إليه
+            if (sub === 'network' && !nsInitialized) nsInit();
+        });
     });
 
     // إخفاء الأكورديون الأصلي لأنه لم يعد مطلوباً في التصميم الجديد
@@ -375,169 +402,569 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Network simulator
-    const netCanvas = document.getElementById('network-canvas');
-    const netDeviceCount = document.getElementById('net-device-count');
-    const netLinkCount = document.getElementById('net-link-count');
-    const netClear = document.getElementById('net-clear');
-    const netLinkModeBtn = document.getElementById('net-link-mode');
+    // Polyfill for roundRect if not available
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (typeof r === 'number') r = [r];
+            const radii = r.map(v => Math.min(v, Math.min(Math.abs(w), Math.abs(h)) / 2));
+            const tl = radii[0] || 0;
+            this.moveTo(x + tl, y);
+            this.lineTo(x + w - tl, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + tl);
+            this.lineTo(x + w, y + h - tl);
+            this.quadraticCurveTo(x + w, y + h, x + w - tl, y + h);
+            this.lineTo(x + tl, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - tl);
+            this.lineTo(x, y + tl);
+            this.quadraticCurveTo(x, y, x + tl, y);
+            this.closePath();
+        };
+    }
 
-    let netDevices = [];
-    let netLinks = [];
-    let dragDevice = null;
-    let dragOffset = { x: 0, y: 0 };
-    let isLinking = false;
-    let linkStart = null;
-    let selectedDevice = null;
+    // ============================================================
+    // Network Simulator Advanced (دمج من network-simulator.html)
+    // ============================================================
+    const nsCanvas = document.getElementById('ns-canvas');
+    const nsCtx = nsCanvas ? nsCanvas.getContext('2d') : null;
 
-    const deviceIcons = { pc: '💻', server: '🖥️', switch: '🔀', router: '📡' };
-    const deviceColors = { pc: '#4facfe', server: '#10b981', switch: '#f59e0b', router: '#a78bfa' };
+    const NS_DEVICE_NAMES = {
+        pc: 'حاسوب', phone: 'هاتف', printer: 'طابعة',
+        server: 'خادم', router: 'موجه', switch: 'محول', hub: 'مكرر', cloud: 'سحابة'
+    };
+    const NS_DEVICE_ICONS = {
+        pc: '💻', phone: '📱', printer: '🖨️',
+        server: '🖥️', router: '📡', switch: '🔀', hub: '🔲', cloud: '☁️'
+    };
+    const NS_DEVICE_COLORS = {
+        pc: '#4fc3f7', phone: '#81c784', printer: '#ffb74d',
+        server: '#ce93d8', router: '#e94560', switch: '#4dd0e1', hub: '#ffd54f', cloud: '#81d4fa'
+    };
 
-    function updateLinkModeUI() {
-        if (netLinkModeBtn) {
-            netLinkModeBtn.classList.toggle('active', isLinking);
-            netLinkModeBtn.style.background = isLinking ? 'var(--blue-primary)' : '';
-            netLinkModeBtn.style.color = isLinking ? '#fff' : '';
+    const nsState = {
+        devices: [],
+        connections: [],
+        selectedId: null,
+        tool: 'select',
+        pan: { x: 0, y: 0 },
+        zoom: 1,
+        isPanning: false,
+        panStart: null,
+        connectFirst: null,
+        connectPendingSecond: null,
+        deviceIdCounter: 0,
+        dragDevice: null,
+        dragOffset: null,
+    };
+
+    function nsRandIP() {
+        return `192.168.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+    }
+
+    function nsCreateDevice(type, x, y) {
+        const id = ++nsState.deviceIdCounter;
+        const d = { id, type, x, y, name: NS_DEVICE_NAMES[type] + ' ' + id, ip: nsRandIP(), ports: [] };
+        if (type === 'router') d.ports = [0,1,2,3];
+        if (type === 'switch') d.ports = [0,1,2,3,4,5,6,7];
+        if (type === 'hub') d.ports = [0,1,2,3,4];
+        nsState.devices.push(d);
+        return d;
+    }
+
+    function nsGetDeviceSize(type) {
+        switch(type) {
+            case 'router': return 60;
+            case 'switch': return 70;
+            case 'hub': return 55;
+            case 'server': return 50;
+            case 'cloud': return 90;
+            default: return 45;
         }
-        if (netCanvas) {
-            netCanvas.style.cursor = isLinking ? 'crosshair' : '';
+    }
+
+    function nsDrawDevice(d) {
+        if (!nsCtx) return;
+        const s = nsGetDeviceSize(d.type) * nsState.zoom;
+        const x = d.x * nsState.zoom + nsState.pan.x;
+        const y = d.y * nsState.zoom + nsState.pan.y;
+        const isSelected = d.id === nsState.selectedId;
+        const color = NS_DEVICE_COLORS[d.type];
+        const ctx = nsCtx;
+
+        ctx.shadowColor = isSelected ? '#e9456080' : '#00000040';
+        ctx.shadowBlur = isSelected ? 15 : 5;
+
+        ctx.beginPath();
+        if (d.type === 'router' || d.type === 'switch' || d.type === 'cloud') {
+            const r = d.type === 'cloud' ? 20 : 8;
+            ctx.roundRect(x - s/2, y - s/2, s, s, r);
+        } else {
+            ctx.arc(x, y, s/2, 0, Math.PI * 2);
+        }
+        const isLightNs = document.body.classList.contains('light-mode');
+        ctx.fillStyle = isLightNs ? '#f1f5f9' : '#16213e';
+        ctx.fill();
+        ctx.strokeStyle = isSelected ? '#e94560' : color;
+        ctx.lineWidth = isSelected ? 3 : 2;
+        ctx.stroke();
+
+        if (d.type === 'cloud') {
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = isSelected ? '#e94560' : '#81d4fa';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        ctx.shadowBlur = 0;
+
+        ctx.font = `${Math.round(s * 0.5)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(NS_DEVICE_ICONS[d.type], x, y - s * 0.05);
+
+        ctx.font = `${Math.max(10, Math.round(11 * nsState.zoom))}px sans-serif`;
+        ctx.fillStyle = isLightNs ? '#475569' : '#ccc';
+        ctx.textBaseline = 'top';
+        ctx.fillText(d.name, x, y + s/2 + 4);
+
+        ctx.font = `${Math.max(8, Math.round(9 * nsState.zoom))}px sans-serif`;
+        ctx.fillStyle = isLightNs ? '#94a3b8' : '#888';
+        ctx.textBaseline = 'top';
+        ctx.fillText(d.ip, x, y + s/2 + 18);
+    }
+
+    function nsDrawConnection(c) {
+        if (!nsCtx) return;
+        const a = nsState.devices.find(d => d.id === c.from);
+        const b = nsState.devices.find(d => d.id === c.to);
+        if (!a || !b) return;
+        const ctx = nsCtx;
+
+        const ax = a.x * nsState.zoom + nsState.pan.x;
+        const ay = a.y * nsState.zoom + nsState.pan.y;
+        const bx = b.x * nsState.zoom + nsState.pan.x;
+        const by = b.y * nsState.zoom + nsState.pan.y;
+        const as = nsGetDeviceSize(a.type) * nsState.zoom / 2;
+        const bs = nsGetDeviceSize(b.type) * nsState.zoom / 2;
+
+        const dx = bx - ax, dy = by - ay;
+        const len = Math.sqrt(dx*dx + dy*dy);
+        if (len === 0) return;
+        const nx = dx/len, ny = dy/len;
+
+        const x1 = ax + nx * as, y1 = ay + ny * as;
+        const x2 = bx - nx * bs, y2 = by - ny * bs;
+        const isWireless = c.type === 'wireless';
+        const isActive = c.active;
+
+        if (isWireless) {
+            const midX = (x1+x2)/2, midY = (y1+y2)/2;
+            const perpX = -ny, perpY = nx;
+            const amp = 8 * nsState.zoom;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            const steps = Math.max(4, Math.floor(len / (20 * nsState.zoom)));
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const px = x1 + dx * t;
+                const py = y1 + dy * t;
+                if (i % 2 === 0) ctx.lineTo(px, py);
+                else ctx.moveTo(px, py);
+            }
+            ctx.strokeStyle = isActive ? '#81c784' : '#2e7d32';
+            ctx.lineWidth = isActive ? 2 : 1.5;
+            ctx.stroke();
+
+            ctx.font = `${Math.round(16 * nsState.zoom)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('📶', midX + perpX * amp * 1.2, midY + perpY * amp * 1.2);
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = isActive ? '#4fc3f7' : '#0f3460';
+            ctx.lineWidth = isActive ? 2.5 : 1.5;
+            ctx.setLineDash(isActive ? [] : [5, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            if (isActive) {
+                const mx = (x1+x2)/2, my = (y1+y2)/2;
+                ctx.beginPath();
+                ctx.arc(mx, my, 3, 0, Math.PI*2);
+                ctx.fillStyle = '#4fc3f7';
+                ctx.fill();
+            }
         }
     }
 
-    function renderNet() {
-        if (!netCanvas) return;
-        netCanvas.innerHTML = '';
+    function nsRender() {
+        if (!nsCanvas || !nsCtx) return;
+        const rect = nsCanvas.parentElement.getBoundingClientRect();
+        nsCanvas.width = nsCanvas.clientWidth || rect.width;
+        nsCanvas.height = nsCanvas.clientHeight || rect.height;
+        const ctx = nsCtx;
+        ctx.clearRect(0, 0, nsCanvas.width, nsCanvas.height);
 
-        // رسم الوصلات
-        netLinks.forEach(link => {
-            const from = netDevices[link.from];
-            const to = netDevices[link.to];
-            if (!from || !to) return;
-            const line = document.createElement('div');
-            line.className = 'net-link';
-            const x1 = from.x + 30, y1 = from.y + 20;
-            const x2 = to.x + 30, y2 = to.y + 20;
-            const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-            line.style.cssText = `position:absolute;left:${x1}px;top:${y1}px;width:${length}px;height:2px;transform-origin:0 0;transform:rotate(${angle}deg);background:linear-gradient(90deg,var(--blue-primary),#10b981);z-index:1;pointer-events:none;`;
-            netCanvas.appendChild(line);
-        });
+        // شبكة الخلفية
+        const isLight = document.body.classList.contains('light-mode');
+        ctx.strokeStyle = isLight ? '#e2e8f0' : '#1a1a3e';
+        ctx.lineWidth = 1;
+        const gridSize = 40 * nsState.zoom;
+        const ox = nsState.pan.x % gridSize, oy = nsState.pan.y % gridSize;
+        for (let x = ox; x < nsCanvas.width; x += gridSize) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, nsCanvas.height); ctx.stroke();
+        }
+        for (let y = oy; y < nsCanvas.height; y += gridSize) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(nsCanvas.width, y); ctx.stroke();
+        }
 
-        // رسم الأجهزة
-        netDevices.forEach((dev, idx) => {
-            const el = document.createElement('div');
-            const isSelected = selectedDevice === idx;
-            const isLinkSource = isLinking && linkStart === idx;
-            el.className = `net-device${isSelected ? ' selected' : ''}${isLinkSource ? ' link-source' : ''}`;
-            el.dataset.index = idx;
-            el.style.cssText = `position:absolute;left:${dev.x}px;top:${dev.y}px;border:2px solid ${isLinkSource ? '#fff' : deviceColors[dev.type]};background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;display:flex;flex-direction:column;align-items:center;cursor:${isLinking ? 'crosshair' : 'grab'};z-index:2;transition:border-color 0.2s;`;
-            el.innerHTML = `<span style="font-size:1.5rem">${deviceIcons[dev.type]}</span><span class="net-device-label">${dev.name}</span>`;
-
-            // بدء السحب (ماوس + لمس)
-            function startDrag(clientX, clientY) {
-                if (isLinking) return;
-                dragDevice = idx;
-                dragOffset.x = clientX - dev.x;
-                dragOffset.y = clientY - dev.y;
-            }
-            el.addEventListener('mousedown', (e) => { e.stopPropagation(); startDrag(e.clientX, e.clientY); });
-            el.addEventListener('touchstart', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                const t = e.touches[0];
-                startDrag(t.clientX, t.clientY);
-            }, { passive: false });
-
-            // النقر للتحديد أو الربط
-            el.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (isLinking) {
-                    if (linkStart === null) {
-                        linkStart = idx;
-                    } else if (linkStart !== idx) {
-                        addLink(linkStart, idx);
-                        linkStart = null;
-                        isLinking = false;
-                        updateLinkModeUI();
-                    }
-                    renderNet();
-                    return;
-                }
-                selectedDevice = selectedDevice === idx ? null : idx;
-                renderNet();
-            });
-            netCanvas.appendChild(el);
-        });
-
-        if (netDeviceCount) netDeviceCount.textContent = netDevices.length;
-        if (netLinkCount) netLinkCount.textContent = netLinks.length;
+        nsState.connections.forEach(nsDrawConnection);
+        nsState.devices.forEach(nsDrawDevice);
     }
 
-    function addLink(from, to) {
-        if (from === to) return;
-        const exists = netLinks.some(l => (l.from === from && l.to === to) || (l.from === to && l.to === from));
-        if (!exists) netLinks.push({ from, to });
-    }
-
-    // أحداث السحب العامة (ماوس + لمس)
-    function onDragMove(clientX, clientY) {
-        if (dragDevice === null || !netCanvas) return;
-        const rect = netCanvas.getBoundingClientRect();
-        netDevices[dragDevice].x = Math.max(0, Math.min(clientX - rect.left - dragOffset.x, netCanvas.clientWidth - 70));
-        netDevices[dragDevice].y = Math.max(0, Math.min(clientY - rect.top - dragOffset.y, netCanvas.clientHeight - 50));
-        renderNet();
-    }
-    function onDragEnd() { dragDevice = null; }
-
-    if (netCanvas) {
-        document.addEventListener('mousemove', (e) => onDragMove(e.clientX, e.clientY));
-        document.addEventListener('touchmove', (e) => {
-            if (dragDevice === null) return;
-            e.preventDefault();
-            onDragMove(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
-        document.addEventListener('mouseup', onDragEnd);
-        document.addEventListener('touchend', onDragEnd);
-
-        netCanvas.addEventListener('click', (e) => {
-            if (e.target === netCanvas) {
-                selectedDevice = null;
-                if (isLinking) { isLinking = false; linkStart = null; updateLinkModeUI(); }
-                renderNet();
-            }
-        });
-    }
-
-    // زر وضع الربط
-    if (netLinkModeBtn) {
-        netLinkModeBtn.addEventListener('click', () => {
-            isLinking = !isLinking;
-            linkStart = null;
-            updateLinkModeUI();
-            renderNet();
-        });
-    }
-
-    // إضافة الأجهزة
-    document.querySelectorAll('.net-device-btn[data-device]').forEach(btn => {
+    // إضافة جهاز بالنقر على زر
+    document.querySelectorAll('[data-ns-device]').forEach(btn => {
         btn.addEventListener('click', () => {
-            if (!netCanvas) return;
-            const type = btn.dataset.device;
-            const count = netDevices.filter(d => d.type === type).length;
-            const names = {pc: 'حاسوب', server: 'خادم', switch: 'مبدل', router: 'موجه'};
-            const x = 20 + Math.random() * (netCanvas.clientWidth - 100);
-            const y = 20 + Math.random() * (netCanvas.clientHeight - 80);
-            netDevices.push({ type, name: `${names[type]} ${count + 1}`, x, y });
-            renderNet();
+            if (!nsCanvas) return;
+            const type = btn.dataset.nsDevice;
+            const cw = nsCanvas.width || nsCanvas.clientWidth;
+            const ch = nsCanvas.height || nsCanvas.clientHeight;
+            const x = (50 + Math.random() * (cw - 150) - nsState.pan.x) / nsState.zoom;
+            const y = (50 + Math.random() * (ch - 100) - nsState.pan.y) / nsState.zoom;
+            nsCreateDevice(type, x, y);
+            nsRender();
         });
     });
 
-    if (netClear) {
-        netClear.addEventListener('click', () => {
-            netDevices = []; netLinks = [];
-            selectedDevice = null; isLinking = false; linkStart = null;
-            updateLinkModeUI();
-            renderNet();
+    // أدوات التحديد/التوصيل/الحذف
+    document.querySelectorAll('[data-ns-tool]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-ns-tool]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            nsState.tool = btn.dataset.nsTool;
+            if (nsState.tool !== 'connect') {
+                nsState.connectFirst = null;
+                nsState.connectPendingSecond = null;
+                document.getElementById('ns-connectionMode').classList.remove('show');
+                document.getElementById('ns-connTypePicker').classList.remove('show');
+            }
         });
+    });
+
+    // تفعيل أداة التحديد افتراضياً
+    const nsSelectBtn = document.querySelector('[data-ns-tool="select"]');
+    if (nsSelectBtn) nsSelectBtn.classList.add('active');
+
+    // التفاعل مع الكانفاس
+    function nsDeviceAt(x, y) {
+        for (let i = nsState.devices.length - 1; i >= 0; i--) {
+            const d = nsState.devices[i];
+            const s = nsGetDeviceSize(d.type) / 2;
+            const dx = d.x - x, dy = d.y - y;
+            if (d.type === 'router' || d.type === 'switch' || d.type === 'cloud') {
+                if (Math.abs(dx) <= s && Math.abs(dy) <= s) return d;
+            } else {
+                if (dx*dx + dy*dy <= s*s) return d;
+            }
+        }
+        return null;
+    }
+
+    if (nsCanvas) {
+        nsCanvas.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            const rect = nsCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left - nsState.pan.x) / nsState.zoom;
+            const y = (e.clientY - rect.top - nsState.pan.y) / nsState.zoom;
+            const d = nsDeviceAt(x, y);
+            if (d) {
+                nsState.selectedId = d.id;
+                nsRender();
+                const menu = document.getElementById('ns-contextMenu');
+                menu.classList.add('show');
+                menu.style.left = e.clientX + 'px';
+                menu.style.top = e.clientY + 'px';
+                menu.dataset.deviceId = d.id;
+            }
+        });
+
+        nsCanvas.addEventListener('mousedown', e => {
+            if (e.button === 2) return;
+            if (e.button === 1 || e.shiftKey) {
+                nsState.isPanning = true;
+                nsState.panStart = { x: e.clientX - nsState.pan.x, y: e.clientY - nsState.pan.y };
+                return;
+            }
+
+            const rect = nsCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left - nsState.pan.x) / nsState.zoom;
+            const y = (e.clientY - rect.top - nsState.pan.y) / nsState.zoom;
+            const d = nsDeviceAt(x, y);
+
+            if (nsState.tool === 'delete') {
+                if (d) nsRemoveDevice(d.id);
+                return;
+            }
+
+            if (nsState.tool === 'connect') {
+                if (d) {
+                    if (!nsState.connectFirst) {
+                        nsState.connectFirst = d.id;
+                        document.getElementById('ns-connectionMode').classList.add('show');
+                        document.getElementById('ns-connectionMode').textContent = `🔗 اختر الجهاز الثاني (${d.name})`;
+                    } else if (d.id !== nsState.connectFirst) {
+                        nsState.connectPendingSecond = d.id;
+                        document.getElementById('ns-connTypePicker').classList.add('show');
+                    }
+                }
+                return;
+            }
+
+            nsState.selectedId = d ? d.id : null;
+            if (d) {
+                nsState.dragDevice = d;
+                nsState.dragOffset = { x: x - d.x, y: y - d.y };
+            }
+            nsRender();
+        });
+
+        nsCanvas.addEventListener('mousemove', e => {
+            if (nsState.isPanning) {
+                nsState.pan.x = e.clientX - nsState.panStart.x;
+                nsState.pan.y = e.clientY - nsState.panStart.y;
+                nsRender();
+                return;
+            }
+            if (nsState.dragDevice) {
+                const rect = nsCanvas.getBoundingClientRect();
+                nsState.dragDevice.x = (e.clientX - rect.left - nsState.pan.x) / nsState.zoom - nsState.dragOffset.x;
+                nsState.dragDevice.y = (e.clientY - rect.top - nsState.pan.y) / nsState.zoom - nsState.dragOffset.y;
+                nsRender();
+            }
+        });
+
+        nsCanvas.addEventListener('mouseup', () => {
+            nsState.dragDevice = null;
+            nsState.isPanning = false;
+        });
+
+        nsCanvas.addEventListener('mouseleave', () => {
+            nsState.dragDevice = null;
+            nsState.isPanning = false;
+        });
+
+        // عجلة الفأرة للتكبير
+        nsCanvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.05 : 0.05;
+            nsState.zoom = Math.max(0.2, Math.min(3, nsState.zoom + delta));
+            nsUpdateZoom();
+        }, { passive: false });
+    }
+
+    // قائمة السياق
+    document.addEventListener('click', () => {
+        document.getElementById('ns-contextMenu').classList.remove('show');
+        document.getElementById('ns-infoPanel').classList.remove('show');
+    });
+
+    document.getElementById('ns-contextMenu').addEventListener('click', e => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const id = parseInt(document.getElementById('ns-contextMenu').dataset.deviceId);
+        const d = nsState.devices.find(dd => dd.id === id);
+        if (!d) return;
+
+        switch(btn.dataset.nsAction) {
+            case 'edit': nsOpenModal(d); break;
+            case 'info': nsShowInfo(d); break;
+            case 'delete': nsRemoveDevice(d.id); break;
+        }
+        document.getElementById('ns-contextMenu').classList.remove('show');
+    });
+
+    function nsShowInfo(d) {
+        const panel = document.getElementById('ns-infoPanel');
+        document.getElementById('ns-infoTitle').textContent = `${NS_DEVICE_ICONS[d.type]} ${d.name}`;
+        const conns = nsState.connections.filter(c => c.from === d.id || c.to === d.id);
+        const connList = conns.map(c => {
+            const other = nsState.devices.find(dev => dev.id === (c.from === d.id ? c.to : c.from));
+            const typeLabel = c.type === 'wireless' ? '📶 لاسلكي' : '🔌 سلكي';
+            return other ? `<li>${other.name} (${typeLabel})</li>` : '';
+        }).join('');
+        document.getElementById('ns-infoContent').innerHTML = `
+            <p>النوع: ${NS_DEVICE_NAMES[d.type]}</p>
+            <p>${d.type === 'cloud' ? 'IP: عام' : 'IP: ' + d.ip}</p>
+            <p>المنافذ: ${d.ports.length || 'غير معروف'}</p>
+            <p>رقم: #${d.id}</p>
+            ${conns.length ? `<p>التوصيلات (${conns.length}):</p><ul>${connList}</ul>` : '<p>لا توجد توصيلات</p>'}
+        `;
+        panel.classList.add('show');
+        setTimeout(() => { panel.classList.remove('show'); }, 5000);
+    }
+
+    // تعديل الجهاز
+    let nsEditingDevice = null;
+    function nsOpenModal(d) {
+        nsEditingDevice = d;
+        document.getElementById('ns-modalTitle').textContent = `✏️ تعديل ${NS_DEVICE_NAMES[d.type]}`;
+        document.getElementById('ns-editName').value = d.name;
+        document.getElementById('ns-editIP').value = d.ip;
+        document.getElementById('ns-modalOverlay').classList.add('show');
+    }
+    document.getElementById('ns-modalCancel').addEventListener('click', () => {
+        document.getElementById('ns-modalOverlay').classList.remove('show');
+        nsEditingDevice = null;
+    });
+    document.getElementById('ns-modalSave').addEventListener('click', () => {
+        if (!nsEditingDevice) return;
+        nsEditingDevice.name = document.getElementById('ns-editName').value || nsEditingDevice.name;
+        nsEditingDevice.ip = document.getElementById('ns-editIP').value || nsEditingDevice.ip;
+        document.getElementById('ns-modalOverlay').classList.remove('show');
+        nsEditingDevice = null;
+        nsRender();
+    });
+
+    // الاتصالات
+    function nsAddConnection(fromId, toId, type = 'wired') {
+        if (nsState.connections.some(c => (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId))) {
+            document.getElementById('ns-connectionMode').textContent = '⚠️ يوجد اتصال مسبق';
+            setTimeout(() => { document.getElementById('ns-connectionMode').classList.remove('show'); }, 1500);
+            return;
+        }
+        const c = { from: fromId, to: toId, active: false, type };
+        nsState.connections.push(c);
+        setTimeout(() => { c.active = true; nsRender(); }, 500);
+        nsRender();
+    }
+
+    document.querySelectorAll('.ns-conn-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.nsConn;
+            const secondId = nsState.connectPendingSecond;
+            if (nsState.connectFirst && secondId) {
+                nsAddConnection(nsState.connectFirst, secondId, type);
+                nsState.connectFirst = null;
+                nsState.connectPendingSecond = null;
+                document.getElementById('ns-connectionMode').classList.remove('show');
+                document.getElementById('ns-connTypePicker').classList.remove('show');
+            }
+        });
+    });
+
+    // إزالة
+    function nsRemoveDevice(id) {
+        nsState.devices = nsState.devices.filter(d => d.id !== id);
+        nsState.connections = nsState.connections.filter(c => c.from !== id && c.to !== id);
+        if (nsState.selectedId === id) nsState.selectedId = null;
+        if (nsState.connectFirst === id) { nsState.connectFirst = null; nsState.connectPendingSecond = null; document.getElementById('ns-connTypePicker').classList.remove('show'); }
+        nsRender();
+    }
+
+    // تكبير/تصغير
+    document.getElementById('ns-zoomIn').addEventListener('click', () => {
+        nsState.zoom = Math.min(3, nsState.zoom + 0.1);
+        nsUpdateZoom();
+    });
+    document.getElementById('ns-zoomOut').addEventListener('click', () => {
+        nsState.zoom = Math.max(0.2, nsState.zoom - 0.1);
+        nsUpdateZoom();
+    });
+    document.getElementById('ns-zoomReset').addEventListener('click', () => {
+        nsState.zoom = 1;
+        nsState.pan = { x: 0, y: 0 };
+        nsUpdateZoom();
+    });
+    function nsUpdateZoom() {
+        document.getElementById('ns-zoomLevel').textContent = Math.round(nsState.zoom * 100) + '%';
+        nsRender();
+    }
+
+    // مسح الكل
+    document.getElementById('ns-clearAll').addEventListener('click', () => {
+        if (nsState.devices.length === 0) return;
+        if (confirm('هل أنت متأكد من مسح جميع العناصر؟')) {
+            nsState.devices = [];
+            nsState.connections = [];
+            nsState.selectedId = null;
+            nsState.connectFirst = null;
+            nsState.connectPendingSecond = null;
+            document.getElementById('ns-connTypePicker').classList.remove('show');
+            nsRender();
+        }
+    });
+
+    // اختصارات لوحة المفاتيح
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (nsState.selectedId) {
+                nsRemoveDevice(nsState.selectedId);
+                e.preventDefault();
+            }
+        }
+        if (e.key === 'Escape') {
+            nsState.connectFirst = null;
+            nsState.connectPendingSecond = null;
+            document.getElementById('ns-connectionMode').classList.remove('show');
+            document.getElementById('ns-connTypePicker').classList.remove('show');
+            if (document.getElementById('ns-modalOverlay').classList.contains('show')) {
+                document.getElementById('ns-modalOverlay').classList.remove('show');
+                nsEditingDevice = null;
+            }
+        }
+    });
+
+    // مثال تلقائي
+    function nsLoadExample() {
+        const p1 = nsCreateDevice('pc', 120, 200);
+        const p2 = nsCreateDevice('pc', 250, 350);
+        const phone = nsCreateDevice('phone', 100, 400);
+        const printer = nsCreateDevice('printer', 350, 200);
+        const server = nsCreateDevice('server', 700, 150);
+        const router = nsCreateDevice('router', 500, 300);
+        const sw = nsCreateDevice('switch', 400, 450);
+        const hub = nsCreateDevice('hub', 600, 400);
+        const cloud = nsCreateDevice('cloud', 900, 300);
+
+        nsAddConnection(p1.id, sw.id, 'wired');
+        nsAddConnection(p2.id, sw.id, 'wired');
+        nsAddConnection(phone.id, hub.id, 'wireless');
+        nsAddConnection(hub.id, sw.id, 'wired');
+        nsAddConnection(sw.id, router.id, 'wired');
+        nsAddConnection(printer.id, sw.id, 'wired');
+        nsAddConnection(server.id, router.id, 'wired');
+        nsAddConnection(router.id, cloud.id, 'wired');
+        nsAddConnection(p2.id, router.id, 'wireless');
+        nsRender();
+    }
+
+    let nsInitialized = false;
+
+    function nsInit() {
+        if (nsInitialized || !nsCanvas) return;
+        nsInitialized = true;
+        nsLoadExample();
+    }
+
+    // تشغيل المثال عند أول ظهور للتبويب
+    const nsSubtabObserver = new MutationObserver(() => {
+        const st = document.getElementById('subtab-network');
+        if (st && st.classList.contains('active') && !nsInitialized) nsInit();
+    });
+    const nsSubtab = document.getElementById('subtab-network');
+    if (nsSubtab) {
+        nsSubtabObserver.observe(nsSubtab, { attributes: true, attributeFilter: ['class'] });
+        if (nsSubtab.classList.contains('active')) nsInit();
+    }
+
+    // إعادة الرسم عند تغيير حجم الحاوية
+    if (nsCanvas) {
+        const nsRo = new ResizeObserver(() => {
+            if (nsInitialized) nsRender();
+        });
+        nsRo.observe(nsCanvas.parentElement);
     }
 
     // Flowchart designer setup
@@ -644,75 +1071,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (algoPills.length) renderFlow();
-
-    // --- محرر الأكواد — مفسّر كود زائف حقيقي ---
-    const codeEditorArea = document.getElementById('code-editor-textarea');
-    const codeRunBtn = document.getElementById('code-run-btn');
-    const codeOutput = document.getElementById('output-content');
-
-    // تقييم تعبير رياضي بسيط باستخدام المتغيرات
-    function evalExpr(expr, vars) {
-        let e = expr.trim();
-        // استبدال أسماء المتغيرات بقيمها (الأطول أولاً لتجنب الاستبدال الجزئي)
-        const sorted = Object.keys(vars).sort((a, b) => b.length - a.length);
-        sorted.forEach(v => { e = e.replace(new RegExp(`\\b${v}\\b`, 'g'), vars[v]); });
-        // تحويل العمليات العربية
-        e = e.replace(/×/g, '*').replace(/÷/g, '/');
-        try { return Function('"use strict"; return (' + e + ')')(); }
-        catch { return e; }
-    }
-
-    function executePseudo(code) {
-        const vars = {};
-        const output = [];
-        const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
-
-        for (const line of lines) {
-            if (line.startsWith('اقرأ')) {
-                const varNames = line.replace('اقرأ', '').split(',').map(v => v.trim());
-                for (const vn of varNames) {
-                    const val = prompt(`⌨️ أدخل قيمة ${vn}:`);
-                    if (val === null) return ['⚠️ تم إلغاء التنفيذ'];
-                    vars[vn] = isNaN(val) ? val : Number(val);
-                }
-            } else if (line.includes('←')) {
-                const [left, right] = line.split('←').map(s => s.trim());
-                // دعم التعيين المتعدد: F ← 1, I ← 1
-                if (right.includes(',') && right.includes('←')) {
-                    const parts = line.split(',').map(s => s.trim());
-                    parts.forEach(p => {
-                        const [l, r] = p.split('←').map(s => s.trim());
-                        vars[l] = evalExpr(r, vars);
-                    });
-                } else {
-                    vars[left] = evalExpr(right, vars);
-                }
-            } else if (line.startsWith('اطبع') || line.startsWith('أظهر')) {
-                const varName = line.replace(/^(اطبع|أظهر)\s*/, '').trim();
-                const val = vars[varName] !== undefined ? vars[varName] : evalExpr(varName, vars);
-                output.push(`> ${val}`);
-            }
-        }
-        return output.length ? output : ['> تم التنفيذ بنجاح (بدون مخرجات)'];
-    }
-
-    if (codeRunBtn && codeEditorArea) {
-        codeRunBtn.addEventListener('click', () => {
-            if (!codeOutput) return;
-            codeOutput.textContent = 'جاري التنفيذ...';
-            codeOutput.style.color = 'var(--text-secondary)';
-            setTimeout(() => {
-                try {
-                    const results = executePseudo(codeEditorArea.value);
-                    codeOutput.textContent = results.join('\n');
-                    codeOutput.style.color = results[0].includes('⚠️') ? '#f59e0b' : '#10b981';
-                } catch (err) {
-                    codeOutput.textContent = `❌ خطأ: ${err.message}`;
-                    codeOutput.style.color = '#ef4444';
-                }
-            }, 300);
-        });
-    }
 
     // ============================================================
     // HTML Editor Advanced — دمـج من html-editor.html
@@ -1371,6 +1729,482 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Expose functions globally for fullscreen
     window.htmlEditorRunCode = htmlRunCode;
+
+    // ============================================================
+    // Algorithm Editor Engine (دمج من algo-editor.html)
+    // ============================================================
+    function algoShowInputModal(label) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'algo-input-modal-overlay';
+            overlay.innerHTML =
+                `<div class="algo-input-modal" role="dialog" aria-modal="true">
+              <label class="algo-input-modal-label">${label}</label>
+              <input class="algo-input-modal-field" type="text" autocomplete="off" dir="auto" />
+              <div class="algo-input-modal-actions">
+                <button class="algo-btn-run algo-input-modal-confirm">تأكيد</button>
+                <button class="algo-btn-reset algo-input-modal-cancel">إلغاء</button>
+              </div>
+            </div>`;
+            document.body.appendChild(overlay);
+            const field = overlay.querySelector('.algo-input-modal-field');
+            const confirm = overlay.querySelector('.algo-input-modal-confirm');
+            const cancel = overlay.querySelector('.algo-input-modal-cancel');
+            requestAnimationFrame(() => field?.focus());
+            const done = (val) => { overlay.remove(); resolve(val); };
+            if (confirm) confirm.onclick = () => done(field ? field.value : '');
+            if (cancel) cancel.onclick = () => done('');
+            field?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') done(field.value);
+                if (e.key === 'Escape') done('');
+            });
+        });
+    }
+
+    const algoEditorEl = document.getElementById('algoEditor');
+    const algoHighlightEl = document.getElementById('algoHighlight');
+    const algoVarsBody = document.getElementById('algoVarsBody');
+    const algoOutputEl = document.getElementById('algoOutput');
+    const algoRunBtn = document.getElementById('algoRunBtn');
+    const algoStepBtn = document.getElementById('algoStepBtn');
+    const algoResetBtn = document.getElementById('algoResetBtn');
+    const algoLangToggle = document.getElementById('algoLangToggle');
+
+    if (algoEditorEl && algoHighlightEl && algoVarsBody && algoOutputEl && algoRunBtn && algoStepBtn && algoResetBtn) {
+        let algoCurrentLang = 'en';
+        let algoIsRunning = false;
+
+        const algoDefaultPrograms = {
+            en: 'Algorithm example\nstart\n  Write("Hello World!");\nend',
+            fr: 'Algorithme exemple\nDebut\n  Ecrire("Hello World!");\nFin'
+        };
+
+        const algoExamples = {
+            en: {
+                hello: 'Algorithm HelloWorld\nstart\n  Write("Hello World!");\nend',
+                sum: 'Algorithm Summation\nvar a, b, s : integer\nstart\n  a \u2190 10\n  b \u2190 20\n  s \u2190 a + b\n  Write("The sum is:");\n  Write(s);\nend',
+                condition: 'Algorithm Grades\nvar score : integer\nstart\n  score \u2190 85\n  if score >= 90 then\n    Write("Excellent");\n  else if score >= 80 then\n    Write("Very Good");\n  else if score >= 70 then\n    Write("Good");\n  else\n    Write("Needs improvement");\n  end\nend',
+                loop: 'Algorithm Counting\nvar i : integer\nstart\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  end\nend'
+            },
+            fr: {
+                hello: 'Algorithme HelloWorld\nDebut\n  Ecrire("Bonjour tout le monde!");\nFin',
+                sum: 'Algorithme Somme\nvar a, b, s : entier\nDebut\n  a \u2190 10\n  b \u2190 20\n  s \u2190 a + b\n  Ecrire("La somme est:");\n  Ecrire(s);\nFin',
+                condition: 'Algorithme Notes\nvar score : entier\nDebut\n  score \u2190 85\n  Si score >= 90 Alors\n    Ecrire("Excellent");\n  Sinon si score >= 80 Alors\n    Ecrire("Tr\u00e8s bien");\n  Sinon si score >= 70 Alors\n    Ecrire("Bien");\n  Sinon\n    Ecrire("Am\u00e9lioration n\u00e9cessaire");\n  FinSi\nFin',
+                loop: 'Algorithme Comptage\nvar i : entier\nDebut\n  Pour i = 1 a 5 Faire\n    Ecrire("Nombre:");\n    Ecrire(i);\n  FinPour\nFin'
+            }
+        };
+
+        const algoKW_ALGORITHM = ['algorithm', 'algorithme'];
+        const algoKW_VAR = ['var', 'variable', 'variables'];
+        const algoKW_START = ['start', 'debut', 'd\u00e9but'];
+        const algoKW_END = ['end', 'fin', 'finsi', 'fintantque'];
+        const algoKW_IF_START = ['if', 'si'];
+        const algoKW_ELSE_IF = ['else if', 'sinon si'];
+        const algoKW_THEN = ['then', 'alors'];
+        const algoKW_ELSE = ['else', 'sinon'];
+        const algoKW_WHILE_START = ['while', 'tantque'];
+        const algoKW_FOR_START = ['for', 'pour'];
+        const algoKW_TO = ['to', 'a', '\u00e0'];
+        const algoKW_DO = ['do', 'faire'];
+        const algoKW_READ = ['read', 'lire'];
+        const algoKW_WRITE = ['write', 'ecrire', '\u00e9crire'];
+
+        const algoHL_KEYWORDS = [...algoKW_ALGORITHM, ...algoKW_VAR, ...algoKW_START, ...algoKW_END];
+        const algoHL_CONTROL = [...algoKW_IF_START, ...algoKW_THEN, ...algoKW_ELSE, ...algoKW_WHILE_START, ...algoKW_FOR_START, ...algoKW_TO, ...algoKW_DO, 'finsi', 'fintantque', 'finpour', 'else if', 'sinon si'];
+        const algoHL_IO = [...algoKW_READ, ...algoKW_WRITE, 'print', 'let'];
+        const algoHL_TYPES = ['integer', 'real', 'string', 'boolean', 'char', 'entier', 'reel', 'r\u00e9el', 'chaine', 'cha\u00eene', 'booleen', 'bool\u00e9en', 'caractere', 'caract\u00e8re'];
+        const algoHL_LOGIC = ['and', 'or', 'not', 'true', 'false', 'et', 'ou', 'non', 'vrai', 'faux'];
+
+        let algoVM = { lines: [], blocks: [], pc: 0, vars: {}, out: [], halted: false, _ifMap: new Map(), _whileMap: new Map(), _forMap: new Map() };
+
+        function algoSanitizeExpr(expr) {
+            const s = String(expr ?? '').trim();
+            if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) throw new Error('تعبير غير مسموح.');
+            const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval', 'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require', 'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'];
+            const lower = s.toLowerCase();
+            if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) throw new Error('محاولة وصول غير مصرح بها.');
+            if (/\w+\s*\(/.test(s)) throw new Error('استدعاء دوال غير مسموح.');
+            return s;
+        }
+
+        function algoEvalExpr(expr, vars) {
+            const safe = algoSanitizeExpr(expr)
+                .replace(/\b(?:and|et)\b/gi, '&&')
+                .replace(/\b(?:or|ou)\b/gi, '||')
+                .replace(/\b(?:not|non)\b/gi, '!')
+                .replace(/\b(?:vrai|true)\b/gi, 'true')
+                .replace(/\b(?:faux|false)\b/gi, 'false');
+            try {
+                const keys = Object.keys(vars);
+                const values = keys.map(k => vars[k]);
+                const fn = new Function(...keys, 'return (' + safe + ');');
+                return fn(...values);
+            } catch (e) { throw new Error('خطأ في تقييم التعبير: ' + e.message); }
+        }
+
+        function algoStripComments(line) {
+            let s = line;
+            const hash = s.indexOf('#'), slashes = s.indexOf('//');
+            const cut = [hash, slashes].filter(i => i >= 0).sort((a, b) => a - b)[0];
+            if (cut !== undefined) s = s.slice(0, cut);
+            return s.trimEnd();
+        }
+
+        function algoNormalizeLine(line) {
+            return algoStripComments(line).replace(/\s*;\s*$/, '');
+        }
+
+        function algoStartsWithAny(low, prefixes) {
+            for (const p of prefixes) { if (low.startsWith(p + ' ') || low.startsWith(p + '(')) return p; }
+            return null;
+        }
+
+        function algoEndsWithAny(low, suffixes) {
+            for (const s of suffixes) { if (low.endsWith(' ' + s)) return s; }
+            return null;
+        }
+
+        function algoRebuildBlocks(lines) {
+            const blocks = [], stack = [];
+            const pushBlock = (b) => { blocks.push(b); stack.push(b); };
+            lines.forEach((raw, i) => {
+                const line = algoNormalizeLine(raw).trim();
+                if (!line) return;
+                const low = line.toLowerCase();
+                const ifPrefix = algoStartsWithAny(low, algoKW_IF_START);
+                const thenSuffix = algoEndsWithAny(low, algoKW_THEN);
+                if (ifPrefix && thenSuffix) {
+                    const cond = line.slice(ifPrefix.length + 1, -(thenSuffix.length + 1)).trim();
+                    pushBlock({ type: 'if', line: i, cond, elseLine: null, endLine: null });
+                    return;
+                }
+                const elseifPrefix = algoStartsWithAny(low, algoKW_ELSE_IF);
+                if (elseifPrefix && thenSuffix) {
+                    const top = stack[stack.length - 1];
+                    if (!top || top.type !== 'if') throw new Error('else if/sinon si بدون if/si (سطر ' + (i + 1) + ')');
+                    const cond = line.slice(elseifPrefix.length + 1, -(thenSuffix.length + 1)).trim();
+                    if (!top.elseIfs) top.elseIfs = [];
+                    top.elseIfs.push({ line: i, cond });
+                    return;
+                }
+                if (algoKW_ELSE.includes(low)) {
+                    const top = stack[stack.length - 1];
+                    if (!top || top.type !== 'if') throw new Error('else/sinon بدون if/si (سطر ' + (i + 1) + ')');
+                    top.elseLine = i;
+                    return;
+                }
+                const whilePrefix = algoStartsWithAny(low, algoKW_WHILE_START);
+                const doSuffix = algoEndsWithAny(low, algoKW_DO);
+                if (whilePrefix && doSuffix) {
+                    const cond = line.slice(whilePrefix.length + 1, -(doSuffix.length + 1)).trim();
+                    pushBlock({ type: 'while', line: i, cond, endLine: null });
+                    return;
+                }
+                const forPrefix = algoStartsWithAny(low, algoKW_FOR_START);
+                if (forPrefix && doSuffix) {
+                    const middle = line.slice(forPrefix.length + 1, -(doSuffix.length + 1)).trim();
+                    let toIdx = -1, toLen = 0;
+                    for (const kwTo of algoKW_TO) {
+                        const idx = middle.toLowerCase().indexOf(' ' + kwTo + ' ');
+                        if (idx >= 0) { toIdx = idx; toLen = kwTo.length; break; }
+                    }
+                    if (toIdx < 0) throw new Error('صيغة for غير صحيحة: مفقود to/a (سطر ' + (i + 1) + ')');
+                    const left = middle.slice(0, toIdx).trim();
+                    const endExpr = middle.slice(toIdx + toLen + 2).trim();
+                    const m = left.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                    if (!m) throw new Error('صيغة for غير صحيحة: المتغير والبداية (سطر ' + (i + 1) + ')');
+                    const [, name, startExpr] = m;
+                    pushBlock({ type: 'for', line: i, varName: name, startExpr, endExpr, endLine: null });
+                    return;
+                }
+                if (algoKW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') {
+                    const top = stack.pop();
+                    if (top) top.endLine = i;
+                    return;
+                }
+            });
+            if (stack.length) {
+                const top = stack[stack.length - 1];
+                throw new Error('كتلة غير مغلقة بدأت في سطر ' + (top.line + 1));
+            }
+            const mapIfByLine = new Map(), mapWhileByLine = new Map(), mapForByLine = new Map();
+            blocks.forEach(b => { if (b.type === 'if') mapIfByLine.set(b.line, b); if (b.type === 'while') mapWhileByLine.set(b.line, b); if (b.type === 'for') mapForByLine.set(b.line, b); });
+            return { blocks, mapIfByLine, mapWhileByLine, mapForByLine };
+        }
+
+        function algoGetLineKind(line) {
+            const s = algoNormalizeLine(line).trim();
+            const low = s.toLowerCase();
+            if (!s) return { kind: 'empty' };
+            if (algoStartsWithAny(low, algoKW_ALGORITHM)) return { kind: 'algorithm', text: s };
+            if (algoStartsWithAny(low, algoKW_VAR)) return { kind: 'var', text: s };
+            if (algoKW_START.includes(low)) return { kind: 'start', text: s };
+            if (low.startsWith('let ')) return { kind: 'let', text: s };
+            if (low.startsWith('print ')) return { kind: 'print', text: s };
+            const readP = algoStartsWithAny(low, algoKW_READ);
+            if (readP) return { kind: 'read', text: s };
+            const writeP = algoStartsWithAny(low, algoKW_WRITE);
+            if (writeP) return { kind: 'write', text: s };
+            const ifP = algoStartsWithAny(low, algoKW_IF_START);
+            const thenS = algoEndsWithAny(low, algoKW_THEN);
+            if (ifP && thenS) return { kind: 'if', text: s };
+            const elseifP = algoStartsWithAny(low, algoKW_ELSE_IF);
+            if (elseifP && thenS) return { kind: 'elseif', text: s };
+            if (algoKW_ELSE.includes(low)) return { kind: 'else', text: s };
+            const whP = algoStartsWithAny(low, algoKW_WHILE_START);
+            const doS = algoEndsWithAny(low, algoKW_DO);
+            if (whP && doS) return { kind: 'while', text: s };
+            const forP = algoStartsWithAny(low, algoKW_FOR_START);
+            if (forP && doS) return { kind: 'for', text: s };
+            if (algoKW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') return { kind: 'end', text: s };
+            if (s.includes('\u2190')) return { kind: 'assign', text: s };
+            return { kind: 'unknown', text: s };
+        }
+
+        function algoEscapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = String(text ?? '');
+            return div.innerHTML;
+        }
+
+        function algoRenderVars() {
+            const entries = Object.entries(algoVM.vars).filter(([k]) => !k.startsWith('__'));
+            if (!entries.length) {
+                algoVarsBody.innerHTML = '<tr><td colspan="2" class="algo-empty">لا توجد متغيرات بعد</td></tr>';
+                return;
+            }
+            algoVarsBody.innerHTML = entries.sort(([a], [b]) => a.localeCompare(b))
+                .map(([k, v]) => {
+                    const value = typeof v === 'string' ? JSON.stringify(v) : String(v);
+                    return '<tr><td>' + algoEscapeHtml(k) + '</td><td dir="ltr" style="text-align:left;">' + algoEscapeHtml(value) + '</td></tr>';
+                }).join('');
+        }
+
+        function algoRenderOutput() { algoOutputEl.textContent = algoVM.out.join('\n'); }
+
+        function algoHighlightLine(raw) {
+            if (!raw.trim()) return '&nbsp;';
+            let mainPart = raw, commentPart = '';
+            const hashIdx = raw.indexOf('#'), slashIdx = raw.indexOf('//');
+            let commentStart = -1;
+            if (hashIdx >= 0 && (slashIdx < 0 || hashIdx <= slashIdx)) commentStart = hashIdx;
+            else if (slashIdx >= 0) commentStart = slashIdx;
+            if (commentStart >= 0) { mainPart = raw.slice(0, commentStart); commentPart = raw.slice(commentStart); }
+            const tokens = [];
+            const tokenRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\d+(?:\.\d+)?)|([A-Za-z\u00C0-\u00FF_]\w*)|(\u2190|:=|<=|>=|<>|!=|&&|\|\||[+\-*/%<>=!(),;:])|(\s+)|(.)/g;
+            let m;
+            while ((m = tokenRe.exec(mainPart)) !== null) {
+                if (m[1] !== undefined) tokens.push('<span class="algo-tok-string">' + algoEscapeHtml(m[1]) + '</span>');
+                else if (m[2] !== undefined) tokens.push('<span class="algo-tok-number">' + algoEscapeHtml(m[2]) + '</span>');
+                else if (m[3] !== undefined) {
+                    const word = m[3], low = word.toLowerCase();
+                    if (algoHL_KEYWORDS.includes(low)) tokens.push('<span class="algo-tok-keyword">' + algoEscapeHtml(word) + '</span>');
+                    else if (algoHL_CONTROL.includes(low)) tokens.push('<span class="algo-tok-control">' + algoEscapeHtml(word) + '</span>');
+                    else if (algoHL_IO.includes(low)) tokens.push('<span class="algo-tok-io">' + algoEscapeHtml(word) + '</span>');
+                    else if (algoHL_TYPES.includes(low)) tokens.push('<span class="algo-tok-type">' + algoEscapeHtml(word) + '</span>');
+                    else if (algoHL_LOGIC.includes(low)) tokens.push('<span class="algo-tok-logic">' + algoEscapeHtml(word) + '</span>');
+                    else tokens.push('<span class="algo-tok-var">' + algoEscapeHtml(word) + '</span>');
+                } else if (m[4] !== undefined) tokens.push('<span class="algo-tok-op">' + algoEscapeHtml(m[4]) + '</span>');
+                else if (m[5] !== undefined) tokens.push(m[5]);
+                else tokens.push(algoEscapeHtml(m[6]));
+            }
+            if (commentPart) tokens.push('<span class="algo-tok-comment">' + algoEscapeHtml(commentPart) + '</span>');
+            return tokens.join('');
+        }
+
+        function algoRenderHighlight() {
+            const lines = algoVM.lines, cur = algoVM.pc;
+            const html = lines.map((ln, idx) => {
+                const colored = algoHighlightLine(ln);
+                const num = String(idx + 1).padStart(2, '0');
+                const isCur = idx === cur && !algoVM.halted;
+                return '<div class="algo-line ' + (isCur ? 'is-current' : '') + '">' +
+                    '<span class="algo-ln" aria-hidden="true">' + num + '</span>' +
+                    '<span class="algo-code">' + colored + '</span></div>';
+            }).join('');
+            algoHighlightEl.innerHTML = html + '\n';
+            const curEl = algoHighlightEl.querySelector('.algo-line.is-current');
+            if (curEl) {
+                const top = curEl.offsetTop, h = algoHighlightEl.clientHeight;
+                if (top < algoHighlightEl.scrollTop || top > algoHighlightEl.scrollTop + h - 48) {
+                    algoHighlightEl.scrollTop = Math.max(0, top - Math.floor(h / 3));
+                }
+            }
+        }
+
+        function algoResetVM() {
+            algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
+            const result = algoRebuildBlocks(algoVM.lines);
+            algoVM.blocks = result.blocks;
+            algoVM._ifMap = result.mapIfByLine;
+            algoVM._whileMap = result.mapWhileByLine;
+            algoVM._forMap = result.mapForByLine;
+            algoVM.pc = 0; algoVM.vars = {}; algoVM.out = []; algoVM.halted = false;
+            algoRenderVars(); algoRenderOutput(); algoRenderHighlight();
+        }
+
+        function algoJumpToNextExecutable() {
+            while (algoVM.pc < algoVM.lines.length) {
+                const { kind } = algoGetLineKind(algoVM.lines[algoVM.pc]);
+                if (kind === 'empty') { algoVM.pc += 1; continue; }
+                return;
+            }
+        }
+
+        async function algoStepOnce() {
+            if (algoVM.halted) return;
+            algoJumpToNextExecutable();
+            if (algoVM.pc >= algoVM.lines.length) { algoVM.halted = true; algoRenderHighlight(); return; }
+            const lineIdx = algoVM.pc, raw = algoVM.lines[lineIdx];
+            const s = algoNormalizeLine(raw).trim(), { kind } = algoGetLineKind(raw);
+            try {
+                algoVM._lastPC = algoVM.pc;
+                if (kind === 'algorithm' || kind === 'start') { algoVM.pc += 1; }
+                else if (kind === 'var') {
+                    const low = s.toLowerCase(); let rest;
+                    for (const kw of algoKW_VAR) { if (low.startsWith(kw + ' ')) { rest = s.slice(kw.length + 1).trim(); break; } }
+                    if (!rest) rest = s.slice(3).trim();
+                    const beforeType = rest.split(':')[0].trim();
+                    const names = beforeType.split(',').map(x => x.trim()).filter(Boolean);
+                    names.forEach(n => { if (/^[A-Za-z_]\w*$/.test(n) && !(n in algoVM.vars)) algoVM.vars[n] = null; });
+                    algoVM.pc += 1;
+                } else if (kind === 'let') {
+                    const rest = s.slice(4).trim();
+                    const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                    if (!m) throw new Error('صيغة let غير صحيحة (سطر ' + (lineIdx + 1) + ')');
+                    const [, name, expr] = m;
+                    algoVM.vars[name] = algoEvalExpr(expr, algoVM.vars);
+                    algoVM.pc += 1;
+                } else if (kind === 'assign') {
+                    const m = s.match(/^([A-Za-z_]\w*)\s*\u2190\s*(.+)$/);
+                    if (!m) throw new Error('صيغة الإسناد غير صحيحة (سطر ' + (lineIdx + 1) + ')');
+                    const [, name, expr] = m;
+                    algoVM.vars[name] = algoEvalExpr(expr, algoVM.vars);
+                    algoVM.pc += 1;
+                } else if (kind === 'read') {
+                    const m = s.match(/^(?:read|lire)\s*\(\s*([A-Za-z_]\w*)\s*\)\s*$/i);
+                    if (!m) throw new Error('صيغة Read/Lire غير صحيحة (سطر ' + (lineIdx + 1) + ')');
+                    const name = m[1];
+                    const rawVal = await algoShowInputModal('أدخل قيمة المتغير: ' + name);
+                    const v = rawVal == null ? '' : String(rawVal);
+                    const num = Number(v);
+                    algoVM.vars[name] = Number.isFinite(num) && v.trim() !== '' ? num : v;
+                    algoVM.pc += 1;
+                } else if (kind === 'write') {
+                    const m = s.match(/^(?:write|ecrire|\u00e9crire)\s*\(\s*(.+)\s*\)\s*$/i);
+                    if (!m) throw new Error('صيغة Write/Ecrire غير صحيحة (سطر ' + (lineIdx + 1) + ')');
+                    const val = algoEvalExpr(m[1], algoVM.vars);
+                    algoVM.out.push(String(val));
+                    algoVM.pc += 1;
+                } else if (kind === 'print') {
+                    const expr = s.slice(6).trim();
+                    const val = algoEvalExpr(expr, algoVM.vars);
+                    algoVM.out.push(String(val));
+                    algoVM.pc += 1;
+                } else if (kind === 'if') {
+                    const b = algoVM._ifMap.get(lineIdx);
+                    if (!b) throw new Error('if/si غير معروف (سطر ' + (lineIdx + 1) + ')');
+                    const ok = Boolean(algoEvalExpr(b.cond, algoVM.vars));
+                    if (ok) { algoVM.pc += 1; }
+                    else {
+                        let handled = false;
+                        if (b.elseIfs) { for (const ei of b.elseIfs) { if (Boolean(algoEvalExpr(ei.cond, algoVM.vars))) { algoVM.pc = ei.line + 1; handled = true; break; } } }
+                        if (!handled) algoVM.pc = (b.elseLine != null ? b.elseLine + 1 : b.endLine + 1);
+                    }
+                } else if (kind === 'elseif') {
+                    const match = algoVM.blocks.find(b => b.type === 'if' && b.elseIfs && b.elseIfs.some(ei => ei.line === lineIdx));
+                    if (!match) throw new Error('else if/sinon si بدون if/si (سطر ' + (lineIdx + 1) + ')');
+                    algoVM.pc = match.endLine + 1;
+                } else if (kind === 'else') {
+                    const match = algoVM.blocks.find(b => b.type === 'if' && b.elseLine === lineIdx);
+                    if (!match) throw new Error('else/sinon بدون if/si (سطر ' + (lineIdx + 1) + ')');
+                    algoVM.pc = match.endLine + 1;
+                } else if (kind === 'while') {
+                    const b = algoVM._whileMap.get(lineIdx);
+                    if (!b) throw new Error('while/tantque غير معروف (سطر ' + (lineIdx + 1) + ')');
+                    const ok = Boolean(algoEvalExpr(b.cond, algoVM.vars));
+                    if (ok) { algoVM.pc += 1; } else { algoVM.pc = b.endLine + 1; }
+                } else if (kind === 'for') {
+                    const b = algoVM._forMap.get(lineIdx);
+                    if (!b) throw new Error('for/pour غير معروف (سطر ' + (lineIdx + 1) + ')');
+                    const loopKey = '__for_' + lineIdx;
+                    if (!algoVM.vars[loopKey]) { algoVM.vars[b.varName] = algoEvalExpr(b.startExpr, algoVM.vars); algoVM.vars[loopKey] = true; }
+                    else { algoVM.vars[b.varName] = (Number(algoVM.vars[b.varName]) || 0) + 1; }
+                    const currentVal = Number(algoVM.vars[b.varName]), endVal = Number(algoEvalExpr(b.endExpr, algoVM.vars));
+                    if (currentVal <= endVal) { algoVM.pc += 1; }
+                    else { delete algoVM.vars[loopKey]; algoVM.pc = b.endLine + 1; }
+                } else if (kind === 'end') {
+                    const whileBlock = algoVM.blocks.find(b => b.type === 'while' && b.endLine === lineIdx);
+                    const forBlock = algoVM.blocks.find(b => b.type === 'for' && b.endLine === lineIdx);
+                    if (whileBlock) algoVM.pc = whileBlock.line;
+                    else if (forBlock) algoVM.pc = forBlock.line;
+                    else algoVM.pc += 1;
+                } else { throw new Error('سطر غير مدعوم (سطر ' + (lineIdx + 1) + ')'); }
+            } catch (e) { algoVM.out.push('خطأ: ' + (e && e.message ? e.message : String(e))); algoVM.halted = true; }
+            algoRenderVars(); algoRenderOutput(); algoRenderHighlight();
+        }
+
+        async function algoRunAll() {
+            const CHUNK = 500; let steps = 0;
+            const runChunk = async () => {
+                let i = 0;
+                while (!algoVM.halted && i < CHUNK) { await algoStepOnce(); i++; steps++; }
+                if (!algoVM.halted && steps < 10000) { setTimeout(() => runChunk(), 0); }
+                else if (steps >= 10000) { algoVM.out.push('تم إيقاف التشغيل: تجاوز الحد الأقصى للخطوات.'); algoVM.halted = true; algoRenderOutput(); algoRenderHighlight(); }
+            };
+            await runChunk();
+        }
+
+        function algoSyncScroll() { algoHighlightEl.scrollTop = algoEditorEl.scrollTop; algoHighlightEl.scrollLeft = algoEditorEl.scrollLeft; }
+
+        algoEditorEl.addEventListener('input', () => {
+            algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
+            try { const result = algoRebuildBlocks(algoVM.lines); algoVM.blocks = result.blocks; algoVM._ifMap = result.mapIfByLine; algoVM._whileMap = result.mapWhileByLine; algoVM._forMap = result.mapForByLine; } catch (e) {}
+            algoRenderHighlight();
+        });
+        algoEditorEl.addEventListener('scroll', algoSyncScroll);
+
+        algoRunBtn.addEventListener('click', async () => {
+            if (algoIsRunning) return; algoIsRunning = true; algoRunBtn.disabled = true; algoStepBtn.disabled = true;
+            try { algoResetVM(); await algoRunAll(); } finally { algoIsRunning = false; algoRunBtn.disabled = false; algoStepBtn.disabled = false; }
+        });
+        algoStepBtn.addEventListener('click', async () => {
+            if (algoIsRunning) return;
+            if (!algoVM.blocks?.length && algoEditorEl.value.trim()) algoResetVM();
+            await algoStepOnce();
+        });
+        algoResetBtn.addEventListener('click', () => { algoEditorEl.value = algoDefaultPrograms[algoCurrentLang]; algoResetVM(); });
+
+        if (algoLangToggle) {
+            const langBtns = algoLangToggle.querySelectorAll('.algo-lang-btn');
+            langBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lang = btn.dataset.lang;
+                    if (lang === algoCurrentLang) return;
+                    algoCurrentLang = lang;
+                    langBtns.forEach(b => b.classList.remove('is-active'));
+                    btn.classList.add('is-active');
+                    algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
+                    algoResetVM();
+                });
+            });
+        }
+
+        // Examples
+        const algoExampleBtns = document.querySelectorAll('.example-item');
+        algoExampleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.example;
+                if (algoExamples[algoCurrentLang] && algoExamples[algoCurrentLang][type]) {
+                    algoEditorEl.value = algoExamples[algoCurrentLang][type];
+                    algoResetVM();
+                }
+            });
+        });
+
+        if (!algoEditorEl.value.trim()) algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
+        algoResetVM();
+    }
 
     // Typing effect for lab subtitle
     const typingEl = document.getElementById('lab-typing');

@@ -11,6 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
 </head>
 
 <body>
@@ -192,61 +193,79 @@
                                     <button class="sub-tab" data-subtab="network">إنشاء الشبكات</button>
                                 </div>
 
-                                <!-- التبويب 1: محاكي التثبيت -->
+                                <!-- التبويب 1: محاكي التثبيت (دمج win11-simulator.html) -->
                                 <div class="subtab-content active" id="subtab-installer">
-                                    <div class="installer-container">
-                                        <div class="installer-sidebar">
-                                            <div class="installer-steps" id="installer-steps"></div>
-                                        </div>
-                                        <div class="installer-main">
-                                            <div class="installer-screen" id="installer-screen">
-                                                <div class="installer-progress-bar">
-                                                    <div class="installer-progress-fill" id="installer-progress"></div>
-                                                </div>
-                                                <div class="installer-content" id="installer-content">
-                                                    <div class="installer-icon">💻</div>
-                                                    <h3 class="installer-title">مرحباً بك في مثبت النظام</h3>
-                                                    <p class="installer-text">انقر "بدء التثبيت" لمحاكاة عملية تثبيت
-                                                        نظام التشغيل</p>
-                                                </div>
-                                            </div>
-                                            <div class="installer-controls">
-                                                <button id="installer-prev" class="glass-btn" disabled>السابق</button>
-                                                <button id="installer-next" class="glass-btn primary">بدء
-                                                    التثبيت</button>
-                                                <button id="installer-reset" class="glass-btn"
-                                                    style="display:none">إعادة</button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <iframe src="win11-simulator.html" class="w11-iframe" title="Windows 11 محاكي تثبيت" loading="lazy"></iframe>
                                 </div>
 
-                                <!-- التبويب 2: إنشاء الشبكات -->
+                                <!-- التبويب 2: إنشاء الشبكات (محاكي متقدم) -->
                                 <div class="subtab-content" id="subtab-network">
-                                    <div class="network-container">
+                                    <div class="network-container ns-container">
+                                        <!-- شريط الأدوات -->
                                         <div class="network-toolbar">
-                                            <button class="net-device-btn" data-device="pc" aria-label="إضافة حاسوب">💻
-                                                حاسوب</button>
-                                            <button class="net-device-btn" data-device="server"
-                                                aria-label="إضافة خادم">🖥️ خادم</button>
-                                            <button class="net-device-btn" data-device="switch"
-                                                aria-label="إضافة مبدل">🔀 مبدل</button>
-                                            <button class="net-device-btn" data-device="router"
-                                                aria-label="إضافة موجه">📡 موجه</button>
-                                            <button class="net-device-btn net-link-btn" id="net-link-mode"
-                                                aria-label="وضع ربط الأجهزة">🔗 ربط</button>
-                                            <button class="net-clear-btn" id="net-clear"
-                                                aria-label="مسح جميع الأجهزة">🗑️ مسح</button>
+                                            <button class="tool-btn" data-ns-tool="select"><span class="icon">👆</span> تحديد</button>
+                                            <button class="tool-btn" data-ns-tool="connect"><span class="icon">🔗</span> توصيل</button>
+                                            <button class="tool-btn" data-ns-tool="delete"><span class="icon">🗑️</span> حذف</button>
+                                            <span class="ns-sep"></span>
+                                            <button class="tool-btn" data-ns-device="pc"><span class="icon">💻</span> حاسوب</button>
+                                            <button class="tool-btn" data-ns-device="phone"><span class="icon">📱</span> هاتف</button>
+                                            <button class="tool-btn" data-ns-device="printer"><span class="icon">🖨️</span> طابعة</button>
+                                            <button class="tool-btn" data-ns-device="server"><span class="icon">🖥️</span> خادم</button>
+                                            <button class="tool-btn" data-ns-device="router"><span class="icon">📡</span> موجه</button>
+                                            <button class="tool-btn" data-ns-device="switch"><span class="icon">🔀</span> مبدل</button>
+                                            <button class="tool-btn" data-ns-device="hub"><span class="icon">🔲</span> مكرر</button>
+                                            <button class="tool-btn" data-ns-device="cloud"><span class="icon">☁️</span> سحابة</button>
+                                            <span class="ns-sep"></span>
+                                            <button class="tool-btn" id="ns-clearAll"><span class="icon">🧹</span> مسح</button>
                                         </div>
-                                        <div class="network-canvas-wrapper">
-                                            <div class="network-canvas" id="network-canvas"></div>
-                                            <div class="network-hint">اسحب الأجهزة إلى سطح العمل</div>
+
+                                        <!-- وضع التوصيل + نوعه -->
+                                        <div class="ns-mode-bar" id="ns-connectionMode">🔗 انقر الجهاز الأول ثم الثاني</div>
+                                        <div class="ns-conn-picker" id="ns-connTypePicker">
+                                            <span>نوع التوصيل:</span>
+                                            <button class="tool-btn ns-conn-type-btn active" data-ns-conn="wired">🔌 سلكي</button>
+                                            <button class="tool-btn ns-conn-type-btn" data-ns-conn="wireless">📶 لاسلكي</button>
                                         </div>
-                                        <div class="network-info" id="network-info">
-                                            <span class="net-info-label">عدد الأجهزة: <strong
-                                                    id="net-device-count">0</strong></span>
-                                            <span class="net-info-label">عدد الوصلات: <strong
-                                                    id="net-link-count">0</strong></span>
+
+                                        <!-- منطقة الرسم -->
+                                        <div class="network-canvas-wrapper ns-canvas-area" id="ns-canvasArea">
+                                            <canvas id="ns-canvas"></canvas>
+                                        </div>
+
+                                        <!-- تحكم التكبير -->
+                                        <div class="ns-zoom-bar">
+                                            <button id="ns-zoomOut">−</button>
+                                            <span id="ns-zoomLevel">100%</span>
+                                            <button id="ns-zoomIn">+</button>
+                                            <button id="ns-zoomReset">↺</button>
+                                        </div>
+
+                                        <!-- قائمة السياق -->
+                                        <div class="ns-context-menu" id="ns-contextMenu">
+                                            <button data-ns-action="edit">✏️ تعديل</button>
+                                            <button data-ns-action="info">ℹ️ معلومات</button>
+                                            <button data-ns-action="delete" class="ns-danger">🗑️ حذف</button>
+                                        </div>
+
+                                        <!-- لوحة المعلومات -->
+                                        <div class="ns-info-panel" id="ns-infoPanel">
+                                            <div class="ns-info-title" id="ns-infoTitle"></div>
+                                            <div class="ns-info-body" id="ns-infoContent"></div>
+                                        </div>
+
+                                        <!-- نافذة التعديل -->
+                                        <div class="ns-modal-overlay" id="ns-modalOverlay">
+                                            <div class="ns-modal">
+                                                <h3 id="ns-modalTitle">✏️ تعديل الجهاز</h3>
+                                                <label>الاسم</label>
+                                                <input type="text" id="ns-editName" maxlength="30">
+                                                <label>عنوان IP</label>
+                                                <input type="text" id="ns-editIP" placeholder="192.168.1.1">
+                                                <div class="ns-modal-btns">
+                                                    <button class="ns-btn-secondary" id="ns-modalCancel">إلغاء</button>
+                                                    <button class="ns-btn-primary" id="ns-modalSave">حفظ</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -260,7 +279,7 @@
                             <div class="station-id">STATION_02</div>
                             <div class="station-title-group">
                                 <h2 class="station-title">مدخل إلى البرمجة</h2>
-                                <p class="station-desc">مصمم المخططات ومحرر الأكواد</p>
+                                <p class="station-desc">مصمم المخططات ومحرر الخوارزميات</p>
                             </div>
                             <button class="station-toggle" data-station="programming"
                                 aria-label="فتح/إغلاق محطة مدخل إلى البرمجة" aria-expanded="false">
@@ -274,7 +293,7 @@
                             <div class="station-workspace">
                                 <div class="sub-tabs">
                                     <button class="sub-tab active" data-subtab="flowchart">مصمم المخططات</button>
-                                    <button class="sub-tab" data-subtab="code-editor">محرر الأكواد</button>
+                                    <button class="sub-tab" data-subtab="algo-editor">محرر الخوارزميات</button>
                                 </div>
 
                                 <!-- التبويب 1: مصمم المخططات -->
@@ -315,25 +334,85 @@
                                     </div>
                                 </div>
 
-                                <!-- التبويب 2: محرر الأكواد -->
-                                <div class="subtab-content" id="subtab-code-editor">
-                                    <div class="code-editor-container">
-                                        <div class="code-editor-header">
-                                            <span class="code-dot red"></span>
-                                            <span class="code-dot yellow"></span>
-                                            <span class="code-dot green"></span>
-                                            <span class="code-label-text">code.pseudo</span>
-                                            <button id="code-run-btn" class="code-run-btn">▶ تشغيل</button>
+                                <!-- التبويب 3: محرر الخوارزميات -->
+                                <div class="subtab-content" id="subtab-algo-editor">
+                                    <div class="algo-container">
+                                        <div class="algo-examples-bar">
+                                            <div class="algo-examples-list horizontal">
+                                                <button class="example-item" data-example="hello">
+                                                    <span class="example-icon"><i class="ph ph-chat-centered-text"></i></span>
+                                                    <div class="example-info">
+                                                        <span class="example-name">مرحباً بالعالم</span>
+                                                    </div>
+                                                </button>
+                                                <button class="example-item" data-example="sum">
+                                                    <span class="example-icon"><i class="ph ph-plus-circle"></i></span>
+                                                    <div class="example-info">
+                                                        <span class="example-name">جمع عددين</span>
+                                                    </div>
+                                                </button>
+                                                <button class="example-item" data-example="condition">
+                                                    <span class="example-icon"><i class="ph ph-git-fork"></i></span>
+                                                    <div class="example-info">
+                                                        <span class="example-name">الشروط (Else If)</span>
+                                                    </div>
+                                                </button>
+                                                <button class="example-item" data-example="loop">
+                                                    <span class="example-icon"><i class="ph ph-arrows-clockwise"></i></span>
+                                                    <div class="example-info">
+                                                        <span class="example-name">حلقة تكرارية (For)</span>
+                                                    </div>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <textarea id="code-editor-textarea" class="code-editor-textarea" dir="ltr"
-                                            spellcheck="false" aria-label="محرر الكود الزائف">// خوارزمية لجمع عددين
-اقرأ A
-اقرأ B
-S ← A + B
-اطبع S</textarea>
-                                        <div class="code-editor-output" id="code-editor-output">
-                                            <div class="output-label">OUTPUT</div>
-                                            <div class="output-content" id="output-content">انقر "تشغيل" لتنفيذ الكود
+
+                                        <div class="algo-grid">
+                                            <div class="algo-card algo-editor-card">
+                                                <div class="algo-card-header">
+                                                    <h3>محرر الخوارزمية</h3>
+                                                    <div class="algo-lang-toggle" id="algoLangToggle">
+                                                        <button class="algo-lang-btn is-active" data-lang="en">EN</button>
+                                                        <button class="algo-lang-btn" data-lang="fr">FR</button>
+                                                    </div>
+                                                    <div class="algo-actions">
+                                                        <button id="algoRunBtn" class="algo-btn-run" type="button">▶ تشغيل</button>
+                                                        <button id="algoStepBtn" class="algo-btn-reset" type="button">⏭ خطوة</button>
+                                                        <button id="algoResetBtn" class="algo-btn-reset" type="button">↺ إعادة</button>
+                                                    </div>
+                                                </div>
+                                                <div class="algo-editor-wrap">
+                                                    <pre id="algoHighlight" class="algo-highlight" aria-hidden="true"></pre>
+                                                    <textarea id="algoEditor" class="algo-editor" spellcheck="false" aria-label="محرر الخوارزميات"></textarea>
+                                                </div>
+                                                <p class="algo-note">ملاحظة: هذه صيغة تعليمية مبسطة، وليست لغة برمجة كاملة.</p>
+                                            </div>
+
+                                            <div class="algo-card algo-results-card">
+                                                <div class="algo-card-header">
+                                                    <h3>التتبع والنتائج</h3>
+                                                </div>
+                                                <div class="algo-panels">
+                                                    <div class="algo-panel">
+                                                        <h4 class="algo-panel-title">المتغيرات</h4>
+                                                        <div class="algo-vars" role="region" aria-label="جدول المتغيرات">
+                                                            <table class="algo-table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>الاسم</th>
+                                                                        <th>القيمة</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="algoVarsBody" aria-live="polite">
+                                                                    <tr><td colspan="2" class="algo-empty">لا توجد متغيرات بعد</td></tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <div class="algo-panel">
+                                                        <h4 class="algo-panel-title">الإخراج</h4>
+                                                        <pre id="algoOutput" class="algo-output" aria-label="مخرجات الخوارزمية" aria-live="polite" aria-atomic="false"></pre>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
