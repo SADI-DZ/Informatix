@@ -3871,9 +3871,6 @@ body.light-mode .ns-canvas-area {
     background: #f8fafc;
     border-color: #e2e8f0;
 }
-body.light-mode #ns-canvas {
-    /* The grid is drawn programmatically */
-}
 body.light-mode .ns-context-menu {
     background: #fff;
     border-color: #e2e8f0;
