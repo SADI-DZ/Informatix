@@ -142,25 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Course Navigation Logic ---
-    let coursData = {};
+    let coursData = window.COURSES_DATA || {};
     let currentFieldId = null;
-
-    // Load course data from JSON
-    async function loadCourseData() {
-        try {
-            const response = await fetch('assets/data/courses.json');
-            if (!response.ok) throw new Error('فشل تحميل بيانات الدروس');
-            coursData = await response.json();
-            console.log('informatix: تم تحميل بيانات الدروس بنجاح');
-        } catch (err) {
-            console.error('informatix: فشل تحميل البيانات:', err);
-            if (viewerContent) {
-                viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: تعذر تحميل بيانات الدروس. يرجى التأكد من تشغيل الموقع عبر خادم ويب (http://) وليس مباشرة (file://)</div>`;
-            }
-        }
-    }
-
-    loadCourseData();
 
     function showUnits(fieldId) {
         const data = coursData[fieldId];

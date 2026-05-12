@@ -8,6 +8,8 @@
     <meta name="description" content="منصة Informatix التعليمية لمادة المعلوماتية - مستوى الأولى ثانوي">
     <meta property="og:title" content="Informatix - تعلم المعلوماتية">
     <meta property="og:description" content="دروس، تمارين، وأدوات تفاعلية لمساعدتك على التفوق">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/images/Informatix-logo.png">
+    <link rel="apple-touch-icon" href="assets/images/Informatix-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
@@ -253,6 +255,49 @@
 
     <!-- ربط ملف الجافاسكريبت الخاص بتشغيل التفاعلات -->
     <script src="assets/js/content.js"></script>
+    <script>
+        window.COURSES_DATA = {
+          "env": {
+            "title": "بيئة التعامل مع الحاسوب",
+            "units": [
+              { "id": "01", "title": "تقنية المعلومات", "desc": "مفهوم تقنية المعلومات (IT) وأهميتها في حياتنا اليومية ومجالات استخدامها.", "tags": ["تقنية", "معلومات", "أساسيات"], "file": "content/1- بيئة التعامل مع الحاسوب/01_تقنية_المعلومات.md", "bg": "linear-gradient(135deg, #0c0c1d 0%, #1a1a4e 30%, #2d1b69 70%, #1a1a4e 100%)", "image": "assets/images/lessons/IT.avif" },
+              { "id": "02", "title": "تجميع الحاسوب", "desc": "التعرف على المكونات المادية (Hardware) وكيفية تجميعها لعمل حاسوب متكامل.", "tags": ["هاردوير", "تركيب", "عتاد"], "file": "content/1- بيئة التعامل مع الحاسوب/02_تجميع_الحاسوب.md", "bg": "linear-gradient(135deg, #0d1117 0%, #1a2332 30%, #2d3748 70%, #1a2332 100%)", "image": "assets/images/lessons/PC.avif" },
+              { "id": "03", "title": "نظام التشغيل", "desc": "مفهوم نظام التشغيل، أنواعه، ودوره الأساسي كحلقة وصل بين المستخدم والعتاد.", "tags": ["ويندوز", "برمجيات", "نظام"], "file": "content/1- بيئة التعامل مع الحاسوب/03_نظام_التشغيل.md", "bg": "linear-gradient(135deg, #0a1628 0%, #1a365d 30%, #2a4365 70%, #1a365d 100%)", "image": "assets/images/lessons/OS.avif" },
+              { "id": "04", "title": "لوحة التحكم", "desc": "تخصيص إعدادات النظام وإدارة الأجهزة والبرامج.", "tags": ["إعدادات", "نظام", "تحكم"], "file": "content/1- بيئة التعامل مع الحاسوب/04_لوحة_التحكم.md", "bg": "linear-gradient(135deg, #111827 0%, #1f2937 30%, #374151 70%, #1f2937 100%)", "image": "assets/images/lessons/PC.avif" },
+              { "id": "05", "title": "حماية الحاسوب", "desc": "طرق تأمين البيانات والحماية من الفيروسات والبرمجيات الضارة.", "tags": ["أمن", "حماية", "فيروسات"], "file": "content/1- بيئة التعامل مع الحاسوب/05_حماية_الحاسوب.md", "bg": "linear-gradient(135deg, #0a1a0f 0%, #1a3a2a 30%, #22543d 70%, #1a3a2a 100%)", "image": "assets/images/lessons/Security.avif" },
+              { "id": "06", "title": "الشبكة المحلية", "desc": "أساسيات الشبكات المحلية وكيفية مشاركة الموارد.", "tags": ["شبكات", "إنترنت", "تواصل"], "file": "content/1- بيئة التعامل مع الحاسوب/06_الشبكة_المحلية.md", "bg": "linear-gradient(135deg, #0f1419 0%, #1a2a3a 30%, #1a365d 70%, #1a2a3a 100%)", "image": "assets/images/lessons/Network.avif" }
+            ]
+          },
+          "programming": {
+            "title": "مدخل إلى البرمجة",
+            "units": [
+              { "id": "01", "title": "المخططات الانسيابية", "desc": "تعلم كيفية تمثيل الخوارزميات باستخدام الأشكال الهندسية لتبسيط فهم تسلسل العمليات.", "tags": ["خوارزمية", "رسم", "منطق", "تكرار"], "file": "content/2- مقدمة في البرمجة/01_المخططات_الانسيابية.md", "image": "assets/images/lessons/Flowchart_thumb.jpg" },
+              { "id": "02", "title": "مدخل إلى الخوارزمية", "desc": "مفهوم الخوارزمية، خصائصها، وكيفية التفكير المنطقي المتسلسل لحل المشكلات.", "tags": ["تفكير", "حل_مشكلات", "برمجة"], "file": "content/2- مقدمة في البرمجة/03_مدخل_الى_الخوارزمية.md", "image": "assets/images/lessons/Algo1.avif" },
+              { "id": "03", "title": "التعليمات الأساسية", "desc": "التعرف على المتغيرات، الثوابت، والعمليات الأساسية.", "tags": ["متغيرات", "كود", "تعليمات"], "file": "content/2- مقدمة في البرمجة/04_التعليمات_الأساسية.md", "image": "assets/images/lessons/Algo2.avif" }
+            ]
+          },
+          "web": {
+            "title": "تقنيات الويب",
+            "units": [
+              { "id": "01", "title": "المتصفح", "desc": "كيف تعمل متصفحات الويب وكيفية تصفح الإنترنت بأمان.", "tags": ["متصفح", "إنترنت", "أمان"], "file": "content/3- تقنيات الويب/01_المتصفح.md", "image": "assets/images/lessons/browser_thumb.jpg" },
+              { "id": "02", "title": "أدوات التواصل", "desc": "استكشاف منصات التواصل الرقمي الحديثة.", "tags": ["تواصل", "تعاون", "منصات"], "file": "content/3- تقنيات الويب/03_استغلال_أدوات_التواصل.md", "image": "assets/images/lessons/SM.avif" },
+              { "id": "03", "title": "البريد الإلكتروني", "desc": "إدارة المراسلات الرسمية واستخدام البريد الإلكتروني بفعالية.", "tags": ["بريد_إلكتروني", "مراسلات", "فعالية"], "file": "content/3- تقنيات الويب/04_البريد_الإلكتروني.md", "image": "assets/images/lessons/email.avif" },
+              { "id": "04", "title": "إنشاء صفحة ويب", "desc": "خطواتك الأولى في بناء صفحات الويب باستخدام HTML.", "tags": ["HTML", "صفحة_ويب", "تصميم"], "file": "content/3- تقنيات الويب/02_إنشاء_صفحة_ويب.md", "image": "assets/images/lessons/HTML.avif" }
+            ]
+          },
+          "office": {
+            "title": "المكتبية",
+            "units": [
+              { "id": "01", "title": "معالج النصوص 1 (الأنماط والمقاطع)", "desc": "أتنسيق المستندات المتقدم باستخدام الأنماط (Styles) وتقسيم المستند إلى مقاطع (Sections).", "file": "content/4- المكتبية/معالج_النصوص_1.md", "image": "assets/images/lessons/word.svg" },
+              { "id": "02", "title": "معالج النصوص 2 (دمج المراسلات)", "desc": "استخدام خاصية دمج المراسلات (Mail Merge) لإنشاء رسائل وشهادات متعددة آلياً.", "file": "content/4- المكتبية/معالج_النصوص_2.md", "image": "assets/images/lessons/word.svg" },
+              { "id": "03", "title": "المجدول 1 (الصيغ والدوال)", "desc": "إجراء العمليات الحسابية في Excel باستخدام الصيغ الرياضية والدوال الجاهزة (Functions).", "file": "content/4- المكتبية/المجدول_1.md", "image": "assets/images/lessons/excel.svg" },
+              { "id": "04", "title": "المجدول 2 (فرز البيانات)", "desc": "كيفية ترتيب البيانات وفرزها (Sorting & Filtering) لتسهيل استخراج المعلومات.", "file": "content/4- المكتبية/المجدول_2.md", "image": "assets/images/lessons/excel.svg" },
+              { "id": "05", "title": "العروض التقديمية 1 (أساسيات PowerPoint)", "desc": "إعداد شرائح العرض، إدراج النصوص والصور، واختيار التصميم المناسب.", "file": "content/4- المكتبية/العروض_التقديمية_1.md", "image": "assets/images/lessons/ppt.svg" },
+              { "id": "06", "title": "العروض التقديمية 2 (الحركات والارتباط التشعبي)", "desc": "إضافة حركات انتقالية ومخصصة، واستخدام الارتباط التشعبي لإنشاء عروض تفاعلية.", "file": "content/4- المكتبية/العروض_التقديمية_2.md", "image": "assets/images/lessons/ppt.svg" }
+            ]
+          }
+        };
+    </script>
     <script src="assets/js/script.js"></script>
 </body>
 

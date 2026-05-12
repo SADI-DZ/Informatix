@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- Browser window -->
+  <rect x="8" y="14" width="112" height="100" rx="10" stroke="url(#g1)" stroke-width="4" fill="rgba(59,130,246,0.06)"/>
+  <!-- Browser title bar -->
+  <path d="M8 24a10 10 0 0 1 10-10h92a10 10 0 0 1 10 10v6H8v-6z" fill="rgba(59,130,246,0.1)" stroke="url(#g1)" stroke-width="2"/>
+  <!-- Window dots -->
+  <circle cx="24" cy="27" r="3.5" fill="#ef4444" opacity="0.8"/>
+  <circle cx="38" cy="27" r="3.5" fill="#f59e0b" opacity="0.8"/>
+  <circle cx="52" cy="27" r="3.5" fill="#22c55e" opacity="0.8"/>
+  <!-- Address bar -->
+  <rect x="66" y="23" width="42" height="8" rx="4" fill="rgba(59,130,246,0.12)"/>
+  <!-- Lock icon in address bar -->
+  <path d="M71 27l1-2c1-2 3-2 4 0l1 2" stroke="#22c55e" stroke-width="1.5" fill="none"/>
+  <rect x="72" y="27" width="4" height="3" rx="1" fill="#22c55e"/>
+  <!-- Page content - HTML structure -->
+  <rect x="22" y="42" width="84" height="4" rx="2" fill="#3b82f6" opacity="0.6"/>
+  <rect x="30" y="52" width="60" height="4" rx="2" fill="#8b5cf6" opacity="0.5"/>
+  <rect x="30" y="62" width="68" height="4" rx="2" fill="#3b82f6" opacity="0.5"/>
+  <rect x="38" y="72" width="44" height="4" rx="2" fill="#8b5cf6" opacity="0.4"/>
+  <rect x="30" y="82" width="28" height="4" rx="2" fill="#3b82f6" opacity="0.4"/>
+  <rect x="22" y="92" width="50" height="4" rx="2" fill="#8b5cf6" opacity="0.3"/>
+  <!-- HTML tag decoration -->
+  <text x="98" y="105" fill="url(#g1)" font-size="11" font-weight="bold" font-family="monospace" opacity="0.2">&lt;/&gt;</text>
+</svg>

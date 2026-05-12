@@ -4,15 +4,15 @@
     // Initial Fallback Data in case JSON fetch fails
     const fallbackData = {
         "env": [
-            {"id": "installer", "title": "محاكي التثبيت", "desc": "تجربة تثبيت نظام التشغيل خطوة بخطوة", "icon": "💿", "category": "بيئة الحاسوب"},
-            {"id": "network", "title": "إنشاء الشبكات", "desc": "تصميم وربط الأجهزة في شبكة محلية", "icon": "🔗", "category": "بيئة الحاسوب"}
+            {"id": "installer", "title": "محاكي التثبيت", "desc": "تجربة تثبيت نظام التشغيل خطوة بخطوة", "icon": "💿", "iconFile": "installer.svg", "category": "بيئة الحاسوب"},
+            {"id": "network", "title": "إنشاء الشبكات", "desc": "تصميم وربط الأجهزة في شبكة محلية", "icon": "🔗", "iconFile": "network.svg", "category": "بيئة الحاسوب"}
         ],
         "programming": [
-            {"id": "flowchart", "title": "مخطط التدفق", "desc": "بناء منطق الخوارزميات مرئياً", "icon": "📊", "category": "البرمجة"},
-            {"id": "algo-editor", "title": "محرر الخوارزميات", "desc": "كتابة وتجربة كود الخوارزميات", "icon": "📜", "category": "البرمجة"}
+            {"id": "flowchart", "title": "مخطط التدفق", "desc": "بناء منطق الخوارزميات مرئياً", "icon": "📊", "iconFile": "flowchart.svg", "category": "البرمجة"},
+            {"id": "algo-editor", "title": "محرر الخوارزميات", "desc": "كتابة وتجربة كود الخوارزميات", "icon": "📜", "iconFile": "algo-editor.svg", "category": "البرمجة"}
         ],
         "web": [
-            {"id": "web-editor", "title": "محرر الويب التفاعلي", "desc": "كتابة HTML/CSS ومعاينتها فوراً", "icon": "🌐", "category": "تقنيات الويب"}
+            {"id": "web-editor", "title": "محرر الويب التفاعلي", "desc": "كتابة HTML/CSS ومعاينتها فوراً", "icon": "🌐", "iconFile": "web-editor.svg", "category": "تقنيات الويب"}
         ]
     };
 
@@ -75,8 +75,11 @@
                 data.forEach(ws => {
                     const card = document.createElement('div');
                     card.className = 'workshop-card';
+                    const iconHtml = ws.iconFile
+                        ? `<img src="../assets/images/workshops/${ws.iconFile}" alt="${ws.title}" class="workshop-icon-img">`
+                        : `${ws.icon}`;
                     card.innerHTML = `
-                        <div class="workshop-icon">${ws.icon}</div>
+                        <div class="workshop-icon">${iconHtml}</div>
                         <h3>${ws.title}</h3>
                         <p>${ws.desc}</p>
                     `;
