@@ -270,6 +270,15 @@ input:checked+.slider .clouds {
     transform: translateY(0);
 }
 
+img.emoji-replaced {
+    display: inline;
+    height: 1.2em;
+    width: 1.2em;
+    vertical-align: middle;
+    margin: 0 0.05em;
+    pointer-events: none;
+}
+
 .logo {
     display: flex;
     align-items: center;

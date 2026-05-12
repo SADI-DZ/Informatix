@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) throw new Error('تعذر تحميل الملف');
                 mdText = await response.text();
             } catch (fetchErr) {
-                if (viewerContent) viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: تعذر تحميل الدرس. يرجى التأكد من تشغيل الموقع عبر خادم ويب (http://) وليس مباشرة (file://)</div>`;
+                if (viewerContent) { viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: تعذر تحميل الدرس. يرجى التأكد من تشغيل الموقع عبر خادم ويب (http://) وليس مباشرة (file://)</div>`; if (window.replaceEmojisInElement) window.replaceEmojisInElement(viewerContent); }
                 return;
             }
         }
@@ -262,13 +262,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (viewerContent) {
                 viewerContent.innerHTML = `<div class="md-container"><div class="md-content">${htmlContent}</div></div>`;
+                if (window.replaceEmojisInElement) window.replaceEmojisInElement(viewerContent);
                 viewerContent.scrollTo({ top: 0, behavior: 'smooth' });
             }
             
             const progressFill = document.getElementById('reading-progress-fill');
             if (progressFill) progressFill.style.width = '0%';
         } catch (err) {
-            if (viewerContent) viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: ${esc(err.message)}</div>`;
+            if (viewerContent) { viewerContent.innerHTML = `<div class="error-msg">❌ خطأ: ${esc(err.message)}</div>`; if (window.replaceEmojisInElement) window.replaceEmojisInElement(viewerContent); }
         }
     };
 

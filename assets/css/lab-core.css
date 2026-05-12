@@ -1349,6 +1349,15 @@ h3 {
     background: var(--text-secondary);
 }
 
+img.emoji-replaced {
+    display: inline;
+    height: 1.2em;
+    width: 1.2em;
+    vertical-align: middle;
+    margin: 0 0.05em;
+    pointer-events: none;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1400px) {
     .modules-grid {

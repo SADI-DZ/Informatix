@@ -119,6 +119,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0d111
 @media(max-width:480px){
   .toolbar button span.btn-text{display:none}
 }
+img.emoji-replaced{display:inline;height:1.2em;width:1.2em;vertical-align:middle;margin:0 0.05em;pointer-events:none}
 </style>
 </head>
 <body>
@@ -824,5 +825,6 @@ window.addEventListener('resize', () => {
   if (sugActive) { const tp = getTagContext(); if (tp !== null) showSuggestions(); }
 });
 </script>
+<script src="../assets/js/emoji-replacer.js"></script>
 </body>
 </html>
