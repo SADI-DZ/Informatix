@@ -7,54 +7,11 @@
     <title>مصمم المخططات الانسيابية</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/lab-editors.css">
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <script src="../assets/js/theme-manager.js"></script>
     <style>
-        :root {
-            --primary-color: #4f46e5;
-            --primary-light: #818cf8;
-            --primary-dark: #3730a3;
-            --accent-color: #06b6d4;
-            --accent-secondary: #f59e0b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --bg-color: #f8fafc;
-            --surface-color: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            --radius-sm: 0.5rem;
-            --radius-md: 0.75rem;
-            --radius-lg: 1rem;
-            --radius-xl: 1.5rem;
-            --radius-full: 9999px;
-            --transition-fast: 0.15s ease;
-            --transition: 0.3s ease;
-            --transition-slow: 0.5s ease;
-        }
-
-        [data-theme="dark"] {
-            --primary-color: #818cf8;
-            --primary-light: #a5b4fc;
-            --primary-dark: #4f46e5;
-            --accent-color: #22d3ee;
-            --accent-secondary: #fbbf24;
-            --success-color: #34d399;
-            --warning-color: #fbbf24;
-            --danger-color: #f87171;
-            --bg-color: #0f172a;
-            --surface-color: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #b0bec5;
-            --border-color: #334155;
-        }
-
         *,
         *::before,
         *::after {
@@ -62,180 +19,148 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         html {
             scroll-behavior: smooth;
             font-size: 16px;
         }
-
         body {
-            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
             line-height: 1.7;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
         }
-
         .container {
             max-width: 1280px;
             margin: 0 auto;
             padding: 0 1.5rem;
         }
-
         .navbar {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(13, 19, 31, 0.85);
             backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--card-border);
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 100;
         }
-
-        [data-theme="dark"] .navbar {
-            background: rgba(30, 41, 59, 0.85);
+        body.light-mode .navbar {
+            background: rgba(255, 255, 255, 0.85);
         }
-
         .nav-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
             height: 72px;
         }
-
         .logo {
             display: flex;
             align-items: center;
             gap: 0.6rem;
             font-size: 1.6rem;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            background: linear-gradient(135deg, var(--blue-primary), #22d3ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-decoration: none;
         }
-
         .logo i {
             font-size: 2.2rem;
         }
-
         .nav-actions {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-
         .icon-btn {
             background: transparent;
             border: none;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             font-size: 1.4rem;
             cursor: pointer;
             width: 40px;
             height: 40px;
-            border-radius: var(--radius-md);
+            border-radius: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition);
+            transition: 0.3s ease;
         }
-
         .icon-btn:hover {
-            background: var(--bg-color);
-            color: var(--primary-color);
+            background: var(--bg-dark);
+            color: var(--blue-primary);
             transform: scale(1.05);
         }
-
         .lab-section {
             padding: 8rem 0 4rem;
-            background: var(--bg-color);
-            background-image: linear-gradient(rgba(79, 70, 229, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(79, 70, 229, 0.03) 1px, transparent 1px);
+            background: var(--bg-dark);
+            background-image: linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
             background-size: 20px 20px;
+            min-height: 100vh;
         }
-
         .lab-hero {
             position: relative;
             overflow: hidden;
-            border-radius: calc(var(--radius-xl) + 0.25rem);
-            border: 1px solid var(--border-color);
-            background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.10));
-            box-shadow: var(--shadow-lg);
+            border-radius: 1.75rem;
+            border: 1px solid var(--card-border);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.10));
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             padding: 2rem;
             margin-bottom: 2.25rem;
-            isolation: isolate;
         }
-
-        [data-theme="dark"] .lab-hero {
-            background: linear-gradient(135deg, rgba(129, 140, 248, 0.18), rgba(34, 211, 238, 0.12));
-        }
-
         .lab-hero-content {
             position: relative;
             z-index: 2;
         }
-
         .lab-hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             padding: 0.4rem 0.9rem;
-            border-radius: var(--radius-full);
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            color: var(--primary-dark);
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid var(--card-border);
+            color: var(--blue-primary);
             font-weight: 800;
             font-size: 0.9rem;
         }
-
-        [data-theme="dark"] .lab-hero-badge {
-            background: rgba(15, 23, 42, 0.55);
-            border-color: rgba(51, 65, 85, 0.9);
-            color: var(--primary-light);
-        }
-
         .lab-hero-title {
             font-size: 2.15rem;
             margin: 0.9rem 0 0.75rem;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            background: linear-gradient(135deg, var(--blue-primary), #22d3ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .lab-hero-subtitle {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             font-size: 1.05rem;
             max-width: 62ch;
         }
-
         .algo-grid {
             display: grid;
             grid-template-columns: 1fr 380px;
             gap: 1.5rem;
             align-items: start;
         }
-
         @media (max-width: 992px) {
             .algo-grid {
                 grid-template-columns: 1fr;
             }
         }
-
         .lab-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-sm);
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             padding: 1.25rem;
             position: relative;
             overflow: hidden;
         }
-
         .lab-card-header {
             display: flex;
             justify-content: space-between;
@@ -244,188 +169,139 @@
             flex-wrap: wrap;
             margin-bottom: 0.9rem;
         }
-
         .lab-card-header h3 {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
             font-size: 1.15rem;
-            color: var(--text-main);
+            color: var(--text-primary);
         }
-
         .lab-actions {
             display: flex;
             gap: 0.5rem;
         }
-
-        .btn-run, .btn-reset {
-            background: var(--success-color);
+        .btn-run,
+        .btn-reset {
+            background: #10b981;
             color: white;
             border: none;
             padding: 0.4rem 1rem;
-            border-radius: var(--radius-sm);
+            border-radius: 0.5rem;
             font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            transition: var(--transition);
+            transition: 0.3s ease;
+            font-family: inherit;
         }
-
         .btn-reset {
             background: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border: 1px solid var(--card-border);
         }
-
         .btn-run:hover {
             background: #059669;
             transform: translateY(-2px);
         }
-
-        /* Flowchart Specific Layout */
-        .flowchart-designer-wrap {
-            display: flex;
-            gap: 0;
-            min-height: 500px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            background: var(--bg-color);
-            position: relative;
+        .btn-reset:hover {
+            border-color: var(--blue-primary);
+            color: var(--blue-primary);
         }
-
-        /* Shape Sidebar (On the right in RTL) */
-        .shapes-sidebar {
-            width: 70px;
-            background: var(--surface-color);
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1rem 0;
-            gap: 1rem;
-            z-index: 10;
-            flex-shrink: 0;
-        }
-
-        .shape-item {
-            width: 44px;
-            height: 44px;
-            background: var(--bg-color);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: grab;
-            transition: var(--transition);
-            color: var(--primary-color);
-            font-size: 1.25rem;
-            position: relative;
-        }
-
-        .shape-item:hover {
-            border-color: var(--primary-color);
-            background: rgba(79, 70, 229, 0.05);
-            transform: scale(1.05);
-        }
-
-        .shape-item[title]::after {
-            content: attr(title);
-            position: absolute;
-            right: 100%;
-            margin-right: 10px;
-            background: var(--text-main);
-            color: white;
-            padding: 0.25rem 0.6rem;
-            border-radius: var(--radius-sm);
-            font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: var(--transition);
-            z-index: 20;
-        }
-
-        .shape-item:hover::after {
-            opacity: 1;
-        }
-
-        /* Workspace (Main Area) */
-        .flowchart-workspace {
-            flex: 1;
-            position: relative;
-            overflow: auto;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-            background-size: 20px 20px;
-            cursor: crosshair;
-        }
-
-        .flowchart-canvas {
-            width: 100%;
-            height: 100%;
-            min-height: 500px;
-            position: relative;
-        }
-
-        /* Side Panels (Left Column) */
         .algo-panels {
             display: grid;
             gap: 1rem;
         }
-
         .algo-panel {
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-color);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            background: var(--bg-dark);
             padding: 0.9rem;
         }
-
         .algo-panel-title {
             display: flex;
             align-items: center;
             gap: 0.4rem;
             font-size: 1rem;
             margin-bottom: 0.75rem;
-            color: var(--text-main);
+            color: var(--text-primary);
         }
-
-        .properties-grid {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .property-field {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-
-        .property-field label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-muted);
-        }
-
-        .property-field input, .property-field select {
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background: var(--surface-color);
-            color: var(--text-main);
-            font-family: inherit;
-        }
-
         .footer {
-            background: var(--surface-color);
+            background: var(--card-bg);
             padding: 2.5rem 0;
             text-align: center;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border-color);
-            margin-top: 4rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--card-border);
+        }
+        .fc-zoom-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 4px 8px;
+            z-index: 20;
+            direction: ltr;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .fc-zoom-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: background 0.15s;
+        }
+        .fc-zoom-btn:hover {
+            background: var(--card-border);
+        }
+        .shape-oval-icon {
+            display: block;
+            width: 30px;
+            height: 18px;
+            border: 3px solid var(--blue-primary);
+            border-radius: 50%;
+            background: transparent;
+            flex-shrink: 0;
+        }
+        .fc-zoom-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            min-width: 36px;
+            text-align: center;
+            font-family: monospace;
+        }
+        .flowchart-workspace {
+            overflow: hidden;
+        }
+        .theme-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .theme-checkbox {
+            display: none;
+        }
+        .theme-label {
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+            transition: 0.3s;
+        }
+        .theme-label:hover {
+            color: var(--blue-primary);
         }
     </style>
 </head>
@@ -438,9 +314,12 @@
                 <span>مصمم المخططات الانسيابية</span>
             </a>
             <div class="nav-actions">
-                <button id="themeToggle" class="icon-btn" aria-label="تبديل الوضع">
-                    <i class="ph ph-moon-stars"></i>
-                </button>
+                <div class="theme-checkbox-wrapper">
+                    <input type="checkbox" id="theme-checkbox" class="theme-checkbox">
+                    <label for="theme-checkbox" class="theme-label">
+                        <i class="ph ph-moon-stars"></i>
+                    </label>
+                </div>
             </div>
         </div>
     </header>
@@ -462,11 +341,11 @@
                         <div class="lab-card-header">
                             <h3><i class="ph ph-presentation-chart"></i> مساحة العمل</h3>
                             <div class="lab-actions">
-                                <button class="btn-run">
+                                <button class="btn-run" id="exportCodeBtn">
                                     <i class="ph ph-export"></i>
                                     تصدير كود
                                 </button>
-                                <button class="btn-reset">
+                                <button class="btn-reset" id="clearAllBtn">
                                     <i class="ph ph-trash"></i>
                                     مسح الكل
                                 </button>
@@ -476,19 +355,19 @@
                         <div class="flowchart-designer-wrap">
                             <!-- Shapes Sidebar (On the right in RTL) -->
                             <aside class="shapes-sidebar">
-                                <div class="shape-item" title="البداية / النهاية" data-shape="start">
-                                    <i class="ph ph-shield-checkered"></i>
+                                <div class="shape-item" title="البداية / النهاية" data-shape="start" draggable="true">
+                                    <span class="shape-oval-icon"></span>
                                 </div>
-                                <div class="shape-item" title="عملية / أمر" data-shape="process">
+                                <div class="shape-item" title="عملية / أمر" data-shape="process" draggable="true">
                                     <i class="ph ph-rectangle"></i>
                                 </div>
-                                <div class="shape-item" title="قرار / شرط" data-shape="decision">
+                                <div class="shape-item" title="قرار / شرط" data-shape="decision" draggable="true">
                                     <i class="ph ph-diamond"></i>
                                 </div>
-                                <div class="shape-item" title="إدخال / إخراج" data-shape="io">
+                                <div class="shape-item" title="إدخال / إخراج" data-shape="io" draggable="true">
                                     <i class="ph ph-parallelogram"></i>
                                 </div>
-                                <div class="shape-item" title="رابط" data-shape="connector">
+                                <div class="shape-item" title="رابط (وضع التوصيل)" data-shape="connector" draggable="true">
                                     <i class="ph ph-arrow-up-right"></i>
                                 </div>
                             </aside>
@@ -496,7 +375,14 @@
                             <!-- Canvas Area -->
                             <div class="flowchart-workspace">
                                 <div class="flowchart-canvas" id="canvas">
-                                    <!-- Flowchart elements will go here -->
+                                    <!-- Flowchart elements go here -->
+                                </div>
+                                <!-- Zoom Bar -->
+                                <div class="fc-zoom-bar">
+                                    <button class="fc-zoom-btn fc-zoom-out" title="تصغير">−</button>
+                                    <span class="fc-zoom-label" id="fcZoomLabel">100%</span>
+                                    <button class="fc-zoom-btn fc-zoom-in" title="تكبير">+</button>
+                                    <button class="fc-zoom-btn fc-zoom-reset" title="إعادة تعيين">↺</button>
                                 </div>
                             </div>
                         </div>
@@ -536,21 +422,25 @@
                                             <option value="danger">أحمر (خطأ)</option>
                                         </select>
                                     </div>
+                                    <div class="property-field" id="shapeRoleField" style="display:none;">
+                                        <label>دور الشكل</label>
+                                        <select id="shapeRole"></select>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="algo-panel">
                                 <h4 class="algo-panel-title"><i class="ph ph-database"></i> تتبع المتغيرات</h4>
-                                <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--surface-color); overflow: hidden;">
+                                <div style="border: 1px solid var(--card-border); border-radius: 0.5rem; background: var(--card-bg); overflow: hidden;">
                                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                                         <thead>
-                                            <tr style="background: var(--bg-color); color: var(--text-muted); border-bottom: 1px solid var(--border-color);">
+                                            <tr style="background: var(--bg-dark); color: var(--text-secondary); border-bottom: 1px solid var(--card-border);">
                                                 <th style="padding: 0.5rem; text-align: right;">المتغير</th>
                                                 <th style="padding: 0.5rem; text-align: right;">القيمة</th>
                                             </tr>
                                         </thead>
                                         <tbody id="flowVarsBody">
-                                            <tr><td colspan="2" style="padding: 1rem; text-align: center; color: var(--text-muted);">لا توجد متغيرات نشطة</td></tr>
+                                            <tr><td colspan="2" style="padding: 1rem; text-align: center; color: var(--text-secondary);">لا توجد متغيرات نشطة</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -558,18 +448,17 @@
 
                             <div class="algo-panel">
                                 <h4 class="algo-panel-title"><i class="ph ph-terminal"></i> مخرجات التنفيذ</h4>
-                                <pre id="flowOutput" style="background: #0f172a; color: #e2e8f0; padding: 0.85rem; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.85rem; min-height: 100px; margin: 0; direction: ltr; text-align: left;"></pre>
+                                <pre id="flowOutput" style="background: #0f172a; color: #e2e8f0; padding: 0.85rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.85rem; min-height: 100px; margin: 0; direction: ltr; text-align: left;"></pre>
                             </div>
 
                             <div class="algo-panel">
                                 <h4 class="algo-panel-title"><i class="ph ph-code"></i> الكود المولد</h4>
-                                <div id="flowGeneratedCode" style="background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; min-height: 100px; direction: ltr;">
+                                <div class="generated-code-box" id="flowGeneratedCode" style="min-height: 100px;">
                                     // الكود سيظهر هنا
                                 </div>
                             </div>
                         </div>
                     </article>
-
                 </div>
             </div>
         </section>
@@ -581,22 +470,7 @@
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeBtn = document.getElementById('themeToggle');
-            if (themeBtn) {
-                themeBtn.addEventListener('click', () => {
-                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                    const newTheme = isDark ? 'light' : 'dark';
-                    localStorage.setItem('theme', newTheme);
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                });
-            }
-            // Load saved theme
-            const saved = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', saved);
-        });
-    </script>
+    <script src="../assets/js/modules/lab-flowchart-designer.js"></script>
 </body>
 
 </html>

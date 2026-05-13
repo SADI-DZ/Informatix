@@ -309,11 +309,11 @@
                                             <div class="algo-card-header">
                                                 <h3><i class="ph ph-presentation-chart"></i> مساحة العمل</h3>
                                                 <div class="algo-actions">
-                                                    <button class="algo-btn-run">
+                                                    <button class="algo-btn-run" id="exportCodeBtn">
                                                         <i class="ph ph-export"></i>
                                                         تصدير كود
                                                     </button>
-                                                    <button class="algo-btn-reset">
+                                                    <button class="algo-btn-reset" id="clearAllBtn">
                                                         <i class="ph ph-trash"></i>
                                                         مسح الكل
                                                     </button>
@@ -323,19 +323,19 @@
                                             <div class="flowchart-designer-wrap">
                                                 <!-- Shapes Sidebar (On the right in RTL) -->
                                                 <aside class="shapes-sidebar">
-                                                    <div class="shape-item" title="البداية / النهاية" data-shape="start">
-                                                        <i class="ph ph-shield-checkered"></i>
+                                                    <div class="shape-item" title="البداية / النهاية" data-shape="start" draggable="true">
+                                                        <span class="shape-oval-icon"></span>
                                                     </div>
-                                                    <div class="shape-item" title="عملية / أمر" data-shape="process">
+                                                    <div class="shape-item" title="عملية / أمر" data-shape="process" draggable="true">
                                                         <i class="ph ph-rectangle"></i>
                                                     </div>
-                                                    <div class="shape-item" title="قرار / شرط" data-shape="decision">
+                                                    <div class="shape-item" title="قرار / شرط" data-shape="decision" draggable="true">
                                                         <i class="ph ph-diamond"></i>
                                                     </div>
-                                                    <div class="shape-item" title="إدخال / إخراج" data-shape="io">
+                                                    <div class="shape-item" title="إدخال / إخراج" data-shape="io" draggable="true">
                                                         <i class="ph ph-parallelogram"></i>
                                                     </div>
-                                                    <div class="shape-item" title="رابط" data-shape="connector">
+                                                    <div class="shape-item" title="رابط (وضع التوصيل)" data-shape="connector" draggable="true">
                                                         <i class="ph ph-arrow-up-right"></i>
                                                     </div>
                                                 </aside>
@@ -344,6 +344,12 @@
                                                 <div class="flowchart-workspace">
                                                     <div class="flowchart-canvas" id="canvas">
                                                         <!-- سيتم توليد الأشكال هنا -->
+                                                    </div>
+                                                    <div class="fc-zoom-bar">
+                                                        <button class="fc-zoom-btn fc-zoom-out" title="تصغير">−</button>
+                                                        <span class="fc-zoom-label" id="fcZoomLabel">100%</span>
+                                                        <button class="fc-zoom-btn fc-zoom-in" title="تكبير">+</button>
+                                                        <button class="fc-zoom-btn fc-zoom-reset" title="إعادة تعيين">↺</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -361,6 +367,10 @@
                                                     <button class="algo-btn-reset" id="flowStepBtn">
                                                         <i class="ph ph-forward"></i>
                                                         خطوة
+                                                    </button>
+                                                    <button class="algo-btn-reset" id="flowResetBtn">
+                                                        <i class="ph ph-arrow-counter-clockwise"></i>
+                                                        إعادة
                                                     </button>
                                                 </div>
                                             </div>
@@ -383,6 +393,10 @@
                                                                 <option value="yellow">أصفر</option>
                                                                 <option value="red">أحمر</option>
                                                             </select>
+                                                        </div>
+                                                        <div class="property-field" id="shapeRoleField" style="display:none;">
+                                                            <label>دور الشكل</label>
+                                                            <select id="shapeRole"></select>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -656,7 +670,7 @@
     <script src="../assets/js/modules/lab-typing.js"></script>
     <script src="../assets/js/modules/lab-networksim.js"></script>
     <!-- lab-installer.js مُعلق: عناصر DOM المقابلة غير موجودة في هذه الصفحة -->
-    <script src="../assets/js/modules/lab-flowchart.js"></script>
+    <script src="../assets/js/modules/lab-flowchart-designer.js"></script>
     <script src="../assets/js/modules/lab-html-editor.js"></script>
     <script src="../assets/js/modules/lab-algo-engine.js"></script>
     <script src="../assets/js/modules/lab-workshop.js"></script>
