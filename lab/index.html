@@ -303,41 +303,124 @@
 
                                 <!-- التبويب 1: مصمم المخططات -->
                                 <div class="subtab-content active" id="subtab-flowchart">
-                                    <div class="algo-selector">
-                                        <button class="algo-pill active" data-algo="max">إيجاد الأكبر</button>
-                                        <button class="algo-pill" data-algo="fact">مضروب العدد</button>
-                                        <button class="algo-pill" data-algo="prime">العدد الأولي</button>
-                                    </div>
-                                    <div class="flowchart-main">
-                                        <div class="flowchart-track" id="flowchart-steps"></div>
-                                        <div class="flowchart-sidebar">
-                                            <div class="flowchart-code-panel">
-                                                <div class="code-panel-header">
-                                                    <span class="code-dot red"></span>
-                                                    <span class="code-dot yellow"></span>
-                                                    <span class="code-dot green"></span>
-                                                    <span class="code-label-text">pseudo.code</span>
+                                    <div class="algo-grid">
+                                        <!-- Editor Card (Main Workspace) -->
+                                        <div class="algo-card">
+                                            <div class="algo-card-header">
+                                                <h3><i class="ph ph-presentation-chart"></i> مساحة العمل</h3>
+                                                <div class="algo-actions">
+                                                    <button class="algo-btn-run">
+                                                        <i class="ph ph-export"></i>
+                                                        تصدير كود
+                                                    </button>
+                                                    <button class="algo-btn-reset">
+                                                        <i class="ph ph-trash"></i>
+                                                        مسح الكل
+                                                    </button>
                                                 </div>
-                                                <pre id="flowchart-code-display" dir="ltr"></pre>
                                             </div>
-                                            <div class="flowchart-nav">
-                                                <button id="flowchart-prev" class="nav-arrow" disabled>
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                                        stroke="currentColor" stroke-width="2.5">
-                                                        <polyline points="15 18 9 12 15 6" />
-                                                    </svg>
-                                                </button>
-                                                <span id="flowchart-step-indicator" class="step-indicator">0 / 0</span>
-                                                <button id="flowchart-next" class="nav-arrow">
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                                        stroke="currentColor" stroke-width="2.5">
-                                                        <polyline points="9 18 15 12 9 6" />
-                                                    </svg>
-                                                </button>
+
+                                            <div class="flowchart-designer-wrap">
+                                                <!-- Shapes Sidebar (On the right in RTL) -->
+                                                <aside class="shapes-sidebar">
+                                                    <div class="shape-item" title="البداية / النهاية" data-shape="start">
+                                                        <i class="ph ph-shield-checkered"></i>
+                                                    </div>
+                                                    <div class="shape-item" title="عملية / أمر" data-shape="process">
+                                                        <i class="ph ph-rectangle"></i>
+                                                    </div>
+                                                    <div class="shape-item" title="قرار / شرط" data-shape="decision">
+                                                        <i class="ph ph-diamond"></i>
+                                                    </div>
+                                                    <div class="shape-item" title="إدخال / إخراج" data-shape="io">
+                                                        <i class="ph ph-parallelogram"></i>
+                                                    </div>
+                                                    <div class="shape-item" title="رابط" data-shape="connector">
+                                                        <i class="ph ph-arrow-up-right"></i>
+                                                    </div>
+                                                </aside>
+
+                                                <!-- Canvas Area -->
+                                                <div class="flowchart-workspace">
+                                                    <div class="flowchart-canvas" id="canvas">
+                                                        <!-- سيتم توليد الأشكال هنا -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Side Panels (Trace and Results) -->
+                                        <div class="algo-card">
+                                            <div class="algo-card-header">
+                                                <h3><i class="ph ph-activity"></i> التتبع والنتائج</h3>
+                                                <div class="algo-actions">
+                                                    <button class="algo-btn-run" id="flowRunBtn">
+                                                        <i class="ph ph-play"></i>
+                                                        تشغيل
+                                                    </button>
+                                                    <button class="algo-btn-reset" id="flowStepBtn">
+                                                        <i class="ph ph-forward"></i>
+                                                        خطوة
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="algo-panels">
+                                                <!-- Shape Properties (Added because it's a designer) -->
+                                                <div class="algo-panel">
+                                                    <h4 class="algo-panel-title"><i class="ph ph-info"></i> خصائص العنصر</h4>
+                                                    <div class="properties-grid">
+                                                        <div class="property-field">
+                                                            <label>النص</label>
+                                                            <input type="text" id="shapeText" placeholder="اكتب النص هنا...">
+                                                        </div>
+                                                        <div class="property-field">
+                                                            <label>اللون</label>
+                                                            <select id="shapeColor">
+                                                                <option value="default">تلقائي</option>
+                                                                <option value="blue">أزرق</option>
+                                                                <option value="green">أخضر</option>
+                                                                <option value="yellow">أصفر</option>
+                                                                <option value="red">أحمر</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="algo-panel">
+                                                    <h4 class="algo-panel-title"><i class="ph ph-database"></i> المتغيرات</h4>
+                                                    <div class="algo-vars">
+                                                        <table class="algo-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>الاسم</th>
+                                                                    <th>القيمة</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="flowVarsBody">
+                                                                <tr><td colspan="2" class="algo-empty">لا توجد متغيرات</td></tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <div class="algo-panel">
+                                                    <h4 class="algo-panel-title"><i class="ph ph-terminal"></i> المخرجات</h4>
+                                                    <pre id="flowOutput" class="algo-output" style="min-height: 120px;"></pre>
+                                                </div>
+
+                                                <div class="algo-panel">
+                                                    <h4 class="algo-panel-title"><i class="ph ph-code"></i> الكود المولد</h4>
+                                                    <div class="generated-code-box" id="flowGeneratedCode" style="min-height: 100px;">
+                                                        // الكود سيظهر هنا
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+
 
                                 <!-- التبويب 2: محرر الخوارزميات -->
                                 <div class="subtab-content" id="subtab-algo-editor">

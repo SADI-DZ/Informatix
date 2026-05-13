@@ -1,4 +1,4 @@
-﻿
+
 /* ==========================================================================
    HTML Editor Advanced (دمج من html-editor.html)
    ========================================================================== */
@@ -1266,3 +1266,153 @@ body.light-mode .ns-conn-picker .tool-btn.active {
     }
 }
 
+
+/* ==========================================================================
+   Flowchart Designer (ØªØµÙ…ÙŠÙ… Ø§Ù„Ù…Ø®Ø·Ø·Ø§Øª Ø§Ù„Ø§Ù†Ø³ÙŠØ§Ø¨ÙŠØ©)
+   ========================================================================== */
+.flowchart-designer-wrap {
+    display: flex;
+    min-height: 480px;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg-dark);
+    position: relative;
+    direction: rtl !important;
+}
+
+.shapes-sidebar {
+    width: 65px;
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem 0;
+    gap: 0.85rem;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.shape-item {
+    width: 42px;
+    height: 42px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--blue-primary);
+    font-size: 1.25rem;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.shape-item:hover {
+    border-color: var(--blue-primary);
+    background: rgba(59, 130, 246, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.shape-item[title]::after {
+    content: attr(title);
+    position: absolute;
+    right: 100%;
+    margin-right: 12px;
+    background: #1e293b;
+    color: #fff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.shape-item:hover::after {
+    opacity: 1;
+    transform: translateX(-5px);
+}
+
+.flowchart-workspace {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    background-color: var(--bg-dark);
+    background-image: radial-gradient(var(--card-border) 1px, transparent 1px);
+    background-size: 24px 24px;
+    cursor: crosshair;
+}
+
+.flowchart-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 480px;
+    position: relative;
+}
+
+.properties-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.property-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.property-field label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.property-field input, .property-field select {
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.property-field input:focus, .property-field select:focus {
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.generated-code-box {
+    background: #0d1117;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 10px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    min-height: 150px;
+    border: 1px solid #2a2a4a;
+    direction: ltr;
+    white-space: pre-wrap;
+}
+
+/* Light mode adjustments */
+body.light-mode .flowchart-designer-wrap { background: #f8fafc; border-color: #e2e8f0; }
+body.light-mode .shapes-sidebar { background: #ffffff; border-left-color: #e2e8f0; }
+body.light-mode .shape-item { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+body.light-mode .flowchart-workspace { background-color: #f8fafc; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); }
+body.light-mode .generated-code-box { background: #f8fafc; color: #1e293b; border-color: #e2e8f0; }

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصمم المخططات الانسيابية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
+    <script src="../assets/js/theme-manager.js"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --accent-color: #06b6d4;
+            --accent-secondary: #f59e0b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+            --transition-fast: 0.15s ease;
+            --transition: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #818cf8;
+            --primary-light: #a5b4fc;
+            --primary-dark: #4f46e5;
+            --accent-color: #22d3ee;
+            --accent-secondary: #fbbf24;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #b0bec5;
+            --border-color: #334155;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        [data-theme="dark"] .navbar {
+            background: rgba(30, 41, 59, 0.85);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 2.2rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .lab-section {
+            padding: 8rem 0 4rem;
+            background: var(--bg-color);
+            background-image: linear-gradient(rgba(79, 70, 229, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 70, 229, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .lab-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: calc(var(--radius-xl) + 0.25rem);
+            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.10));
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            margin-bottom: 2.25rem;
+            isolation: isolate;
+        }
+
+        [data-theme="dark"] .lab-hero {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.18), rgba(34, 211, 238, 0.12));
+        }
+
+        .lab-hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .lab-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        [data-theme="dark"] .lab-hero-badge {
+            background: rgba(15, 23, 42, 0.55);
+            border-color: rgba(51, 65, 85, 0.9);
+            color: var(--primary-light);
+        }
+
+        .lab-hero-title {
+            font-size: 2.15rem;
+            margin: 0.9rem 0 0.75rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lab-hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 62ch;
+        }
+
+        .algo-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 992px) {
+            .algo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lab-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lab-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.9rem;
+        }
+
+        .lab-card-header h3 {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1.15rem;
+            color: var(--text-main);
+        }
+
+        .lab-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-run, .btn-reset {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: var(--transition);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-run:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        /* Flowchart Specific Layout */
+        .flowchart-designer-wrap {
+            display: flex;
+            gap: 0;
+            min-height: 500px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--bg-color);
+            position: relative;
+        }
+
+        /* Shape Sidebar (On the right in RTL) */
+        .shapes-sidebar {
+            width: 70px;
+            background: var(--surface-color);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            gap: 1rem;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .shape-item {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: var(--transition);
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            position: relative;
+        }
+
+        .shape-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+            transform: scale(1.05);
+        }
+
+        .shape-item[title]::after {
+            content: attr(title);
+            position: absolute;
+            right: 100%;
+            margin-right: 10px;
+            background: var(--text-main);
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            z-index: 20;
+        }
+
+        .shape-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Workspace (Main Area) */
+        .flowchart-workspace {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            cursor: crosshair;
+        }
+
+        .flowchart-canvas {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            position: relative;
+        }
+
+        /* Side Panels (Left Column) */
+        .algo-panels {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .algo-panel {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-color);
+            padding: 0.9rem;
+        }
+
+        .algo-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .properties-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .property-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .property-field label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .property-field input, .property-field select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--surface-color);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .footer {
+            background: var(--surface-color);
+            padding: 2.5rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <i class="ph-fill ph-tree-structure"></i>
+                <span>مصمم المخططات الانسيابية</span>
+            </a>
+            <div class="nav-actions">
+                <button id="themeToggle" class="icon-btn" aria-label="تبديل الوضع">
+                    <i class="ph ph-moon-stars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="lab-section">
+            <div class="container">
+                <div class="lab-hero">
+                    <div class="lab-hero-content">
+                        <span class="lab-hero-badge"><i class="ph ph-flow-arrow"></i> المخططات الانسيابية</span>
+                        <h3 class="lab-hero-title">مصمم المخططات الانسيابية</h3>
+                        <p class="lab-hero-subtitle">قم ببناء منطق خوارزميتك بصرياً باستخدام الأشكال والروابط، ثم حولها إلى كود برمجى.</p>
+                    </div>
+                </div>
+
+                <div class="algo-grid">
+                    <!-- Editor Card (Main Workspace) -->
+                    <article class="lab-card">
+                        <div class="lab-card-header">
+                            <h3><i class="ph ph-presentation-chart"></i> مساحة العمل</h3>
+                            <div class="lab-actions">
+                                <button class="btn-run">
+                                    <i class="ph ph-export"></i>
+                                    تصدير كود
+                                </button>
+                                <button class="btn-reset">
+                                    <i class="ph ph-trash"></i>
+                                    مسح الكل
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flowchart-designer-wrap">
+                            <!-- Shapes Sidebar (On the right in RTL) -->
+                            <aside class="shapes-sidebar">
+                                <div class="shape-item" title="البداية / النهاية" data-shape="start">
+                                    <i class="ph ph-shield-checkered"></i>
+                                </div>
+                                <div class="shape-item" title="عملية / أمر" data-shape="process">
+                                    <i class="ph ph-rectangle"></i>
+                                </div>
+                                <div class="shape-item" title="قرار / شرط" data-shape="decision">
+                                    <i class="ph ph-diamond"></i>
+                                </div>
+                                <div class="shape-item" title="إدخال / إخراج" data-shape="io">
+                                    <i class="ph ph-parallelogram"></i>
+                                </div>
+                                <div class="shape-item" title="رابط" data-shape="connector">
+                                    <i class="ph ph-arrow-up-right"></i>
+                                </div>
+                            </aside>
+
+                            <!-- Canvas Area -->
+                            <div class="flowchart-workspace">
+                                <div class="flowchart-canvas" id="canvas">
+                                    <!-- Flowchart elements will go here -->
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Side Panels (Execution & Properties) -->
+                    <article class="lab-card">
+                        <div class="lab-actions" style="margin-bottom: 1.25rem; display: flex; gap: 0.5rem; justify-content: space-between; width: 100%;">
+                            <button class="btn-run" style="flex: 1;" id="flowRunBtn">
+                                <i class="ph ph-play"></i>
+                                تشغيل
+                            </button>
+                            <button class="btn-reset" id="flowStepBtn">
+                                <i class="ph ph-forward"></i>
+                                خطوة
+                            </button>
+                            <button class="btn-reset" id="flowResetBtn">
+                                <i class="ph ph-arrow-counter-clockwise"></i>
+                                إعادة
+                            </button>
+                        </div>
+
+                        <div class="algo-panels">
+                            <div class="algo-panel">
+                                <h4 class="algo-panel-title"><i class="ph ph-info"></i> خصائص الشكل</h4>
+                                <div class="properties-grid">
+                                    <div class="property-field">
+                                        <label>النص المعروض</label>
+                                        <input type="text" id="shapeText" placeholder="اكتب النص هنا...">
+                                    </div>
+                                    <div class="property-field">
+                                        <label>لون الخلفية</label>
+                                        <select id="shapeColor">
+                                            <option value="default">الافتراضي (أزرق)</option>
+                                            <option value="success">أخضر (نجاح)</option>
+                                            <option value="warning">أصفر (تنبيه)</option>
+                                            <option value="danger">أحمر (خطأ)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="algo-panel">
+                                <h4 class="algo-panel-title"><i class="ph ph-database"></i> تتبع المتغيرات</h4>
+                                <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--surface-color); overflow: hidden;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                        <thead>
+                                            <tr style="background: var(--bg-color); color: var(--text-muted); border-bottom: 1px solid var(--border-color);">
+                                                <th style="padding: 0.5rem; text-align: right;">المتغير</th>
+                                                <th style="padding: 0.5rem; text-align: right;">القيمة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="flowVarsBody">
+                                            <tr><td colspan="2" style="padding: 1rem; text-align: center; color: var(--text-muted);">لا توجد متغيرات نشطة</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="algo-panel">
+                                <h4 class="algo-panel-title"><i class="ph ph-terminal"></i> مخرجات التنفيذ</h4>
+                                <pre id="flowOutput" style="background: #0f172a; color: #e2e8f0; padding: 0.85rem; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.85rem; min-height: 100px; margin: 0; direction: ltr; text-align: left;"></pre>
+                            </div>
+
+                            <div class="algo-panel">
+                                <h4 class="algo-panel-title"><i class="ph ph-code"></i> الكود المولد</h4>
+                                <div id="flowGeneratedCode" style="background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; min-height: 100px; direction: ltr;">
+                                    // الكود سيظهر هنا
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 منصتي التعليمية. صُممت بحب للطلاب.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeBtn = document.getElementById('themeToggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    const newTheme = isDark ? 'light' : 'dark';
+                    localStorage.setItem('theme', newTheme);
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                });
+            }
+            // Load saved theme
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        });
+    </script>
+</body>
+
+</html>
