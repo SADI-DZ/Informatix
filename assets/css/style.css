@@ -57,6 +57,7 @@ body {
     color: var(--text-color);
     overflow-x: hidden;
     position: relative;
+    transition: background-color 0.4s ease, color 0.4s ease;
     background-image:
         radial-gradient(circle at 15% 50%, rgba(79, 172, 254, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
@@ -74,6 +75,7 @@ body {
     width: 100%;
     z-index: 100;
     border-bottom: 1px solid var(--glass-border);
+    transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 .theme-switch {
@@ -775,6 +777,7 @@ img.emoji-replaced {
     backdrop-filter: blur(10px);
     border-top: 1px solid var(--glass-border);
     margin-top: 4rem;
+    transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 .footer-container {
@@ -1018,7 +1021,7 @@ img.emoji-replaced {
 
 .btn-viewer-back:hover {
     background: var(--primary-color);
-    color: #0b0f19;
+    color: var(--btn-text);
     border-color: var(--primary-color);
 }
 
@@ -1094,9 +1097,9 @@ img.emoji-replaced {
 .badge-lesson {
     top: 15px;
     right: 15px;
-    background: rgba(0, 0, 0, 0.4);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
 }
 
 .badge-icon {
@@ -1105,7 +1108,7 @@ img.emoji-replaced {
     left: 15px;
     width: 42px;
     height: 42px;
-    background: rgba(11, 15, 25, 0.8);
+    background: var(--card-bg);
     border-radius: 12px;
     display: flex;
     justify-content: center;
@@ -1114,6 +1117,10 @@ img.emoji-replaced {
     border: 1px solid var(--primary-color);
     box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
     z-index: 10;
+}
+
+[data-theme="light"] .badge-icon {
+    box-shadow: 0 0 15px rgba(2, 132, 199, 0.25);
 }
 
 .unit-card-body {
@@ -1127,7 +1134,7 @@ img.emoji-replaced {
 .unit-card-title {
     font-size: 1.4rem;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-color);
     margin: 0;
 }
 
@@ -1190,8 +1197,8 @@ img.emoji-replaced {
 
 .btn-view-content {
     width: 100%;
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: #0b0f19;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    color: var(--btn-text);
     border: none;
     padding: 1rem;
     border-radius: 16px;
@@ -1209,6 +1216,10 @@ img.emoji-replaced {
 .btn-view-content:hover {
     transform: scale(1.02);
     box-shadow: 0 8px 25px rgba(0, 242, 254, 0.4);
+}
+
+[data-theme="light"] .btn-view-content:hover {
+    box-shadow: 0 8px 25px rgba(2, 132, 199, 0.3);
 }
 
 .btn-view-content svg {
