@@ -7,6 +7,7 @@
     <title>Informatix Lab - مخبر المعلوماتية</title>
     <link rel="icon" type="image/png" sizes="512x512" href="../assets/images/Informatix-logo.png">
     <link rel="apple-touch-icon" href="../assets/images/Informatix-logo.png">
+    <link rel="manifest" href="../manifest.json">
     <link rel="stylesheet" href="../assets/css/lab-core.css">
     <link rel="stylesheet" href="../assets/css/lab-components.css">
     <link rel="stylesheet" href="../assets/css/lab-editors.css">
@@ -676,6 +677,13 @@
     <script src="../assets/js/modules/lab-workshop.js"></script>
     <script src="../assets/js/emoji-replacer.js"></script>
     <script src="../assets/js/lab.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                console.warn('informatix: فشل تسجيل Service Worker', err);
+            });
+        }
+    </script>
 </body>
 
 </html>

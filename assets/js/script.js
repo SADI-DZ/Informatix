@@ -356,4 +356,88 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (e) { console.warn('informatix: فشل استعادة آخر درس', e); }
     })();
+
+    // Star Rating
+    const starRating = document.getElementById('star-rating');
+    const ratingInput = document.getElementById('rating-value');
+    let stars;
+
+    function setStars(value) {
+        stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.value) <= value));
+    }
+
+    if (starRating && ratingInput) {
+        stars = starRating.querySelectorAll('.star');
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const value = parseInt(star.dataset.value);
+                ratingInput.value = value;
+                setStars(value);
+            });
+
+            star.addEventListener('mouseenter', () => {
+                setStars(parseInt(star.dataset.value));
+            });
+        });
+
+        starRating.addEventListener('mouseleave', () => {
+            setStars(parseInt(ratingInput.value));
+        });
+    }
+
+    // Contact Form with Formspree
+    const contactForm = document.getElementById('contact-form');
+    const formSuccess = document.getElementById('form-success');
+
+    if (contactForm && formSuccess) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const firstName = document.getElementById('first-name').value.trim();
+            const lastName = document.getElementById('last-name').value.trim();
+            const rating = document.getElementById('rating-value').value;
+            const message = document.getElementById('message').value.trim();
+
+            if (!firstName || !lastName || rating === '0' || !message) return;
+
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري الإرسال...';
+
+            try {
+                const formData = new FormData(contactForm);
+                formData.append('_subject', `رسالة جديدة من ${firstName} ${lastName}`);
+
+                const res = await fetch(contactForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (res.ok) {
+                    contactForm.style.display = 'none';
+                    formSuccess.style.display = 'flex';
+
+                    setTimeout(() => {
+                        contactForm.reset();
+                        if (stars) stars.forEach(s => s.classList.remove('active'));
+                        ratingInput.value = '0';
+                        contactForm.style.display = 'flex';
+                        formSuccess.style.display = 'none';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'إرسال';
+                    }, 5000);
+                } else {
+                    alert('حدث خطأ أثناء الإرسال. حاول مرة أخرى.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'إرسال';
+                }
+            } catch (err) {
+                alert('حدث خطأ في الاتصال. حاول مرة أخرى.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'إرسال';
+            }
+        });
+    }
 });

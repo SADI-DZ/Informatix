@@ -770,6 +770,146 @@ img.emoji-replaced {
     opacity: 0.3;
 }
 
+/* قسم تواصل معنا */
+.contact-section {
+    padding: 5rem 5% 2rem;
+}
+
+.contact-form-container {
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+    padding: 2.5rem;
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.required {
+    color: #ef4444;
+}
+
+.form-group input,
+.form-group textarea {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Cairo', sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.btn-submit {
+    align-self: flex-start;
+    font-size: 1.1rem;
+    padding: 0.8rem 2.5rem;
+}
+
+/* Star Rating */
+.star-rating {
+    display: flex;
+    gap: 0.4rem;
+    font-size: 2rem;
+}
+
+.star-rating .star {
+    cursor: pointer;
+    color: #4a5568;
+    transition: color 0.15s ease, transform 0.15s ease;
+    user-select: none;
+    line-height: 1;
+}
+
+.star-rating .star.active {
+    color: #f59e0b;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="light"] .star-rating .star {
+    color: #cbd5e1;
+}
+
+[data-theme="light"] .star-rating .star.active {
+    color: #f59e0b;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Success Message */
+.form-success {
+    text-align: center;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.form-success .success-icon {
+    font-size: 4rem;
+    color: #10b981;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.1);
+    border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.form-success p {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-form-container {
+        padding: 1.5rem;
+    }
+
+    .star-rating .star {
+        font-size: 1.8rem;
+    }
+}
+
 /* تذييل الصفحة وحقوق النشر */
 .footer {
     padding: 5rem 5% 2rem;

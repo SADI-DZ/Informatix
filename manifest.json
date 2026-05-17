@@ -1,0 +1,35 @@
+{
+  "name": "Informatix - تعلم المعلوماتية",
+  "short_name": "Informatix",
+  "description": "منصة Informatix التعليمية لمادة المعلوماتية - مستوى الأولى ثانوي. دروس، تمارين، وأدوات تفاعلية.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "assets/images/Informatix-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/Informatix-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/images/Informatix-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "books", "reference"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
