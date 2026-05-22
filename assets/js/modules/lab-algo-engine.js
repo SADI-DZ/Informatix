@@ -61,6 +61,85 @@
         // ==================== VM ====================
         let algoVM = { lines: [], blocks: [], pc: 0, vars: {}, out: [], halted: false, _ifMap: new Map(), _whileMap: new Map(), _forMap: new Map() };
 
+        // ==================== AUTOCOMPLETE UI ====================
+        const algoSB = document.createElement('div');
+        algoSB.className = 'sug-panel';
+        algoSB.style.display = 'none';
+        document.body.appendChild(algoSB);
+
+        let algoSugActive = false;
+        let algoSugPrefix = '';
+
+        function algoShowSuggestions() {
+            const pos = algoEditorEl.selectionStart;
+            const text = algoEditorEl.value;
+            const before = text.substring(0, pos);
+            const m = before.match(/([a-zA-Z0-9_\u00C0-\u00FF]+)$/);
+            if (!m) {
+                algoHideSuggestions();
+                return;
+            }
+            algoSugPrefix = m[1].toLowerCase();
+            const allKws = [...algoHL_KEYWORDS, ...algoHL_CONTROL, ...algoHL_IO, ...algoHL_TYPES, ...algoHL_LOGIC];
+            const items = allKws.filter(kw => kw.startsWith(algoSugPrefix)).slice(0, 10);
+            
+            if (items.length === 0) {
+                algoHideSuggestions();
+                return;
+            }
+
+            algoSB.innerHTML = '';
+            items.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'sug-item' + (i === 0 ? ' active' : '');
+                div.innerHTML = `<span class="sug-tag">${item}</span>`;
+                div.onmousedown = (e) => { e.preventDefault(); algoInsertSuggestion(item); };
+                div.onmouseenter = () => {
+                    algoSB.querySelectorAll('.sug-item').forEach(e => e.classList.remove('active'));
+                    div.classList.add('active');
+                };
+                algoSB.appendChild(div);
+            });
+
+            // position
+            const rect = algoEditorEl.getBoundingClientRect();
+            algoSB.style.left = (rect.left + 40) + 'px'; // indent slightly
+            algoSB.style.top = (rect.top + 40) + 'px'; // approximate position near editor top
+            algoSB.style.display = 'block';
+            algoSugActive = true;
+        }
+
+        function algoHideSuggestions() {
+            algoSB.style.display = 'none';
+            algoSugActive = false;
+        }
+
+        function algoInsertSuggestion(val) {
+            const pos = algoEditorEl.selectionStart;
+            const text = algoEditorEl.value;
+            const before = text.substring(0, pos);
+            const after = text.substring(pos);
+            const m = before.match(/([a-zA-Z0-9_\u00C0-\u00FF]+)$/);
+            if (m) {
+                const newBefore = before.substring(0, before.length - m[1].length) + val + ' ';
+                algoEditorEl.value = newBefore + after;
+                algoEditorEl.setSelectionRange(newBefore.length, newBefore.length);
+                algoHideSuggestions();
+                algoEditorEl.dispatchEvent(new Event('input'));
+                algoEditorEl.focus();
+            }
+        }
+
+        // ==================== SYNTAX ERROR UI ====================
+        const algoSyntaxErrorEl = document.createElement('div');
+        algoSyntaxErrorEl.className = 'algo-syntax-error';
+        algoSyntaxErrorEl.style.color = '#ef4444';
+        algoSyntaxErrorEl.style.padding = '0.5rem';
+        algoSyntaxErrorEl.style.fontSize = '0.9rem';
+        algoSyntaxErrorEl.style.fontWeight = 'bold';
+        algoSyntaxErrorEl.style.display = 'none';
+        algoEditorEl.parentElement.appendChild(algoSyntaxErrorEl);
+
         // ==================== HELPERS ====================
         /** تنظيف وحظر التعبيرات الخطرة (حقن) */
         function algoSanitizeExpr(expr) {
@@ -505,7 +584,12 @@
                     else if (forBlock) algoVM.pc = forBlock.line;
                     else algoVM.pc += 1;
                 } else { throw new Error('سطر غير مدعوم (سطر ' + (lineIdx + 1) + ')'); }
-            } catch (e) { algoVM.out.push('خطأ: ' + (e && e.message ? e.message : String(e))); algoVM.halted = true; }
+            } catch (e) { 
+                let msg = e && e.message ? e.message : String(e);
+                if (!msg.includes('(سطر')) msg += ' (في السطر ' + (lineIdx + 1) + ')';
+                algoVM.out.push('❌ خطأ: ' + msg); 
+                algoVM.halted = true; 
+            }
             algoRenderVars(); algoRenderOutput(); algoRenderHighlight();
         }
 
@@ -523,11 +607,48 @@
         function algoSyncScroll() { algoHighlightEl.scrollTop = algoEditorEl.scrollTop; algoHighlightEl.scrollLeft = algoEditorEl.scrollLeft; }
 
         // ==================== EVENT HANDLERS ====================
+        algoEditorEl.addEventListener('keydown', (e) => {
+            if (algoSugActive && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab')) {
+                e.preventDefault();
+                if (e.key === 'Escape') { algoHideSuggestions(); return; }
+                const items = Array.from(algoSB.querySelectorAll('.sug-item'));
+                let idx = items.findIndex(el => el.classList.contains('active'));
+                if (e.key === 'ArrowDown') {
+                    idx = (idx + 1) % items.length;
+                    items.forEach(el => el.classList.remove('active'));
+                    items[idx].classList.add('active');
+                } else if (e.key === 'ArrowUp') {
+                    idx = (idx - 1 + items.length) % items.length;
+                    items.forEach(el => el.classList.remove('active'));
+                    items[idx].classList.add('active');
+                } else if (e.key === 'Enter' || e.key === 'Tab') {
+                    if (idx >= 0) algoInsertSuggestion(items[idx].textContent);
+                }
+                return;
+            }
+        });
+
         algoEditorEl.addEventListener('input', () => {
             algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
-            try { const result = algoRebuildBlocks(algoVM.lines); algoVM.blocks = result.blocks; algoVM._ifMap = result.mapIfByLine; algoVM._whileMap = result.mapWhileByLine; algoVM._forMap = result.mapForByLine; } catch (e) { console.warn('خوارزمية: خطأ في تحليل الكود', e); }
+            algoSyntaxErrorEl.style.display = 'none';
+            try { 
+                const result = algoRebuildBlocks(algoVM.lines); 
+                algoVM.blocks = result.blocks; 
+                algoVM._ifMap = result.mapIfByLine; 
+                algoVM._whileMap = result.mapWhileByLine; 
+                algoVM._forMap = result.mapForByLine; 
+            } catch (e) { 
+                algoSyntaxErrorEl.textContent = '❌ خطأ: ' + e.message;
+                algoSyntaxErrorEl.style.display = 'block';
+            }
             algoRenderHighlight();
+            algoShowSuggestions();
         });
+
+        algoEditorEl.addEventListener('blur', () => {
+            setTimeout(algoHideSuggestions, 150);
+        });
+
         algoEditorEl.addEventListener('scroll', algoSyncScroll);
 
         algoRunBtn.addEventListener('click', async () => {

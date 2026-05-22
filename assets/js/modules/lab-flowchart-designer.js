@@ -176,7 +176,7 @@
     // ==================== ADD / REMOVE SHAPES ====================
     function addShape(type, x, y) {
         const dims = getShapeDimensions(type, '');
-        const snap = 10;
+        const snap = 20;
         const sx = Math.round((x - dims.w / 2) / snap) * snap;
         const sy = Math.round((y - dims.h / 2) / snap) * snap;
         const id = genId();
@@ -826,8 +826,14 @@
                 const val = typeof v === 'string' ? JSON.stringify(v) : String(v);
                 safeExpr = safeExpr.replace(new RegExp('\\b' + k + '\\b', 'g'), val);
             }
-            // eslint-disable-next-line no-new-func
-            return new Function('return (' + safeExpr + ')')();
+            safeExpr = safeExpr.replace(/×/g, '*').replace(/÷/g, '/');
+            // Safe evaluator: only allow math characters
+            if (/^[0-9\.\s\+\-\*\/\(\)%]+$/.test(safeExpr)) {
+                // eslint-disable-next-line no-new-func
+                return new Function('return (' + safeExpr + ')')();
+            } else {
+                return safeExpr;
+            }
         } catch (e) {
             return expr;
         }
@@ -845,19 +851,29 @@
 
         let current = start;
         let indent = 0;
+        let stepCounter = 1;
+        const shapeSteps = {};
 
         function visit(shape) {
-            if (!shape || visited.has(shape.id)) return;
+            if (!shape) return;
+            if (visited.has(shape.id)) {
+                if (shapeSteps[shape.id]) {
+                    lines.push(' '.repeat(indent) + 'ارجع إلى الخطوة ' + shapeSteps[shape.id]);
+                }
+                return;
+            }
             visited.add(shape.id);
+            shapeSteps[shape.id] = stepCounter++;
 
             const text = shape.text || '';
+            const stepPrefix = ' '.repeat(indent) + 'خطوة ' + shapeSteps[shape.id] + ': ';
 
             switch (shape.type) {
                 case 'start': {
                     if (shape.role === 'end') {
-                        lines.push(' '.repeat(indent) + '// نهاية');
+                        lines.push(stepPrefix + 'نهاية البرنامج');
                     } else {
-                        lines.push(' '.repeat(indent) + '// بداية');
+                        lines.push(stepPrefix + 'بداية البرنامج');
                     }
                     break;
                 }
@@ -865,26 +881,26 @@
                     const readMatch = text.match(/^(أدخل|اقرأ|read|lire)\s+(\w+)/i);
                     const writeMatch = text.match(/^(أظهر|اطبع|write|print|ecrire)\s+(.+)/i);
                     if (readMatch) {
-                        lines.push(' '.repeat(indent) + 'اقرأ(' + readMatch[2] + ')');
+                        lines.push(stepPrefix + 'اقرأ المتغير (' + readMatch[2] + ')');
                     } else if (writeMatch) {
-                        lines.push(' '.repeat(indent) + 'اكتب(' + writeMatch[2].trim() + ')');
+                        lines.push(stepPrefix + 'اكتب (' + writeMatch[2].trim() + ')');
                     } else {
-                        lines.push(' '.repeat(indent) + '// ' + text);
+                        lines.push(stepPrefix + text);
                     }
                     break;
                 }
                 case 'process': {
                     const assignMatch = text.match(/^(\w+)\s*(?:←|=)\s*(.+)/);
                     if (assignMatch) {
-                        lines.push(' '.repeat(indent) + assignMatch[1] + ' ← ' + assignMatch[2].trim());
+                        lines.push(stepPrefix + assignMatch[1] + ' ← ' + assignMatch[2].trim());
                     } else {
-                        lines.push(' '.repeat(indent) + text);
+                        lines.push(stepPrefix + text);
                     }
                     break;
                 }
                 case 'decision': {
                     const condMatch = text.replace(/^(هل|if|si)\s+/i, '');
-                    lines.push(' '.repeat(indent) + 'إذا ' + condMatch + ' فإن:');
+                    lines.push(stepPrefix + 'إذا كان (' + condMatch + ') فإن:');
                     const yesConn = state.connections.find(c =>
                         c.fromId === shape.id && c.label === 'نعم'
                     );
@@ -893,24 +909,24 @@
                     );
                     // Follow yes branch
                     if (yesConn) {
-                        indent++;
+                        indent += 4;
                         const nextShape = getShapeById(yesConn.toId);
                         visit(nextShape);
-                        indent--;
+                        indent -= 4;
                     }
                     // Follow no branch
                     if (noConn) {
                         lines.push(' '.repeat(indent) + 'وإلا:');
-                        indent++;
+                        indent += 4;
                         const nextShape = getShapeById(noConn.toId);
                         visit(nextShape);
-                        indent--;
+                        indent -= 4;
                     }
-                    lines.push(' '.repeat(indent) + '// نهاية الشرط');
+                    lines.push(' '.repeat(indent) + 'نهاية إذا');
                     return; // Don't visit default next
                 }
                 case 'connector': {
-                    // Just pass through to connected shapes
+                    lines.push(stepPrefix + 'نقطة ربط');
                     break;
                 }
             }
@@ -1135,7 +1151,7 @@
                 const shape = getShapeById(state.dragTarget);
                 if (!shape) return;
                 const rect = dom.canvas.getBoundingClientRect();
-                const snap = 5;
+                const snap = 20;
                 let nx = Math.round(((e.clientX - rect.left - state.panX) / state.zoom - state.dragOffsetX) / snap) * snap;
                 let ny = Math.round(((e.clientY - rect.top - state.panY) / state.zoom - state.dragOffsetY) / snap) * snap;
                 nx = Math.max(0, nx);
@@ -1291,7 +1307,7 @@
             const rect = dom.canvas.getBoundingClientRect();
             const shape = getShapeById(touchDragId);
             if (!shape) return;
-            const snap = 5;
+            const snap = 20;
             shape.x = Math.max(0, Math.round(((touch.clientX - rect.left - state.panX) / state.zoom - touchOffsetX) / snap) * snap);
             shape.y = Math.max(0, Math.round(((touch.clientY - rect.top - state.panY) / state.zoom - touchOffsetY) / snap) * snap);
             fullRender();

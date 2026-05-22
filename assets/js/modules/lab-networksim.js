@@ -47,8 +47,10 @@
         const id = ++nsState.deviceIdCounter;
         const d = { id, type, x, y, name: NS_DEVICE_NAMES[type] + ' ' + id, ip: nsRandIP(), ports: [] };
         if (type === 'router') d.ports = [0,1,2,3];
-        if (type === 'switch') d.ports = [0,1,2,3,4,5,6,7];
-        if (type === 'hub') d.ports = [0,1,2,3,4];
+        else if (type === 'switch') d.ports = [0,1,2,3,4,5,6,7];
+        else if (type === 'hub') d.ports = [0,1,2,3,4];
+        else if (type === 'cloud') d.ports = [0,1,2,3,4,5,6,7,8,9];
+        else d.ports = [0]; // 1 port for PC, Server, Printer, Phone
         nsState.devices.push(d);
         return d;
     }
@@ -206,6 +208,76 @@
 
         nsState.connections.forEach(nsDrawConnection);
         nsState.devices.forEach(nsDrawDevice);
+        
+        // Draw active ping dots
+        if (nsState.activePings && nsState.activePings.length > 0) {
+            nsState.activePings.forEach(p => {
+                const a = nsState.devices.find(d => d.id === p.from);
+                const b = nsState.devices.find(d => d.id === p.to);
+                if (a && b) {
+                    const ax = a.x * nsState.zoom + nsState.pan.x;
+                    const ay = a.y * nsState.zoom + nsState.pan.y;
+                    const bx = b.x * nsState.zoom + nsState.pan.x;
+                    const by = b.y * nsState.zoom + nsState.pan.y;
+                    const x = ax + (bx - ax) * p.progress;
+                    const y = ay + (by - ay) * p.progress;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6 * nsState.zoom, 0, Math.PI*2);
+                    ctx.fillStyle = p.success ? '#81c784' : '#e57373';
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+        }
+    }
+
+    // Ping Logic
+    function nsHasPath(startId, endId, visited = new Set()) {
+        if (startId === endId) return true;
+        visited.add(startId);
+        const conns = nsState.connections.filter(c => c.from === startId || c.to === startId);
+        for (const c of conns) {
+            const nextId = c.from === startId ? c.to : c.from;
+            if (!visited.has(nextId)) {
+                if (nsHasPath(nextId, endId, visited)) return true;
+            }
+        }
+        return false;
+    }
+
+    function nsRunPing(fromId, toId) {
+        const fromD = nsState.devices.find(d => d.id === fromId);
+        const toD = nsState.devices.find(d => d.id === toId);
+        
+        const subnetRegex = /^(\d+\.\d+\.\d+)\./;
+        const fromSub = fromD.ip.match(subnetRegex);
+        const toSub = toD.ip.match(subnetRegex);
+        
+        const pathExists = nsHasPath(fromId, toId);
+        // Success if path exists and either same subnet or there's a router in path (simplified: just path exists for now)
+        const success = pathExists && (fromSub && toSub && fromSub[1] === toSub[1] || nsState.devices.some(d => d.type === 'router'));
+        
+        if (!nsState.activePings) nsState.activePings = [];
+        const pingObj = { from: fromId, to: toId, progress: 0, success };
+        nsState.activePings.push(pingObj);
+        
+        let lastTime = performance.now();
+        function animatePing(time) {
+            const dt = time - lastTime;
+            lastTime = time;
+            pingObj.progress += dt / 1000; // 1 second to reach destination
+            if (pingObj.progress >= 1) {
+                nsState.activePings = nsState.activePings.filter(p => p !== pingObj);
+                nsRender();
+                alert(success ? `✅ Ping ناجح من ${fromD.name} إلى ${toD.name}` : `❌ Ping فشل من ${fromD.name} إلى ${toD.name}`);
+            } else {
+                nsRender();
+                requestAnimationFrame(animatePing);
+            }
+        }
+        requestAnimationFrame(animatePing);
     }
 
     function nsDeviceAt(x, y) {
@@ -237,6 +309,24 @@
     }
 
     function nsAddConnection(fromId, toId, type = 'wired') {
+        const fromD = nsState.devices.find(d => d.id === fromId);
+        const toD = nsState.devices.find(d => d.id === toId);
+        if (!fromD || !toD) return;
+
+        const fromConns = nsState.connections.filter(c => c.from === fromId || c.to === fromId).length;
+        const toConns = nsState.connections.filter(c => c.from === toId || c.to === toId).length;
+
+        if (fromConns >= fromD.ports.length) {
+            const connMode = document.getElementById('ns-connectionMode');
+            if (connMode) { connMode.textContent = `⚠️ ${fromD.name} ليس لديه منافذ شاغرة!`; setTimeout(() => { connMode.classList.remove('show'); }, 2000); }
+            return;
+        }
+        if (toConns >= toD.ports.length) {
+            const connMode = document.getElementById('ns-connectionMode');
+            if (connMode) { connMode.textContent = `⚠️ ${toD.name} ليس لديه منافذ شاغرة!`; setTimeout(() => { connMode.classList.remove('show'); }, 2000); }
+            return;
+        }
+
         if (nsState.connections.some(c => (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId))) {
             const connMode = document.getElementById('ns-connectionMode');
             if (connMode) {
@@ -386,15 +476,23 @@
                     return;
                 }
 
-                if (nsState.tool === 'connect') {
+                if (nsState.tool === 'connect' || nsState.tool === 'ping') {
                     if (d) {
                         if (!nsState.connectFirst) {
                             nsState.connectFirst = d.id;
                             document.getElementById('ns-connectionMode').classList.add('show');
-                            document.getElementById('ns-connectionMode').textContent = `🔗 اختر الجهاز الثاني (${d.name})`;
+                            document.getElementById('ns-connectionMode').textContent = nsState.tool === 'ping' ? `📡 فحص من: ${d.name} -> اختر الهدف` : `🔗 اختر الجهاز الثاني (${d.name})`;
                         } else if (d.id !== nsState.connectFirst) {
-                            nsState.connectPendingSecond = d.id;
-                            document.getElementById('ns-connTypePicker').classList.add('show');
+                            if (nsState.tool === 'ping') {
+                                nsState.connectPendingSecond = d.id;
+                                nsRunPing(nsState.connectFirst, d.id);
+                                nsState.connectFirst = null;
+                                nsState.connectPendingSecond = null;
+                                document.getElementById('ns-connectionMode').classList.remove('show');
+                            } else {
+                                nsState.connectPendingSecond = d.id;
+                                document.getElementById('ns-connTypePicker').classList.add('show');
+                            }
                         }
                     } else {
                         nsState.connectFirst = null;
@@ -480,8 +578,16 @@
         if (nsModalSave2) {
             nsModalSave2.addEventListener('click', () => {
                 if (!nsEditingDevice) return;
+                const newIP = document.getElementById('ns-editIP')?.value;
+                if (newIP && newIP !== nsEditingDevice.ip) {
+                    const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                    if (!ipRegex.test(newIP)) {
+                        alert('عنوان IP غير صالح. الرجاء إدخال عنوان بصيغة صحيحة (مثال: 192.168.1.1)');
+                        return;
+                    }
+                }
                 nsEditingDevice.name = (document.getElementById('ns-editName')?.value) || nsEditingDevice.name;
-                nsEditingDevice.ip = (document.getElementById('ns-editIP')?.value) || nsEditingDevice.ip;
+                nsEditingDevice.ip = newIP || nsEditingDevice.ip;
                 const overlay = document.getElementById('ns-modalOverlay');
                 if (overlay) overlay.classList.remove('show');
                 nsEditingDevice = null;

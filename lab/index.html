@@ -16,7 +16,7 @@
         href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="../assets/js/theme-manager.js"></script>
+    <script src="../assets/js/theme-manager.js?v=2"></script>
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
 </head>
 
@@ -212,6 +212,7 @@
                                             <button class="tool-btn" data-ns-tool="select"><span class="icon">👆</span> تحديد</button>
                                             <button class="tool-btn" data-ns-tool="connect"><span class="icon">🔗</span> توصيل</button>
                                             <button class="tool-btn" data-ns-tool="delete"><span class="icon">🗑️</span> حذف</button>
+                                            <button class="tool-btn" data-ns-tool="ping"><span class="icon">📡</span> فحص (Ping)</button>
                                             <span class="ns-sep"></span>
                                             <button class="tool-btn" data-ns-device="pc"><span class="icon">💻</span> حاسوب</button>
                                             <button class="tool-btn" data-ns-device="phone"><span class="icon">📱</span> هاتف</button>
@@ -666,17 +667,17 @@
 
 
     <!-- Lab modules — split from lab.js for maintainability -->
-    <script src="../assets/js/modules/lab-polyfill.js"></script>
-    <script src="../assets/js/modules/lab-particles.js"></script>
-    <script src="../assets/js/modules/lab-typing.js"></script>
-    <script src="../assets/js/modules/lab-networksim.js"></script>
+    <script src="../assets/js/modules/lab-polyfill.js?v=2"></script>
+    <script src="../assets/js/modules/lab-particles.js?v=2"></script>
+    <script src="../assets/js/modules/lab-typing.js?v=2"></script>
+    <script src="../assets/js/modules/lab-networksim.js?v=2"></script>
     <!-- lab-installer.js مُعلق: عناصر DOM المقابلة غير موجودة في هذه الصفحة -->
-    <script src="../assets/js/modules/lab-flowchart-designer.js"></script>
-    <script src="../assets/js/modules/lab-html-editor.js"></script>
-    <script src="../assets/js/modules/lab-algo-engine.js"></script>
-    <script src="../assets/js/modules/lab-workshop.js"></script>
-    <script src="../assets/js/emoji-replacer.js"></script>
-    <script src="../assets/js/lab.js"></script>
+    <script src="../assets/js/modules/lab-flowchart-designer.js?v=2"></script>
+    <script src="../assets/js/modules/lab-html-editor.js?v=2"></script>
+    <script src="../assets/js/modules/lab-algo-engine.js?v=2"></script>
+    <script src="../assets/js/modules/lab-workshop.js?v=2"></script>
+    <script src="../assets/js/emoji-replacer.js?v=2"></script>
+    <script src="../assets/js/lab.js?v=2"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(function(err) {

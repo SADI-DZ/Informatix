@@ -206,6 +206,61 @@
     transition: all 0.15s;
   }
   .exit-option:hover { background: rgba(255,255,255,0.08); }
+  .sys-tray-btn { background: none; border: none; color: #fff; padding: 4px; border-radius: 4px; font-size: 14px; cursor: pointer; }
+  .sys-tray-btn:hover { background: rgba(255,255,255,0.1); }
+  
+  /* Window System */
+  .win-window {
+    position: absolute;
+    background: #202020;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    z-index: 10;
+  }
+  .win-titlebar {
+    background: #101010;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    padding-left: 12px;
+  }
+  .win-title { color: #fff; font-size: 13px; font-family: 'Segoe UI', sans-serif; }
+  .win-controls { display: flex; height: 100%; }
+  .win-controls button {
+    background: transparent; border: none; color: #fff; width: 46px; height: 100%;
+    cursor: pointer; font-family: monospace; font-size: 12px;
+  }
+  .win-controls button:hover { background: rgba(255,255,255,0.1); }
+  .win-controls button.btn-close:hover { background: #E81123; }
+  .win-content { flex: 1; position: relative; overflow: hidden; }
+  
+  /* CMD & Edge contents */
+  .cmd-output {
+    padding: 8px; color: #ccc; font-family: 'Consolas', monospace; font-size: 14px;
+    height: calc(100% - 30px); overflow-y: auto; background: #000;
+  }
+  .cmd-input-line {
+    display: flex; padding: 0 8px 8px 8px; color: #ccc; font-family: 'Consolas', monospace; font-size: 14px; background: #000;
+  }
+  .cmd-input-line input {
+    flex: 1; background: transparent; border: none; color: #fff; outline: none;
+    font-family: 'Consolas', monospace; font-size: 14px; margin-left: 4px;
+  }
+  .browser-bar {
+    background: #333; height: 40px; display: flex; align-items: center; padding: 0 10px; gap: 10px;
+  }
+  .browser-bar input {
+    flex: 1; background: #222; border: 1px solid #444; color: #fff; border-radius: 20px; padding: 4px 12px; outline: none;
+  }
+  .browser-content {
+    flex: 1; background: #fff; color: #000; display: flex; align-items: center; justify-content: center; font-family: sans-serif; flex-direction: column; height: calc(100% - 40px);
+  }
 
   /* ===== BOOT WINDOWS ===== */
   #boot-windows, #restart-screen {
@@ -372,7 +427,42 @@
   .privacy-item .p-label { color: #fff; font-size: 13px; font-weight: 500; }
   .privacy-item .p-desc { color: rgba(255,255,255,0.5); font-size: 11px; }
 
-  /* ===== SETUP SCREENS (Blue) ===== */
+  /* ===== DISK MANAGEMENT STYLES ===== */
+  .disk-list {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  .disk-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .disk-item:hover { background: rgba(255,255,255,0.05); }
+  .disk-item.selected { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+  .disk-actions { display: flex; gap: 8px; }
+  .d-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .d-btn:hover { background: rgba(255,255,255,0.2); }
+  .d-btn[style*="opacity: 0.5"] { cursor: not-allowed; }
+
   .setup-screen {
     background: #0078D4;
     align-items: center;
@@ -487,38 +577,6 @@
   .type-option:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.4); }
   .type-option .t-title { font-weight: 500; margin-bottom: 4px; }
   .type-option .t-desc { color: rgba(255,255,255,0.5); font-size: 13px; }
-
-  /* Disk */
-  .disk-table {
-    background: #001B36;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .disk-header, .disk-row {
-    display: grid;
-    grid-template-columns: 1fr 80px 80px 100px;
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-  .disk-header { border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); font-size: 11px; }
-  .disk-row { color: rgba(255,255,255,0.9); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s; }
-  .disk-row:hover { background: rgba(255,255,255,0.05); }
-  .disk-row.selected { background: rgba(255,255,255,0.1); border-left: 2px solid #0078D4; }
-  .disk-actions { display: flex; gap: 8px; margin-bottom: 20px; }
-  .disk-actions button {
-    padding: 6px 14px;
-    font-size: 13px;
-    border: 1px solid rgba(255,255,255,0.3);
-    background: none;
-    color: rgba(255,255,255,0.7);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: background 0.15s;
-  }
-  .disk-actions button:hover { background: rgba(255,255,255,0.05); }
 
   /* ===== OOBE SETUP ===== */
   #oobe-setup {
@@ -764,6 +822,100 @@
   }
   img.emoji-replaced{display:inline;height:1.2em;width:1.2em;vertical-align:middle;margin:0 0.05em;pointer-events:none}
 </style>
+<script>
+  let diskPartitions = [
+    { id: 0, name: "Drive 0 Unallocated Space", size: 50.0, free: 50.0, type: "Unallocated", isFormatted: false }
+  ];
+  let selectedDiskIndex = 0;
+
+  function renderDisks() {
+    const container = document.getElementById("disk-list-container");
+    container.innerHTML = "";
+    diskPartitions.forEach((p, idx) => {
+      let div = document.createElement("div");
+      div.className = "disk-item" + (idx === selectedDiskIndex ? " selected" : "");
+      div.onclick = () => { selectedDiskIndex = idx; renderDisks(); };
+      div.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        <div style="flex:1">
+          <div style="color:#fff;font-size:13px">${p.name} ${p.type !== "Unallocated" ? "(" + p.type + ")" : ""}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px">Total size: ${p.size.toFixed(1)} GB &nbsp;&nbsp; Free space: ${p.free.toFixed(1)} GB</div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+    updateDiskButtons();
+  }
+
+  function updateDiskButtons() {
+    const p = diskPartitions[selectedDiskIndex];
+    const btnNew = document.getElementById("disk-btn-new");
+    const btnFormat = document.getElementById("disk-btn-format");
+    const btnDelete = document.getElementById("disk-btn-delete");
+    const btnNext = document.getElementById("disk-btn-next");
+
+    if (!p) return;
+
+    btnNew.style.opacity = p.type === "Unallocated" ? "1" : "0.5";
+    btnNew.style.pointerEvents = p.type === "Unallocated" ? "auto" : "none";
+
+    btnFormat.style.opacity = p.type === "Primary" && !p.isFormatted ? "1" : "0.5";
+    btnFormat.style.pointerEvents = p.type === "Primary" && !p.isFormatted ? "auto" : "none";
+
+    btnDelete.style.opacity = p.type !== "Unallocated" ? "1" : "0.5";
+    btnDelete.style.pointerEvents = p.type !== "Unallocated" ? "auto" : "none";
+
+    btnNext.disabled = !(p.type === "Primary" && p.isFormatted && p.size >= 20.0);
+  }
+
+  function diskActionNew() {
+    const p = diskPartitions[selectedDiskIndex];
+    if (p && p.type === "Unallocated") {
+      p.name = "Drive 0 Partition 1";
+      p.type = "Primary";
+      p.isFormatted = false;
+      renderDisks();
+    }
+  }
+
+  function diskActionFormat() {
+    const p = diskPartitions[selectedDiskIndex];
+    if (p && p.type === "Primary") {
+      p.name = "Drive 0 Partition 1 (Formatting...)";
+      renderDisks();
+      setTimeout(() => {
+        p.name = "Drive 0 Partition 1";
+        p.isFormatted = true;
+        p.free = p.size - 0.5;
+        renderDisks();
+      }, 1500);
+    }
+  }
+
+  function diskActionDelete() {
+    const p = diskPartitions[selectedDiskIndex];
+    if (p && p.type !== "Unallocated") {
+      p.name = "Drive 0 Unallocated Space";
+      p.type = "Unallocated";
+      p.isFormatted = false;
+      p.free = p.size;
+      renderDisks();
+    }
+  }
+
+  function diskActionNext() {
+    const p = diskPartitions[selectedDiskIndex];
+    if (p && p.type === "Primary" && p.isFormatted && p.size >= 20.0) {
+      goTo('installing');
+    } else {
+      alert("يرجى التأكد من تهيئة القسم وأن مساحته أكبر من 20 جيجابايت لتثبيت النظام.");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderDisks();
+  });
+</script>
 <!-- Phosphor Icons -->
 <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
 </head>
@@ -776,6 +928,10 @@
   <div class="bios-buttons">
     <button onclick="enterBios()">[ Press DEL to enter BIOS Setup ]</button>
     <button onclick="checkBoot()">[ Press F12 for Boot Menu ]</button>
+  </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>💡 معلومة: الإقلاع (Boot)</h4>
+    <p>هذه هي شاشة البداية، وتسمى BIOS. دورها هو تهيئة العتاد والبحث عن نظام تشغيل لكي يعمل.</p>
   </div>
 </div>
 
@@ -885,6 +1041,10 @@
       <button class="btn-exit" onclick="goTo('boot-windows')">Exit</button>
     </div>
   </div>
+  <div class="edu-hint" dir="rtl" style="z-index: 2000;">
+    <h4>⚙️ معلومة: إعدادات BIOS</h4>
+    <p>هنا يمكنك تغيير إعدادات الجهاز الأساسية. أهم خطوة هنا هي تغيير ترتيب الإقلاع (Boot Order) لجعل الحاسوب يقرأ من أداة التثبيت أولاً.</p>
+  </div>
 </div>
 
 <!-- ===== BOOT WINDOWS ===== -->
@@ -950,6 +1110,10 @@
     <button class="btn-install-now" onclick="goTo('setup-key')">Install Now</button>
     <div style="margin-top:40px"><button class="btn-link" style="color:rgba(255,255,255,0.7)">Repair your computer</button></div>
   </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>💿 معلومة: بدء التثبيت</h4>
+    <p>بعد إقلاع أداة التثبيت، يمكننا إما تثبيت نظام جديد أو إصلاح نظام سابق به خلل.</p>
+  </div>
 </div>
 
 <!-- ===== SETUP PRODUCT KEY ===== -->
@@ -960,6 +1124,10 @@
     <input type="text" id="productKeyInput" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" style="text-align:center;font-size:16px;letter-spacing:3px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;padding:10px;width:100%;outline:none;margin-bottom:20px;font-family:'Inter',sans-serif" maxlength="29">
     <button class="btn-next" style="width:100%" onclick="validateProductKey()">Next</button>
     <button class="btn-link" style="display:block;margin:20px auto 0" onclick="goTo('setup-license')">I don't have a product key</button>
+  </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>🔑 معلومة: مفتاح التنشيط</h4>
+    <p>الأنظمة التجارية تحتاج إلى مفتاح لتنشيطها وحماية حقوق الشركة المصنعة. إذا لم يكن لديك مفتاح الآن، يمكنك التخطي والتنشيط لاحقاً.</p>
   </div>
 </div>
 
@@ -982,6 +1150,10 @@
     </div>
     <button class="btn-next" style="width:100%" id="license-next" onclick="goTo('setup-type')" disabled>Next</button>
   </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>📜 معلومة: شروط الترخيص</h4>
+    <p>يجب الموافقة على شروط الاستخدام وقوانين الشركة لاستكمال تثبيت النظام واستخدامه قانونياً.</p>
+  </div>
 </div>
 
 <!-- ===== SETUP TYPE ===== -->
@@ -992,6 +1164,10 @@
     <button class="type-option" onclick="goTo('setup-disk')"><div class="t-title">Upgrade: Install Windows and keep files, apps, and settings</div><div class="t-desc">All your files, apps, and settings will be kept.</div></button>
     <button class="type-option" onclick="goTo('setup-disk')"><div class="t-title">Custom: Install Windows only (advanced)</div><div class="t-desc">All your files, apps, and settings will be deleted.</div></button>
   </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>🔄 معلومة: نوع التثبيت</h4>
+    <p>يمكنك إما ترقية نظام سابق (Upgrade) مع الحفاظ على ملفاتك، أو القيام بتثبيت مخصص (Custom) يمسح النظام القديم ويثبت نظاماً جديداً.</p>
+  </div>
 </div>
 
 <!-- ===== SETUP DISK ===== -->
@@ -999,13 +1175,15 @@
   <div class="setup-box" style="max-width:620px">
     <h1>Where do you want to install Windows?</h1>
     <div class="sub">Select a drive to install Windows.</div>
-    <div class="disk-table">
-      <div class="disk-header"><span>Name</span><span>Total Size</span><span>Type</span><span>Free Space</span></div>
-      <div class="disk-row" onclick="selectDisk(0)"><span>Drive 0 Unallocated Space</span><span>512 GB</span><span>NVMe SSD</span><span>524,288 MB</span></div>
-      <div class="disk-row" onclick="selectDisk(1)"><span>Drive 1 Partition 1</span><span>1 TB</span><span>HDD</span><span>1,048,476 MB</span></div>
+    <div class="disk-table" id="disk-list-container">
+      <!-- Injected by JS -->
     </div>
-    <div class="disk-actions"><button onclick="alert('Disk formatted!')">Format</button><button onclick="alert('New partition created!')">New</button><button>Delete</button></div>
-    <button class="btn-next" style="width:100%" id="disk-next" onclick="goTo('installing')" disabled>Next</button>
+    <div class="disk-actions">
+      <button id="disk-btn-new" onclick="diskActionNew()">New</button>
+      <button id="disk-btn-format" onclick="diskActionFormat()">Format</button>
+      <button id="disk-btn-delete" onclick="diskActionDelete()">Delete</button>
+    </div>
+    <button class="btn-next" style="width:100%" id="disk-btn-next" onclick="diskActionNext()">Next</button>
   </div>
 
   <div class="edu-hint" dir="rtl">
@@ -1033,6 +1211,10 @@
     <select><option>Algeria</option><option>Iraq</option><option>Saudi Arabia</option><option>Egypt</option><option>United Arab Emirates</option><option>Jordan</option><option>France</option><option>United States</option><option>United Kingdom</option></select>
     <button class="btn-primary" onclick="goTo('oobe-keyboard')">Yes</button>
   </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>🌍 معلومة: إعدادات المنطقة</h4>
+    <p>يساعد تحديد المنطقة النظام على عرض التوقيت والعملة والأخبار المحلية بشكل صحيح.</p>
+  </div>
 </div>
 
 <!-- ===== OOBE KEYBOARD ===== -->
@@ -1042,6 +1224,10 @@
     <div class="desc">This helps you type in your preferred language.</div>
     <select><option>Arabic (101)</option><option>Arabic (102)</option><option>US</option><option>UK</option></select>
     <button class="btn-primary" onclick="goTo('oobe-network')">Yes</button>
+  </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>⌨️ معلومة: تخطيط لوحة المفاتيح</h4>
+    <p>تحديد ترتيب الأحرف على لوحة المفاتيح حسب منطقتك لضمان الكتابة الصحيحة.</p>
   </div>
 </div>
 
@@ -1055,6 +1241,10 @@
     <button class="btn-primary" onclick="goTo('oobe-account')">Connect</button>
     <button class="btn-link" style="display:block;width:100%;text-align:center" onclick="goTo('oobe-account')">Continue with limited setup</button>
   </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>📡 معلومة: الاتصال بالشبكة</h4>
+    <p>ربط الحاسوب بالإنترنت لتنزيل التحديثات الأخيرة وإعداد الحسابات السحابية إن وجدت.</p>
+  </div>
 </div>
 
 <!-- ===== OOBE ACCOUNT ===== -->
@@ -1066,6 +1256,10 @@
     <input type="text" id="account-input" placeholder="Enter a name" oninput="checkAccount()">
     <div class="hint">This will be your account name. You can change it later.</div>
     <button class="btn-primary" id="account-next" onclick="goTo('oobe-password')" disabled>Next</button>
+  </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>👤 معلومة: حساب المستخدم</h4>
+    <p>إنشاء حساب شخصي لتنظيم ملفاتك وإعداداتك الخاصة على هذا الجهاز.</p>
   </div>
 </div>
 
@@ -1081,6 +1275,10 @@
     <button class="btn-primary" onclick="goTo('oobe-privacy')">Next</button>
     <button class="btn-link" style="display:block;width:100%;text-align:center" onclick="goTo('oobe-privacy')">Skip for now</button>
   </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>🔒 معلومة: حماية الحساب</h4>
+    <p>وضع كلمة مرور قوية لحماية بياناتك من الوصول غير المصرح به.</p>
+  </div>
 </div>
 
 <!-- ===== OOBE PRIVACY ===== -->
@@ -1090,6 +1288,10 @@
     <div class="desc">You can change these any time in Settings.</div>
     <div id="privacy-list"></div>
     <button class="btn-primary" onclick="goTo('oobe-setup')">Accept</button>
+  </div>
+  <div class="edu-hint" dir="rtl">
+    <h4>🛡️ معلومة: إعدادات الخصوصية</h4>
+    <p>التحكم في كمية البيانات التي يمكن للنظام إرسالها للشركة لتحسين الخدمات وحماية خصوصيتك.</p>
   </div>
 </div>
 
@@ -1110,8 +1312,56 @@
   <div class="desktop-icons">
     <div class="desktop-icon"><span class="ico">💻</span><span class="lbl">This PC</span></div>
     <div class="desktop-icon"><span class="ico">🗑️</span><span class="lbl">Recycle Bin</span></div>
-    <div class="desktop-icon"><span class="ico">🌐</span><span class="lbl">Microsoft Edge</span></div>
+    <div class="desktop-icon" onclick="openWin('win-edge')"><span class="ico">🌐</span><span class="lbl">Microsoft Edge</span></div>
+    <div class="desktop-icon" onclick="openWin('win-cmd')"><span class="ico">⬛</span><span class="lbl">Terminal</span></div>
     <div class="desktop-icon"><span class="ico">📁</span><span class="lbl">File Explorer</span></div>
+  </div>
+
+  <!-- Windows -->
+  <div class="win-window" id="win-cmd" style="left:150px; top:100px; width:600px; height:400px;" onmousedown="bringToFront('win-cmd')">
+    <div class="win-titlebar" onmousedown="dragStart(event, 'win-cmd')">
+      <div class="win-title">Command Prompt</div>
+      <div class="win-controls">
+        <button onclick="minWin('win-cmd')">-</button>
+        <button onclick="maxWin('win-cmd')">[]</button>
+        <button class="btn-close" onclick="closeWin('win-cmd')">X</button>
+      </div>
+    </div>
+    <div class="win-content">
+      <div class="cmd-output" id="cmd-out">
+        <div>Microsoft Windows [Version 10.0.22000.1]</div>
+        <div>(c) Microsoft Corporation. All rights reserved.</div><br>
+      </div>
+      <div class="cmd-input-line">
+        <span id="cmd-prompt">C:\Users\User&gt;</span>
+        <input type="text" id="cmd-in" onkeydown="handleCmd(event)" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="win-window" id="win-edge" style="left:100px; top:80px; width:800px; height:500px;" onmousedown="bringToFront('win-edge')">
+    <div class="win-titlebar" style="background:#111;" onmousedown="dragStart(event, 'win-edge')">
+      <div class="win-title">Microsoft Edge</div>
+      <div class="win-controls">
+        <button onclick="minWin('win-edge')">-</button>
+        <button onclick="maxWin('win-edge')">[]</button>
+        <button class="btn-close" onclick="closeWin('win-edge')">X</button>
+      </div>
+    </div>
+    <div class="win-content">
+      <div class="browser-bar">
+        <span>⬅️</span><span>➡️</span><span>🔄</span>
+        <input type="text" value="https://www.google.com" readonly>
+      </div>
+      <div class="browser-content">
+        <h1 style="color:#4285F4;font-size:48px;margin-bottom:20px;">Google</h1>
+        <input type="text" style="width:400px;padding:12px;border:1px solid #ddd;border-radius:24px;outline:none;font-size:16px;" placeholder="Search Google or type a URL">
+        <div style="margin-top:20px;gap:10px;display:flex;">
+          <button style="padding:10px 20px;background:#f8f9fa;border:1px solid #f8f9fa;border-radius:4px;cursor:pointer;">Google Search</button>
+          <button style="padding:10px 20px;background:#f8f9fa;border:1px solid #f8f9fa;border-radius:4px;cursor:pointer;">I'm Feeling Lucky</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="context-menu" id="context-menu">
     <div class="ctx-item"><span>👁️</span><span>View</span></div>
@@ -1164,6 +1414,10 @@
       <button class="sys-tray-btn">🔊</button>
       <div class="clock-box" id="desktop-clock"></div>
     </div>
+  </div>
+  <div class="edu-hint" dir="rtl" style="z-index: 2000;">
+    <h4>🖥️ تمرين عملي: واجهة النظام</h4>
+    <p>تهانينا! لقد وصلت إلى سطح المكتب. جرب التفاعل مع النوافذ وتجربة استخدام الطرفية (Terminal).</p>
   </div>
 </div>
 
@@ -1365,11 +1619,7 @@ function toggleLicense() {
 }
 
 // ===== DISK =====
-function selectDisk(idx) {
-  selectedDisk = idx;
-  document.querySelectorAll('.disk-row').forEach((r, i) => r.classList.toggle('selected', i === idx));
-  document.getElementById('disk-next').disabled = false;
-}
+// Managed by dynamic logic at the top of the file
 
 // ===== ACCOUNT =====
 function checkAccount() {
@@ -1468,12 +1718,86 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ===== WINDOW MANAGER =====
+let activeZ = 10;
+function openWin(id) {
+  const win = document.getElementById(id);
+  win.style.display = 'flex';
+  bringToFront(id);
+  if(id === 'win-cmd') { setTimeout(() => document.getElementById('cmd-in').focus(), 100); }
+}
+function closeWin(id) { document.getElementById(id).style.display = 'none'; }
+function minWin(id) { closeWin(id); }
+function maxWin(id) {
+  const win = document.getElementById(id);
+  if (!win.dataset.maximized) {
+    win.dataset.oldLeft = win.style.left; win.dataset.oldTop = win.style.top;
+    win.dataset.oldWidth = win.style.width; win.dataset.oldHeight = win.style.height;
+    win.style.left = '0px'; win.style.top = '0px'; win.style.width = '100%'; win.style.height = 'calc(100% - 48px)';
+    win.dataset.maximized = '1';
+  } else {
+    win.style.left = win.dataset.oldLeft; win.style.top = win.dataset.oldTop;
+    win.style.width = win.dataset.oldWidth; win.style.height = win.dataset.oldHeight;
+    win.dataset.maximized = '';
+  }
+}
+function bringToFront(id) {
+  activeZ++; document.getElementById(id).style.zIndex = activeZ;
+}
+
+// Drag logic
+let draggingWin = null;
+let dragStartX = 0, dragStartY = 0;
+function dragStart(e, id) {
+  draggingWin = document.getElementById(id);
+  if (draggingWin.dataset.maximized) return;
+  bringToFront(id);
+  dragStartX = e.clientX - draggingWin.offsetLeft; dragStartY = e.clientY - draggingWin.offsetTop;
+  document.addEventListener('mousemove', dragMove);
+  document.addEventListener('mouseup', dragEnd);
+}
+function dragMove(e) {
+  if (!draggingWin) return;
+  draggingWin.style.left = (e.clientX - dragStartX) + 'px';
+  draggingWin.style.top = (e.clientY - dragStartY) + 'px';
+}
+function dragEnd() {
+  draggingWin = null;
+  document.removeEventListener('mousemove', dragMove);
+  document.removeEventListener('mouseup', dragEnd);
+}
+
+// ===== CMD LOGIC =====
+let currentDir = 'C:\\Users\\User>';
+function handleCmd(e) {
+  if (e.key === 'Enter') {
+    const input = document.getElementById('cmd-in');
+    const out = document.getElementById('cmd-out');
+    const val = input.value.trim();
+    out.innerHTML += `<div>${currentDir} ${val}</div>`;
+    input.value = '';
+    
+    if (val === 'dir') out.innerHTML += `<div> Volume in drive C has no label.<br> Directory of C:\\Users\\User<br><br> 05/22/2026 12:00 PM &lt;DIR&gt; Documents<br> 05/22/2026 12:00 PM &lt;DIR&gt; Downloads<br> 05/22/2026 12:00 PM &lt;DIR&gt; Desktop</div><br>`;
+    else if (val.startsWith('cd ')) out.innerHTML += `<div></div>`;
+    else if (val === 'ping') out.innerHTML += `<div>Usage: ping &lt;target_name&gt;</div><br>`;
+    else if (val.startsWith('ping ')) {
+       out.innerHTML += `<div>Pinging ${val.split(' ')[1]} with 32 bytes of data:<br>Reply from ${val.split(' ')[1]}: bytes=32 time=10ms TTL=128<br>Reply from ${val.split(' ')[1]}: bytes=32 time=11ms TTL=128</div><br>`;
+    }
+    else if (val === 'mkdir' || val.startsWith('mkdir ')) out.innerHTML += `<div></div>`;
+    else if (val.startsWith('echo ')) out.innerHTML += `<div>${val.substring(5)}</div><br>`;
+    else if (val === 'cls' || val === 'clear') out.innerHTML = '';
+    else if (val !== '') out.innerHTML += `<div>'${val}' is not recognized as an internal or external command.</div><br>`;
+    
+    out.scrollTop = out.scrollHeight;
+  }
+}
+
 // ===== INIT =====
 makeSpinner('spinner-boot');
 makeSpinner('spinner-hi');
 renderPrivacy();
 startBios();
 </script>
-<script src="../assets/js/emoji-replacer.js"></script>
+<script src="../assets/js/emoji-replacer.js?v=2"></script>
 </body>
 </html>

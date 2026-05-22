@@ -5,7 +5,7 @@
 
         // ==================== CONSTANTS ====================
         const HTML_TAGS = [
-            'html','head','body','title','meta','link','script',
+            'html','head','body','title','meta','link','script','style',
             'div','span','p','h1','h2','h3','h4','h5','h6',
             'a','img','ul','ol','li','table','caption','colgroup','col','thead','tbody','tfoot','tr','td','th',
             'form','input','button','select','option','optgroup','textarea','label','fieldset','legend',
@@ -18,6 +18,14 @@
             'noscript','template','slot','address','hgroup','bdi','bdo',
             'output','progress','meter','details','summary','menu'
         ].sort();
+
+        const SNIPPETS = {
+            'html5': '<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n  <meta charset="UTF-8">\n  <title>Document</title>\n</head>\n<body>\n  \n</body>\n</html>',
+            'style': '<style>\n  /* CSS Code */\n  body { font-family: Arial; }\n</style>',
+            'script': '<script>\n  // JS Code\n  console.log("Hello");\n</script>',
+            'form': '<form action="" method="post">\n  <label>الاسم: <input type="text" name="name"></label>\n  <button type="submit">إرسال</button>\n</form>',
+            'table': '<table border="1">\n  <tr>\n    <th>العنوان</th>\n  </tr>\n  <tr>\n    <td>البيانات</td>\n  </tr>\n</table>'
+        };
 
         const VOID_ELEMENTS = new Set([
             'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'
@@ -122,7 +130,7 @@
             const lastClose = before.lastIndexOf('>');
             if (lastOpen === -1 || lastOpen < lastClose) return null;
             const inside = before.substring(lastOpen);
-            const m = inside.match(/^<\s*([\w-]*)$/);
+            const m = inside.match(/^<\s*([\w-!]*)$/);
             return m ? m[1] : null;
         }
 
@@ -181,8 +189,13 @@
             let items = [], type = '';
 
             if (tagPrefix !== null) {
-                type = 'tag';
-                items = HTML_TAGS.filter(t => t.startsWith(tagPrefix.toLowerCase())).slice(0, 25);
+                if (tagPrefix.startsWith('!')) {
+                    type = 'snippet';
+                    items = Object.keys(SNIPPETS).filter(k => ('!'+k).startsWith(tagPrefix));
+                } else {
+                    type = 'tag';
+                    items = HTML_TAGS.filter(t => t.startsWith(tagPrefix.toLowerCase())).slice(0, 25);
+                }
             } else if (attrCtx) {
                 type = 'attr';
                 const specific = ATTRS_BY_TAG[attrCtx.tagName] || [];
@@ -198,9 +211,13 @@
                 const div = document.createElement('div');
                 div.className = 'sug-item' + (i === 0 ? ' active' : '');
                 div.dataset.value = item; div.dataset.type = type;
-                div.innerHTML = type === 'tag'
-                    ? `<span class="sug-tag">&lt;${item}&gt;</span><span class="sug-desc">وسم HTML</span>`
-                    : `<span class="sug-tag">${item}</span><span class="sug-desc">خاصية</span>`;
+                if (type === 'tag') {
+                    div.innerHTML = `<span class="sug-tag">&lt;${item}&gt;</span><span class="sug-desc">وسم HTML</span>`;
+                } else if (type === 'snippet') {
+                    div.innerHTML = `<span class="sug-tag">!${item}</span><span class="sug-desc">قالب جاهز</span>`;
+                } else {
+                    div.innerHTML = `<span class="sug-tag">${item}</span><span class="sug-desc">خاصية</span>`;
+                }
                 div.onclick = () => htmlInsertSuggestion(item, type);
                 div.onmouseenter = () => {
                     htmlSB.querySelectorAll('.sug-item').forEach(e => e.classList.remove('active'));
@@ -244,6 +261,15 @@
                         htmlTA.value = htmlTA.value.substring(0, newPos) + ins + htmlTA.value.substring(newPos);
                         htmlTA.setSelectionRange(newPos, newPos);
                     }
+                    htmlTriggerUpdate();
+                }
+            } else if (type === 'snippet') {
+                const m = before.match(/(<[\w-!]*)$/);
+                if (m) {
+                    const newBefore = before.substring(0, before.length - m[0].length) + SNIPPETS[value];
+                    htmlTA.value = newBefore + after;
+                    const newPos = newBefore.length;
+                    htmlTA.setSelectionRange(newPos, newPos);
                     htmlTriggerUpdate();
                 }
             } else if (type === 'attr') {
@@ -348,6 +374,22 @@
             stack.forEach(t => {
                 errors.push({ line: 0, msg: `وسم غير مغلق: <code>&lt;${t}&gt;</code>`, type: 'error' });
             });
+
+            // Semantic Linter checks
+            const imgRegex = /<img\s([^>]+)>/gi;
+            let m2;
+            while ((m2 = imgRegex.exec(code)) !== null) {
+                if (!/alt\s*=\s*(["']).*?\1/i.test(m2[1])) {
+                    const lineNum = code.substring(0, m2.index).split('\n').length;
+                    errors.push({ line: lineNum, msg: `تحذير: ينصح بإضافة خاصية <code>alt</code> لوسم الصورة <code>&lt;img&gt;</code> لتحسين الوصول`, type: 'warning' });
+                }
+            }
+
+            const depRegex = /<(center|font|marquee|blink)[\s>]/gi;
+            while ((m2 = depRegex.exec(code)) !== null) {
+                const lineNum = code.substring(0, m2.index).split('\n').length;
+                errors.push({ line: lineNum, msg: `تحذير: الوسم <code>&lt;${m2[1]}&gt;</code> قديم (Deprecated) ولا ينصح باستخدامه`, type: 'warning' });
+            }
 
             return errors;
         }
@@ -522,9 +564,11 @@
             });
 
             htmlTA.addEventListener('scroll', () => {
-                if (htmlHL) { htmlHL.scrollTop = htmlTA.scrollTop; htmlHL.scrollLeft = htmlTA.scrollLeft; }
-                if (htmlLN) htmlLN.scrollTop = htmlTA.scrollTop;
-            });
+                requestAnimationFrame(() => {
+                    if (htmlHL) { htmlHL.scrollTop = htmlTA.scrollTop; htmlHL.scrollLeft = htmlTA.scrollLeft; }
+                    if (htmlLN) htmlLN.scrollTop = htmlTA.scrollTop;
+                });
+            }, { passive: true });
 
             htmlTA.addEventListener('keydown', (e) => {
                 if (htmlSugActive && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab' || e.key === 'Escape')) {

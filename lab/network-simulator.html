@@ -192,6 +192,7 @@ img.emoji-replaced{display:inline;height:1.2em;width:1.2em;vertical-align:middle
   <button class="tool-btn" data-tool="select" title="تحديد"><span class="icon">👆</span> تحديد</button>
   <button class="tool-btn" data-tool="connect" title="توصيل"><span class="icon">🔗</span> توصيل</button>
   <button class="tool-btn" data-tool="delete" title="حذف"><span class="icon">🗑️</span> حذف</button>
+  <button class="tool-btn" data-tool="ping" title="فحص الاتصال"><span class="icon">📡</span> Ping</button>
   <div class="separator"></div>
   <button class="tool-btn" data-device="pc" draggable="true"><span class="icon">💻</span> حاسوب</button>
   <button class="tool-btn" data-device="phone" draggable="true"><span class="icon">📱</span> هاتف</button>
@@ -300,8 +301,10 @@ function createDevice(type, x, y) {
     ports: [],
   };
   if (type === 'router') d.ports = [0,1,2,3];
-  if (type === 'switch') d.ports = [0,1,2,3,4,5,6,7];
-  if (type === 'hub') d.ports = [0,1,2,3,4];
+  else if (type === 'switch') d.ports = [0,1,2,3,4,5,6,7];
+  else if (type === 'hub') d.ports = [0,1,2,3,4];
+  else if (type === 'cloud') d.ports = [0,1,2,3,4,5,6,7,8,9];
+  else d.ports = [0];
   state.devices.push(d);
   return d;
 }
@@ -460,6 +463,74 @@ function render() {
 
   state.connections.forEach(drawConnection);
   state.devices.forEach(drawDevice);
+  
+  if (state.activePings && state.activePings.length > 0) {
+      state.activePings.forEach(p => {
+          const a = state.devices.find(d => d.id === p.from);
+          const b = state.devices.find(d => d.id === p.to);
+          if (a && b) {
+              const ax = a.x * state.zoom + state.pan.x;
+              const ay = a.y * state.zoom + state.pan.y;
+              const bx = b.x * state.zoom + state.pan.x;
+              const by = b.y * state.zoom + state.pan.y;
+              const x = ax + (bx - ax) * p.progress;
+              const y = ay + (by - ay) * p.progress;
+              ctx.beginPath();
+              ctx.arc(x, y, 6 * state.zoom, 0, Math.PI*2);
+              ctx.fillStyle = p.success ? '#81c784' : '#e57373';
+              ctx.fill();
+              ctx.strokeStyle = '#fff';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+          }
+      });
+  }
+}
+
+// Ping Logic
+function hasPath(startId, endId, visited = new Set()) {
+    if (startId === endId) return true;
+    visited.add(startId);
+    const conns = state.connections.filter(c => c.from === startId || c.to === startId);
+    for (const c of conns) {
+        const nextId = c.from === startId ? c.to : c.from;
+        if (!visited.has(nextId)) {
+            if (hasPath(nextId, endId, visited)) return true;
+        }
+    }
+    return false;
+}
+
+function runPing(fromId, toId) {
+    const fromD = state.devices.find(d => d.id === fromId);
+    const toD = state.devices.find(d => d.id === toId);
+    
+    const subnetRegex = /^(\d+\.\d+\.\d+)\./;
+    const fromSub = fromD.ip.match(subnetRegex);
+    const toSub = toD.ip.match(subnetRegex);
+    
+    const pathExists = hasPath(fromId, toId);
+    const success = pathExists && (fromSub && toSub && fromSub[1] === toSub[1] || state.devices.some(d => d.type === 'router'));
+    
+    if (!state.activePings) state.activePings = [];
+    const pingObj = { from: fromId, to: toId, progress: 0, success };
+    state.activePings.push(pingObj);
+    
+    let lastTime = performance.now();
+    function animatePing(time) {
+        const dt = time - lastTime;
+        lastTime = time;
+        pingObj.progress += dt / 1000;
+        if (pingObj.progress >= 1) {
+            state.activePings = state.activePings.filter(p => p !== pingObj);
+            render();
+            alert(success ? `✅ Ping ناجح من ${fromD.name} إلى ${toD.name}` : `❌ Ping فشل من ${fromD.name} إلى ${toD.name}`);
+        } else {
+            render();
+            requestAnimationFrame(animatePing);
+        }
+    }
+    requestAnimationFrame(animatePing);
 }
 
 // ======================== إضافة جهاز بالسحب والإفلات ========================
@@ -571,8 +642,16 @@ function closeModal() {
 }
 function saveDevice() {
   if (!editingDevice) return;
+  const newIP = document.getElementById('editIP').value;
+  if (newIP && newIP !== editingDevice.ip) {
+      const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      if (!ipRegex.test(newIP)) {
+          alert('عنوان IP غير صالح. الرجاء إدخال عنوان بصيغة صحيحة (مثال: 192.168.1.1)');
+          return;
+      }
+  }
   editingDevice.name = document.getElementById('editName').value || editingDevice.name;
-  editingDevice.ip = document.getElementById('editIP').value || editingDevice.ip;
+  editingDevice.ip = newIP || editingDevice.ip;
   closeModal();
   render();
 }
@@ -598,15 +677,23 @@ canvas.addEventListener('mousedown', e => {
     return;
   }
 
-  if (state.tool === 'connect') {
+  if (state.tool === 'connect' || state.tool === 'ping') {
     if (d) {
       if (!state.connectFirst) {
         state.connectFirst = d.id;
         document.getElementById('connectionMode').classList.add('show');
-        document.getElementById('connectionMode').textContent = `🔗 اختر الجهاز الثاني (${d.name})`;
+        document.getElementById('connectionMode').textContent = state.tool === 'ping' ? `📡 فحص من: ${d.name} -> اختر الهدف` : `🔗 اختر الجهاز الثاني (${d.name})`;
       } else if (d.id !== state.connectFirst) {
-        state.connectPendingSecond = d.id;
-        document.getElementById('connTypePicker').classList.add('show');
+        if (state.tool === 'ping') {
+            state.connectPendingSecond = d.id;
+            runPing(state.connectFirst, d.id);
+            state.connectFirst = null;
+            state.connectPendingSecond = null;
+            document.getElementById('connectionMode').classList.remove('show');
+        } else {
+            state.connectPendingSecond = d.id;
+            document.getElementById('connTypePicker').classList.add('show');
+        }
       }
     }
     return;
@@ -648,6 +735,24 @@ canvas.addEventListener('mouseleave', () => {
 
 // ======================== الإتصالات ========================
 function addConnection(fromId, toId, type = 'wired') {
+  const fromD = state.devices.find(d => d.id === fromId);
+  const toD = state.devices.find(d => d.id === toId);
+  if (!fromD || !toD) return;
+
+  const fromConns = state.connections.filter(c => c.from === fromId || c.to === fromId).length;
+  const toConns = state.connections.filter(c => c.from === toId || c.to === toId).length;
+
+  if (fromConns >= fromD.ports.length) {
+      document.getElementById('connectionMode').textContent = `⚠️ ${fromD.name} ليس لديه منافذ شاغرة!`;
+      setTimeout(() => { document.getElementById('connectionMode').classList.remove('show'); }, 2000);
+      return;
+  }
+  if (toConns >= toD.ports.length) {
+      document.getElementById('connectionMode').textContent = `⚠️ ${toD.name} ليس لديه منافذ شاغرة!`;
+      setTimeout(() => { document.getElementById('connectionMode').classList.remove('show'); }, 2000);
+      return;
+  }
+
   if (state.connections.some(c => (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId))) {
     document.getElementById('connectionMode').textContent = '⚠️ يوجد اتصال مسبق';
     setTimeout(() => { document.getElementById('connectionMode').classList.remove('show'); }, 1500);
@@ -790,6 +895,6 @@ function loadExample() {
 // تشغيل
 loadExample();
 </script>
-<script src="../assets/js/emoji-replacer.js"></script>
+<script src="../assets/js/emoji-replacer.js?v=2"></script>
 </body>
 </html>
