@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>محرر الخوارزميات</title>
-    <!-- ملاحظة: هذا الملف مكرر في assets/js/lab.js (Algorithm Editor Engine).  -->
-    <!-- عند إصلاح خلل، تأكد من تطبيق التغيير في كلا الموقعين. -->
+    <!-- المحرك موجود في assets/js/modules/lab-algo-engine.js -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -482,7 +481,7 @@
         .example-item:hover {
             border-color: var(--primary-color);
             background: rgba(79, 70, 229, 0.05);
-            transform: translateX(-5px);
+            transform: translateX(5px);
         }
 
         .example-icon {
@@ -743,6 +742,7 @@
             direction: ltr;
             text-align: left;
             overflow: auto;
+            box-sizing: border-box;
         }
 
         .algo-highlight {
@@ -760,7 +760,6 @@
             color: transparent;
             -webkit-text-fill-color: transparent;
             caret-color: #e2e8f0;
-            resize: vertical;
             padding-left: calc(44px + 0.75rem + 1rem);
         }
 
@@ -1045,10 +1044,10 @@
 
     <header class="navbar" id="top">
         <div class="container nav-content">
-            <a href="#" class="logo" onclick="event.preventDefault();">
+            <span class="logo" role="heading" aria-level="1">
                 <i class="ph-fill ph-graduation-cap"></i>
                 <span>محرر الخوارزميات</span>
-            </a>
+            </span>
             <button id="navToggle" class="nav-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false">
                 <i class="ph ph-list"></i>
             </button>
@@ -1144,6 +1143,10 @@
                                 <button id="algoResetBtn" class="btn-reset" type="button">
                                     <i class="ph ph-arrow-counter-clockwise"></i>
                                     إعادة
+                                </button>
+                                <button id="algoNewBtn" class="btn-reset" type="button">
+                                    <i class="ph ph-file-plus"></i>
+                                    جديد
                                 </button>
                             </div>
                         </div>

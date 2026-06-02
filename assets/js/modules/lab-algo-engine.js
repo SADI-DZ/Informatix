@@ -82,9 +82,67 @@
         let algoSugActive = false;
         let algoSugPrefix = '';
 
+        let algoCursorMirror = null;
+        function algoGetCursorPixelPos(textarea) {
+            const pos = textarea.selectionStart;
+            const val = textarea.value;
+            const before = val.substring(0, pos);
+            if (!algoCursorMirror) {
+                algoCursorMirror = document.createElement('div');
+                document.body.appendChild(algoCursorMirror);
+            }
+            const style = getComputedStyle(textarea);
+            algoCursorMirror.style.cssText = `
+                position: fixed; top: -9999px; left: -9999px;
+                white-space: pre; word-wrap: break-word;
+                font-size: ${style.fontSize};
+                font-family: ${style.fontFamily};
+                line-height: ${style.lineHeight};
+                padding: ${style.padding};
+                border: ${style.border};
+                letter-spacing: ${style.letterSpacing};
+                width: ${textarea.clientWidth}px;
+            `;
+            const lines = before.split('\n');
+            const textBefore = lines.slice(0, -1).join('\n');
+            const span = document.createElement('span');
+            span.textContent = lines[lines.length - 1] || ' ';
+            algoCursorMirror.textContent = textBefore + '\n';
+            algoCursorMirror.appendChild(span);
+            const spanRect = span.getBoundingClientRect();
+            const mirrorRect = algoCursorMirror.getBoundingClientRect();
+            const x = spanRect.left - mirrorRect.left;
+            const y = span.offsetTop;
+            span.remove();
+            const textareaRect = textarea.getBoundingClientRect();
+            return {
+                left: textareaRect.left + window.scrollX + x,
+                top: textareaRect.top + window.scrollY + y - textarea.scrollTop
+            };
+        }
+
+        function algoIsInsideStringOrComment(text, pos) {
+            let inSingle = false, inDouble = false;
+            let lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+            for (let i = lineStart; i < pos; i++) {
+                const ch = text[i];
+                if (ch === '"' && !inSingle) inDouble = !inDouble;
+                else if (ch === "'" && !inDouble) inSingle = !inSingle;
+            }
+            if (inSingle || inDouble) return true;
+            const line = text.substring(lineStart, pos);
+            const hash = line.indexOf('#'), slash = line.indexOf('//');
+            const commentStart = hash >= 0 && (slash < 0 || hash <= slash) ? hash : (slash >= 0 ? slash : -1);
+            return commentStart >= 0;
+        }
+
         function algoShowSuggestions() {
             const pos = algoEditorEl.selectionStart;
             const text = algoEditorEl.value;
+            if (algoIsInsideStringOrComment(text, pos)) {
+                algoHideSuggestions();
+                return;
+            }
             const before = text.substring(0, pos);
             const m = before.match(/([a-zA-Z0-9_\u00C0-\u00FF]+)$/);
             if (!m) {
@@ -104,7 +162,7 @@
             items.forEach((item, i) => {
                 const div = document.createElement('div');
                 div.className = 'sug-item' + (i === 0 ? ' active' : '');
-                div.dataset.kw = item; // store keyword cleanly for retrieval
+                div.dataset.kw = item;
                 div.innerHTML = `<span class="sug-tag">${item}</span>`;
                 div.onmousedown = (e) => { e.preventDefault(); algoInsertSuggestion(item); };
                 div.onmouseenter = () => {
@@ -114,10 +172,9 @@
                 algoSB.appendChild(div);
             });
 
-            // position
-            const rect = algoEditorEl.getBoundingClientRect();
-            algoSB.style.left = (rect.left + window.scrollX + 40) + 'px'; // indent slightly
-            algoSB.style.top = (rect.top + window.scrollY + 40) + 'px'; // approximate position near editor top
+            const cursorPos = algoGetCursorPixelPos(algoEditorEl);
+            algoSB.style.left = Math.max(0, cursorPos.left) + 'px';
+            algoSB.style.top = (cursorPos.top + 24) + 'px';
             algoSB.style.display = 'block';
             algoSugActive = true;
         }
@@ -151,6 +208,7 @@
         algoSyntaxErrorEl.style.fontSize = '0.9rem';
         algoSyntaxErrorEl.style.fontWeight = 'bold';
         algoSyntaxErrorEl.style.display = 'none';
+        algoSyntaxErrorEl.setAttribute('role', 'alert');
         algoEditorEl.parentElement.appendChild(algoSyntaxErrorEl);
 
         // ==================== HELPERS ====================
@@ -315,12 +373,15 @@
                 const cancel = overlay.querySelector('.algo-input-modal-cancel');
                 requestAnimationFrame(() => field?.focus());
                 const done = (val) => { overlay.remove(); resolve(val); };
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) done(''); });
                 if (confirm) confirm.onclick = () => done(field ? field.value : '');
                 if (cancel) cancel.onclick = () => done('');
-                field?.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') done(field.value);
-                    if (e.key === 'Escape') done('');
-                });
+                const onKey = (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); done(field.value); }
+                    if (e.key === 'Escape') { e.preventDefault(); done(''); }
+                };
+                field?.addEventListener('keydown', onKey);
+                overlay.addEventListener('keydown', onKey);
             });
         }
 
@@ -654,7 +715,13 @@
                     if (ok) { algoVM.pc += 1; }
                     else {
                         let handled = false;
-                        if (b.elseIfs) { for (const ei of b.elseIfs) { if (Boolean(algoEvalExpr(ei.cond, algoVM.vars))) { algoVM.pc = ei.line + 1; handled = true; break; } } }
+                        if (b.elseIfs) {
+                            for (const ei of b.elseIfs) {
+                                if (Boolean(algoEvalExpr(ei.cond, algoVM.vars))) {
+                                    algoVM.pc = ei.line + 1; handled = true; break;
+                                }
+                            }
+                        }
                         if (!handled) algoVM.pc = (b.elseLine != null ? b.elseLine + 1 : b.endLine + 1);
                     }
                 } else if (kind === 'elseif') {
@@ -687,13 +754,15 @@
                         throw new Error(`اسم متغير الحلقة "${b.varName}" غير صالح لأنه كلمة محجوزة (سطر ${lineIdx + 1})`);
                     }
                     if (!(b.varName in algoVM.vars)) {
-                        throw new Error(`المتغير "${b.varName}" غير معرّف. تأكد من التصريح عنه في قسم Var.`);
+                        throw new Error(`المتغير "${b.varName}" غير معرّف. صرّح عنه في قسم Var.`);
                     }
                     const loopKey = '__for_' + lineIdx;
+                    const endKey = '__forEnd_' + lineIdx;
                     const fKey = '__floop_' + lineIdx;
                     if (!algoVM.vars[loopKey]) {
                         algoVM.vars[b.varName] = algoEvalExpr(b.startExpr, algoVM.vars);
                         algoVM.vars[loopKey] = true;
+                        algoVM.vars[endKey] = Number(algoEvalExpr(b.endExpr, algoVM.vars));
                         algoVM._loopCounters[fKey] = 0;
                     } else {
                         algoVM.vars[b.varName] = (Number(algoVM.vars[b.varName]) || 0) + 1;
@@ -702,16 +771,19 @@
                     if (algoVM._loopCounters[fKey] > ALGO_MAX_LOOP_ITER) {
                         throw new Error(`⚠️ تحذير: حلقة لا نهائية محتملة! الحلقة في السطر ${lineIdx + 1} تجاوزت ${ALGO_MAX_LOOP_ITER.toLocaleString()} تكراراً. تحقق من حدود الحلقة.`);
                     }
-                    const currentVal = Number(algoVM.vars[b.varName]), endVal = Number(algoEvalExpr(b.endExpr, algoVM.vars));
+                    const currentVal = Number(algoVM.vars[b.varName]), endVal = Number(algoVM.vars[endKey]);
                     if (currentVal <= endVal) { algoVM.pc += 1; }
-                    else { delete algoVM.vars[loopKey]; algoVM._loopCounters[fKey] = 0; algoVM.pc = b.endLine + 1; }
+                    else { delete algoVM.vars[loopKey]; delete algoVM.vars[endKey]; algoVM._loopCounters[fKey] = 0; algoVM.pc = b.endLine + 1; }
                 } else if (kind === 'end') {
                     const whileBlock = algoVM.blocks.find(b => b.type === 'while' && b.endLine === lineIdx);
                     const forBlock = algoVM.blocks.find(b => b.type === 'for' && b.endLine === lineIdx);
                     if (whileBlock) algoVM.pc = whileBlock.line;
                     else if (forBlock) algoVM.pc = forBlock.line;
                     else algoVM.pc += 1;
-                } else { throw new Error('سطر غير مدعوم (سطر ' + (lineIdx + 1) + ')'); }
+                } else {
+                    const snippet = raw.trim().substring(0, 30);
+                    throw new Error('صيغة غير معروفة: "' + snippet + '..." (سطر ' + (lineIdx + 1) + '). تحقق من الكتابة أو راجع الأمثلة.');
+                }
             } catch (e) {
                 let msg = e && e.message ? e.message : String(e);
                 if (!msg.includes('(سطر')) msg += ' (في السطر ' + (lineIdx + 1) + ')';
@@ -743,7 +815,8 @@
         const algoINDENT_AFTER_EXACT = ['else', 'sinon', 'begin', 'debut', 'début', 'start', 'var', 'variable', 'variables'];
         /** Keywords that are block closers — the line itself should be dedented on type */
         const algoDEDENT_EXACT = ['endif', 'endwhile', 'endfor', 'end while', 'end for',
-            'finsi', 'fintantque', 'finpour', 'fin si', 'fin tant que', 'fin pour', 'fin'];
+            'finsi', 'fintantque', 'finpour', 'fin si', 'fin tant que', 'fin pour', 'fin',
+            'else', 'sinon'];
 
         function algoGetLineIndent(line) {
             const m = line.match(/^(\s*)/);
@@ -865,7 +938,7 @@
         // Auto-dedent closing keywords as they are typed
         algoEditorEl.addEventListener('input', (ev) => {
             // Only run dedent heuristic on regular character input (not paste, delete, etc.)
-            if (ev.inputType === 'insertText') {
+            if (ev.inputType === 'insertText' || ev.inputType === 'insertFromPaste') {
                 algoSmartDedentOnClose();
             }
         }, true); // capture phase so it runs before the main input handler
@@ -924,9 +997,6 @@
             await algoStepOnce();
         });
         algoResetBtn.addEventListener('click', () => {
-            if (confirm('هل تريد تحميل المثال الافتراضي؟ ستفقد الكود الحالي.')) {
-                algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
-            }
             algoResetVM();
         });
 
