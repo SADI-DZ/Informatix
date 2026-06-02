@@ -1,4 +1,4 @@
-const CACHE_NAME = 'informatix-v1';
+const CACHE_NAME = 'informatix-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

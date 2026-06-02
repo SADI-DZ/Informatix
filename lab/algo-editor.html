@@ -681,6 +681,54 @@
             background: #0f172a;
         }
 
+        .algo-editor-wrap.font-size-normal .algo-highlight,
+        .algo-editor-wrap.font-size-normal .algo-editor {
+            font-size: 0.95rem;
+        }
+        .algo-editor-wrap.font-size-medium .algo-highlight,
+        .algo-editor-wrap.font-size-medium .algo-editor {
+            font-size: 1.15rem;
+        }
+        .algo-editor-wrap.font-size-large .algo-highlight,
+        .algo-editor-wrap.font-size-large .algo-editor {
+            font-size: 1.35rem;
+        }
+
+        /* Suggestion box styles */
+        .sug-panel {
+            position: absolute;
+            z-index: 1000;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            max-height: 220px;
+            overflow-y: auto;
+            min-width: 180px;
+            padding: 0.25rem 0;
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        .sug-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            transition: background var(--transition-fast);
+        }
+
+        .sug-item:hover,
+        .sug-item.active {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+        }
+
+        .sug-tag {
+            font-weight: 600;
+        }
+
         .algo-highlight,
         .algo-editor {
             display: block;
@@ -1067,6 +1115,12 @@
                                 <span class="example-name">حلقة تكرارية (For)</span>
                             </div>
                         </button>
+                        <button class="example-item" data-example="boolean">
+                            <span class="example-icon"><i class="ph ph-toggle-left"></i></span>
+                            <div class="example-info">
+                                <span class="example-name">القيم المنطقية (Boolean)</span>
+                            </div>
+                        </button>
                     </div>
                 </section>
 
@@ -1144,7 +1198,7 @@
     </footer>
 
     <!-- محرك الخوارزميات - يستخدم الوحدة النمطية المشتركة -->
-    <script src="../assets/js/modules/lab-algo-engine.js?v=2"></script>
+    <script src="../assets/js/modules/lab-algo-engine.js?v=3"></script>
     <!-- ربط زر السمة بالـ theme-manager -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -1171,6 +1225,31 @@
         const saved = localStorage.getItem('theme');
         if (saved === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        // تكبير وتصغير خط المحرر
+        const fontBtn = document.getElementById('fontToggle');
+        const editorWrap = document.querySelector('.algo-editor-wrap');
+        if (fontBtn && editorWrap) {
+            const fontSizes = ['normal', 'medium', 'large'];
+            let currentSizeIndex = fontSizes.indexOf(localStorage.getItem('editorFontSize') || 'normal');
+            if (currentSizeIndex === -1) currentSizeIndex = 0;
+
+            const applyFontSize = (size) => {
+                fontSizes.forEach(s => {
+                    editorWrap.classList.remove(`font-size-${s}`);
+                });
+                editorWrap.classList.add(`font-size-${size}`);
+                localStorage.setItem('editorFontSize', size);
+            };
+
+            // Apply saved font size on load
+            applyFontSize(fontSizes[currentSizeIndex]);
+
+            fontBtn.addEventListener('click', () => {
+                currentSizeIndex = (currentSizeIndex + 1) % fontSizes.length;
+                applyFontSize(fontSizes[currentSizeIndex]);
+            });
         }
     });
     </script>

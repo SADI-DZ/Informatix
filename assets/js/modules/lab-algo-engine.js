@@ -39,6 +39,14 @@
         const algoHL_TYPES = ['integer', 'real', 'string', 'boolean', 'char', 'entier', 'reel', 'r\u00e9el', 'chaine', 'cha\u00eene', 'booleen', 'bool\u00e9en', 'caractere', 'caract\u00e8re'];
         const algoHL_LOGIC = ['and', 'or', 'not', 'true', 'false', 'et', 'ou', 'non', 'vrai', 'faux'];
 
+        const algoReservedKeywords = new Set([
+            ...algoHL_KEYWORDS,
+            ...algoHL_CONTROL.filter(k => !algoKW_TO.includes(k)),
+            ...algoHL_IO,
+            ...algoHL_TYPES,
+            ...algoHL_LOGIC
+        ].map(k => k.toLowerCase()));
+
         const algoDefaultPrograms = {
             en: 'Algorithm example\nBegin\n  Write("Hello World!");\nEnd',
             fr: 'Algorithme exemple\nDebut\n  Ecrire("Hello World!");\nFin'
@@ -49,19 +57,21 @@
                 hello: 'Algorithm HelloWorld\nBegin\n  Write("Hello World!");\nEnd',
                 sum: 'Algorithm Summation\nVar\n  a, b, s : integer\nBegin\n  a = 10\n  b = 20\n  s = a + b\n  Write("The sum is:");\n  Write(s);\nEnd',
                 condition: 'Algorithm Grades\nVar\n  score : integer\nBegin\n  score = 85\n  if score >= 90 then\n    Write("Excellent");\n  else if score >= 80 then\n    Write("Very Good");\n  else if score >= 70 then\n    Write("Good");\n  else\n    Write("Needs improvement");\n  endif\nEnd',
-                loop: 'Algorithm Counting\nVar\n  i : integer\nBegin\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  endfor\nEnd'
+                loop: 'Algorithm Counting\nVar\n  i : integer\nBegin\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  endfor\nEnd',
+                boolean: 'Algorithm BooleanExample\nVar\n  isAdult, hasLicense : boolean\nBegin\n  isAdult = true\n  hasLicense = false\n  if isAdult and hasLicense then\n    Write("Allowed to drive");\n  else\n    Write("Not allowed to drive");\n  endif\nEnd'
             },
             fr: {
                 hello: 'Algorithme HelloWorld\nDebut\n  Ecrire("Bonjour tout le monde!");\nFin',
                 sum: 'Algorithme Somme\nVar\n  a, b, s : entier\nDebut\n  a := 10\n  b := 20\n  s := a + b\n  Ecrire("La somme est:");\n  Ecrire(s);\nFin',
                 condition: 'Algorithme Notes\nVar\n  score : entier\nDebut\n  score := 85\n  Si score >= 90 Alors\n    Ecrire("Excellent");\n  Sinon si score >= 80 Alors\n    Ecrire("Tr\u00e8s bien");\n  Sinon si score >= 70 Alors\n    Ecrire("Bien");\n  Sinon\n    Ecrire("Am\u00e9lioration n\u00e9cessaire");\n  FinSi\nFin',
-                loop: 'Algorithme Comptage\nVar\n  i : entier\nDebut\n  Pour i = 1 a 5 Faire\n    Ecrire("Nombre:");\n    Ecrire(i);\n  FinPour\nFin'
+                loop: 'Algorithme Comptage\nVar\n  i : entier\nDebut\n  Pour i = 1 a 5 Faire\n    Ecrire("Nombre:");\n    Ecrire(i);\n  FinPour\nFin',
+                boolean: 'Algorithme ExempleBooleen\nVar\n  estAdulte, aPermis : booleen\nDebut\n  estAdulte := vrai\n  aPermis := faux\n  Si estAdulte et aPermis Alors\n    Ecrire("Autorise a conduire");\n  Sinon\n    Ecrire("Non autorise a conduire");\n  FinSi\nFin'
             }
         };
 
         // ==================== VM ====================
         const ALGO_MAX_LOOP_ITER = 10000;
-        let algoVM = { lines: [], blocks: [], pc: 0, vars: {}, out: [], halted: false, _ifMap: new Map(), _whileMap: new Map(), _forMap: new Map(), _loopCounters: {} };
+        let algoVM = { lines: [], blocks: [], pc: 0, vars: {}, out: [], halted: false, isStale: false, _ifMap: new Map(), _whileMap: new Map(), _forMap: new Map(), _loopCounters: {} };
 
         // ==================== AUTOCOMPLETE UI ====================
         const algoSB = document.createElement('div');
@@ -82,7 +92,7 @@
                 return;
             }
             algoSugPrefix = m[1].toLowerCase();
-            const allKws = [...algoHL_KEYWORDS, ...algoHL_CONTROL, ...algoHL_IO, ...algoHL_TYPES, ...algoHL_LOGIC];
+            const allKws = [...new Set([...algoHL_KEYWORDS, ...algoHL_CONTROL, ...algoHL_IO, ...algoHL_TYPES, ...algoHL_LOGIC])];
             const items = allKws.filter(kw => kw.startsWith(algoSugPrefix)).slice(0, 10);
 
             if (items.length === 0) {
@@ -94,6 +104,7 @@
             items.forEach((item, i) => {
                 const div = document.createElement('div');
                 div.className = 'sug-item' + (i === 0 ? ' active' : '');
+                div.dataset.kw = item; // store keyword cleanly for retrieval
                 div.innerHTML = `<span class="sug-tag">${item}</span>`;
                 div.onmousedown = (e) => { e.preventDefault(); algoInsertSuggestion(item); };
                 div.onmouseenter = () => {
@@ -105,8 +116,8 @@
 
             // position
             const rect = algoEditorEl.getBoundingClientRect();
-            algoSB.style.left = (rect.left + 40) + 'px'; // indent slightly
-            algoSB.style.top = (rect.top + 40) + 'px'; // approximate position near editor top
+            algoSB.style.left = (rect.left + window.scrollX + 40) + 'px'; // indent slightly
+            algoSB.style.top = (rect.top + window.scrollY + 40) + 'px'; // approximate position near editor top
             algoSB.style.display = 'block';
             algoSugActive = true;
         }
@@ -146,7 +157,7 @@
         /** تنظيف وحظر التعبيرات الخطرة (حقن) */
         function algoSanitizeExpr(expr) {
             const s = String(expr ?? '').trim();
-            if (!/^[\w\s"'+\-*/%<>=!&|().,:]+$/.test(s)) throw new Error('تعبير غير مسموح.');
+            if (!/^[\w\s"'\p{L}\p{N}\p{M}،؟;?+\-*/%<>=!&|().,:]+$/u.test(s)) throw new Error('تعبير غير مسموح.');
             const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval', 'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require', 'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'];
             const lower = s.toLowerCase();
             if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) throw new Error('محاولة وصول غير مصرح بها.');
@@ -276,7 +287,7 @@
         }
 
         function algoStartsWithAny(low, prefixes) {
-            for (const p of prefixes) { if (low.startsWith(p + ' ') || low.startsWith(p + '(')) return p; }
+            for (const p of prefixes) { if (low === p || low.startsWith(p + ' ') || low.startsWith(p + '(')) return p; }
             return null;
         }
 
@@ -320,6 +331,48 @@
                 const line = algoNormalizeLine(raw).trim();
                 if (!line) return;
                 const low = line.toLowerCase();
+
+                // Check variable names in declarations:
+                const lineKind = algoGetLineKind(raw);
+                if (lineKind.kind === 'var') {
+                    const lowKind = lineKind.text.toLowerCase();
+                    if (algoKW_VAR.includes(lowKind)) return; // Skip block header line (e.g. 'Var')
+                    let rest = lineKind.text;
+                    for (const kw of algoKW_VAR) {
+                        if (lowKind.startsWith(kw + ' ')) {
+                            rest = lineKind.text.slice(kw.length + 1).trim();
+                            break;
+                        }
+                    }
+                    if (rest === lineKind.text) {
+                        rest = lineKind.text.trim();
+                    }
+                    const beforeType = rest.split(':')[0].trim();
+                    const names = beforeType.split(',').map(x => x.trim()).filter(Boolean);
+                    for (const name of names) {
+                        if (algoReservedKeywords.has(name.toLowerCase())) {
+                            throw new Error(`اسم المتغير "${name}" غير صالح لأنه كلمة محجوزة (سطر ${i + 1})`);
+                        }
+                    }
+                } else if (lineKind.kind === 'const') {
+                    const rest = lineKind.text.slice(5).trim();
+                    const m = rest.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+)$/);
+                    if (m) {
+                        const name = m[1];
+                        if (algoReservedKeywords.has(name.toLowerCase())) {
+                            throw new Error(`اسم الثابت "${name}" غير صالح لأنه كلمة محجوزة (سطر ${i + 1})`);
+                        }
+                    }
+                } else if (lineKind.kind === 'let') {
+                    const rest = lineKind.text.slice(4).trim();
+                    const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                    if (m) {
+                        const name = m[1];
+                        if (algoReservedKeywords.has(name.toLowerCase())) {
+                            throw new Error(`اسم المتغير "${name}" غير صالح لأنه كلمة محجوزة (سطر ${i + 1})`);
+                        }
+                    }
+                }
                 const ifPrefix = algoStartsWithAny(low, algoKW_IF_START);
                 const thenSuffix = algoEndsWithAny(low, algoKW_THEN);
                 if (ifPrefix && thenSuffix) {
@@ -355,6 +408,9 @@
                     const match = middle.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+?)\s+\b(to|a|\u00e0)\b\s+(.+)$/i);
                     if (!match) throw new Error('صيغة for غير صحيحة (سطر ' + (i + 1) + ')');
                     const [, name, startExpr, , endExpr] = match;
+                    if (algoReservedKeywords.has(name.toLowerCase())) {
+                        throw new Error(`اسم متغير الحلقة "${name}" غير صالح لأنه كلمة محجوزة (سطر ${i + 1})`);
+                    }
                     pushBlock({ type: 'for', line: i, varName: name, startExpr, endExpr, endLine: null });
                     return;
                 }
@@ -494,6 +550,7 @@
             algoVM._whileMap = result.mapWhileByLine;
             algoVM._forMap = result.mapForByLine;
             algoVM.pc = 0; algoVM.vars = {}; algoVM.out = []; algoVM.halted = false; algoVM._loopCounters = {};
+            algoVM.isStale = false;
             algoRenderVars(); algoRenderOutput(); algoRenderHighlight();
         }
 
@@ -515,7 +572,9 @@
                 algoVM._lastPC = algoVM.pc;
                 if (kind === 'algorithm' || kind === 'start') { algoVM.pc += 1; }
                 else if (kind === 'var') {
-                    const low = s.toLowerCase(); let rest = s;
+                    const low = s.toLowerCase();
+                    if (algoKW_VAR.includes(low)) { algoVM.pc += 1; return; }
+                    let rest = s;
                     for (const kw of algoKW_VAR) {
                         if (low.startsWith(kw + ' ')) {
                             rest = s.slice(kw.length + 1).trim();
@@ -527,13 +586,23 @@
                     }
                     const beforeType = rest.split(':')[0].trim();
                     const names = beforeType.split(',').map(x => x.trim()).filter(Boolean);
-                    names.forEach(n => { if (/^[A-Za-z_]\w*$/.test(n) && !(n in algoVM.vars)) algoVM.vars[n] = null; });
+                    names.forEach(n => {
+                        if (/^[A-Za-z_]\w*$/.test(n)) {
+                            if (algoReservedKeywords.has(n.toLowerCase())) {
+                                throw new Error(`اسم المتغير "${n}" غير صالح لأنه كلمة محجوزة`);
+                            }
+                            if (!(n in algoVM.vars)) algoVM.vars[n] = null;
+                        }
+                    });
                     algoVM.pc += 1;
                 } else if (kind === 'const') {
                     const rest = s.slice(5).trim();
                     const m = rest.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+)$/);
                     if (!m) throw new Error('صيغة التصريح عن الثابت غير صحيحة (سطر ' + (lineIdx + 1) + ')');
                     const [, name, expr] = m;
+                    if (algoReservedKeywords.has(name.toLowerCase())) {
+                        throw new Error(`اسم الثابت "${name}" غير صالح لأنه كلمة محجوزة (سطر ${lineIdx + 1})`);
+                    }
                     algoVM.vars[name] = algoEvalExpr(expr, algoVM.vars);
                     algoVM.pc += 1;
                 } else if (kind === 'let') {
@@ -541,6 +610,9 @@
                     const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
                     if (!m) throw new Error('صيغة let غير صحيحة (سطر ' + (lineIdx + 1) + ')');
                     const [, name, expr] = m;
+                    if (algoReservedKeywords.has(name.toLowerCase())) {
+                        throw new Error(`اسم المتغير "${name}" غير صالح لأنه كلمة محجوزة (سطر ${lineIdx + 1})`);
+                    }
                     algoVM.vars[name] = algoEvalExpr(expr, algoVM.vars);
                     algoVM.pc += 1;
                 } else if (kind === 'assign') {
@@ -611,6 +683,9 @@
                 } else if (kind === 'for') {
                     const b = algoVM._forMap.get(lineIdx);
                     if (!b) throw new Error('for/pour غير معروف (سطر ' + (lineIdx + 1) + ')');
+                    if (algoReservedKeywords.has(b.varName.toLowerCase())) {
+                        throw new Error(`اسم متغير الحلقة "${b.varName}" غير صالح لأنه كلمة محجوزة (سطر ${lineIdx + 1})`);
+                    }
                     if (!(b.varName in algoVM.vars)) {
                         throw new Error(`المتغير "${b.varName}" غير معرّف. تأكد من التصريح عنه في قسم Var.`);
                     }
@@ -705,7 +780,9 @@
             algoEditorEl.dispatchEvent(new Event('input'));
         }
 
+        let _algoDedenting = false; // reentrancy guard for dedent
         function algoSmartDedentOnClose() {
+            if (_algoDedenting) return; // prevent recursive re-trigger
             // Called after input; checks if the current line is a closer and should be dedented
             const pos = algoEditorEl.selectionStart;
             const val = algoEditorEl.value;
@@ -720,10 +797,12 @@
             const newIndent = currentIndent.slice(ALGO_INDENT.length);
             const newVal = val.slice(0, lineStart) + newIndent + val.slice(lineStart + currentIndent.length);
             const delta = currentIndent.length - newIndent.length;
+            _algoDedenting = true;
             algoEditorEl.value = newVal;
             const newPos = Math.max(lineStart + newIndent.length, pos - delta);
             algoEditorEl.setSelectionRange(newPos, newPos);
             algoEditorEl.dispatchEvent(new Event('input'));
+            _algoDedenting = false;
         }
 
         // ==================== EVENT HANDLERS ====================
@@ -743,7 +822,7 @@
                     items.forEach(el => el.classList.remove('active'));
                     items[idx].classList.add('active');
                 } else if (e.key === 'Enter' || e.key === 'Tab') {
-                    if (idx >= 0) algoInsertSuggestion(items[idx].textContent);
+                    if (idx >= 0) algoInsertSuggestion(items[idx].dataset.kw || items[idx].textContent.trim());
                 }
                 return;
             }
@@ -763,6 +842,7 @@
                         algoEditorEl.value = newVal;
                         const np = pos - ALGO_INDENT.length;
                         algoEditorEl.setSelectionRange(np, np);
+                        algoEditorEl.dispatchEvent(new Event('input')); // always refresh highlight
                     }
                 } else {
                     const newVal = val.slice(0, pos) + ALGO_INDENT + val.slice(selEnd);
@@ -794,6 +874,11 @@
         algoEditorEl.addEventListener('input', () => {
             algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
             algoSyntaxErrorEl.style.display = 'none';
+            algoVM.isStale = true;
+            // Clear the running-line indicator while the user edits
+            // (pc stays intact so stepping can resume, but highlight won't freeze on an old line)
+            const savedPc = algoVM.pc;
+            algoVM.pc = -1; // temporarily hide the current-line highlight
             try {
                 const result = algoRebuildBlocks(algoVM.lines);
                 algoVM.blocks = result.blocks;
@@ -804,6 +889,7 @@
                 algoSyntaxErrorEl.textContent = '❌ خطأ: ' + e.message;
                 algoSyntaxErrorEl.style.display = 'block';
             }
+            algoVM.pc = savedPc; // restore pc (step button will reset fully if isStale)
             algoRenderHighlight();
             algoShowSuggestions();
         });
@@ -816,11 +902,23 @@
 
         algoRunBtn.addEventListener('click', async () => {
             if (algoIsRunning) return; algoIsRunning = true; algoRunBtn.disabled = true; algoStepBtn.disabled = true;
-            try { algoResetVM(); await algoRunAll(); } finally { algoIsRunning = false; algoRunBtn.disabled = false; algoStepBtn.disabled = false; }
+            try {
+                algoResetVM();
+                await algoRunAll();
+            } catch (e) {
+                algoVM.out.push('❌ خطأ: ' + e.message);
+                algoVM.halted = true;
+                algoRenderOutput();
+                algoRenderHighlight();
+            } finally {
+                algoIsRunning = false;
+                algoRunBtn.disabled = false;
+                algoStepBtn.disabled = false;
+            }
         });
         algoStepBtn.addEventListener('click', async () => {
             if (algoIsRunning) return;
-            if (!algoVM.blocks?.length && algoEditorEl.value.trim()) {
+            if ((algoVM.isStale || algoVM.halted || !algoVM.lines || algoVM.lines.length === 0) && algoEditorEl.value.trim()) {
                 try { algoResetVM(); } catch (e) { algoVM.out.push('خطأ: ' + e.message); algoVM.halted = true; algoRenderOutput(); }
             }
             await algoStepOnce();
@@ -871,10 +969,13 @@
                 const type = btn.dataset.example;
                 if (algoExamples[algoCurrentLang] && algoExamples[algoCurrentLang][type]) {
                     algoEditorEl.value = algoExamples[algoCurrentLang][type];
+                    algoEditorEl.dispatchEvent(new Event('input'));
                     algoResetVM();
+                    algoEditorEl.focus();
                 }
             });
         });
+
 
         if (!algoEditorEl.value.trim()) algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
         algoResetVM();
