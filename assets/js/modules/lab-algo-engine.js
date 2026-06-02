@@ -246,7 +246,9 @@
                 if (op === '<' || op === '>' || op === '=' || op === '!') {
                     let fullOp = consume();
                     if ((fullOp === '<' || fullOp === '>') && peek() === '=') { fullOp += consume(); }
-                    if (fullOp === '<>' && peek() === '=') { fullOp += consume(); }
+                    if (fullOp === '<' && peek() === '>') { fullOp += consume(); }
+                    if (fullOp === '=' && peek() === '=') { fullOp += consume(); }
+                    if (fullOp === '!' && peek() === '=') { fullOp += consume(); }
                     const right = parseAddSub();
                     if (fullOp === '==') return left == right;
                     if (fullOp === '!=' || fullOp === '<>') return left != right;
@@ -855,18 +857,19 @@
 
         let _algoDedenting = false; // reentrancy guard for dedent
         function algoSmartDedentOnClose() {
-            if (_algoDedenting) return; // prevent recursive re-trigger
-            // Called after input; checks if the current line is a closer and should be dedented
+            if (_algoDedenting) return;
             const pos = algoEditorEl.selectionStart;
             const val = algoEditorEl.value;
             const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+            const lineEnd = val.indexOf('\n', pos);
+            const restOfLine = val.slice(pos, lineEnd >= 0 ? lineEnd : undefined);
+            if (restOfLine.trim().length > 0) return;
             const currentLine = val.slice(lineStart, pos);
             const trimLow = currentLine.trimStart().replace(/\s*;?\s*$/, '').toLowerCase();
             const isCloser = algoDEDENT_EXACT.some(kw => trimLow === kw);
             if (!isCloser) return;
             const currentIndent = algoGetLineIndent(currentLine);
-            if (currentIndent.length < ALGO_INDENT.length) return; // already at root
-            // Remove one indent level from the line start
+            if (currentIndent.length < ALGO_INDENT.length) return;
             const newIndent = currentIndent.slice(ALGO_INDENT.length);
             const newVal = val.slice(0, lineStart) + newIndent + val.slice(lineStart + currentIndent.length);
             const delta = currentIndent.length - newIndent.length;
