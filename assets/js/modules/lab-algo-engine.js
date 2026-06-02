@@ -885,22 +885,44 @@
         algoEditorEl.addEventListener('keydown', (e) => {
             // --- Autocomplete navigation (highest priority) ---
             if (algoSugActive && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab')) {
-                e.preventDefault();
-                if (e.key === 'Escape') { algoHideSuggestions(); return; }
-                const items = Array.from(algoSB.querySelectorAll('.sug-item'));
-                let idx = items.findIndex(el => el.classList.contains('active'));
-                if (e.key === 'ArrowDown') {
-                    idx = (idx + 1) % items.length;
-                    items.forEach(el => el.classList.remove('active'));
-                    items[idx].classList.add('active');
-                } else if (e.key === 'ArrowUp') {
-                    idx = (idx - 1 + items.length) % items.length;
-                    items.forEach(el => el.classList.remove('active'));
-                    items[idx].classList.add('active');
-                } else if (e.key === 'Enter' || e.key === 'Tab') {
-                    if (idx >= 0) algoInsertSuggestion(items[idx].dataset.kw || items[idx].textContent.trim());
+                if (e.key === 'Escape') { algoHideSuggestions(); e.preventDefault(); return; }
+                if (e.key === 'Enter') {
+                    const items = Array.from(algoSB.querySelectorAll('.sug-item'));
+                    let idx = items.findIndex(el => el.classList.contains('active'));
+                    if (idx >= 0) {
+                        const sug = items[idx].dataset.kw || items[idx].textContent.trim();
+                        const before = algoEditorEl.value.substring(0, algoEditorEl.selectionStart);
+                        const m = before.match(/([a-zA-Z0-9_\u00C0-\u00FF]+)$/);
+                        if (m && m[1].toLowerCase() === sug.toLowerCase()) {
+                            algoHideSuggestions();
+                            // Let Enter fall through to the indentation handler
+                        } else {
+                            e.preventDefault();
+                            algoInsertSuggestion(sug);
+                            return;
+                        }
+                    } else {
+                        algoHideSuggestions();
+                        // Let Enter fall through
+                    }
+                    // Fall through to the normal Enter handler
+                } else {
+                    e.preventDefault();
+                    const items = Array.from(algoSB.querySelectorAll('.sug-item'));
+                    let idx = items.findIndex(el => el.classList.contains('active'));
+                    if (e.key === 'ArrowDown') {
+                        idx = (idx + 1) % items.length;
+                        items.forEach(el => el.classList.remove('active'));
+                        items[idx].classList.add('active');
+                    } else if (e.key === 'ArrowUp') {
+                        idx = (idx - 1 + items.length) % items.length;
+                        items.forEach(el => el.classList.remove('active'));
+                        items[idx].classList.add('active');
+                    } else if (e.key === 'Tab') {
+                        if (idx >= 0) algoInsertSuggestion(items[idx].dataset.kw || items[idx].textContent.trim());
+                    }
+                    return;
                 }
-                return;
             }
 
             // --- Tab: insert 2 spaces (Shift+Tab: remove one indent level) ---
