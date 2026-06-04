@@ -258,6 +258,29 @@ test.describe('Auto-Indent on Enter', () => {
     const val = await getEditorValue(page);
     expect(val).toBe('x = 5\n');
   });
+
+  test('Enter after "var a,b: integer" declaration does not add extra indent', async ({ page }) => {
+    await waitForEditorReady(page);
+    const editor = page.locator('#algoEditor');
+    await editor.focus();
+
+    const text = 'var a,b: integer';
+    await page.evaluate((t) => {
+      const el = document.getElementById('algoEditor');
+      el.value = t;
+      el.setSelectionRange(t.length, t.length);
+      el.dispatchEvent(new Event('input'));
+    }, text);
+    await page.waitForTimeout(50);
+
+    await editor.press('Escape');
+    await page.waitForTimeout(50);
+    await editor.press('Enter');
+    await page.waitForTimeout(100);
+
+    const val = await getEditorValue(page);
+    expect(val).toBe('var a,b: integer\n');
+  });
 });
 
 // ===================== 5. AUTO-DEDENT ON CLOSER KEYWORDS =====================
@@ -285,6 +308,23 @@ test.describe('Auto-Dedent on Closer Keywords', () => {
     // After typing "in", line is "    Fin" → closer → dedent to "  Fin"
     const val = await getEditorValue(page);
     expect(val).toBe('  \n  Fin');
+  });
+
+  test('typing "end" at end of line auto-dedents', async ({ page }) => {
+    await waitForEditorReady(page);
+    const editor = page.locator('#algoEditor');
+    await editor.focus();
+
+    await setEditorValue(page, '  \n    end');
+    await setCursorPos(page, '  \n    end'.length);
+    await page.waitForTimeout(50);
+
+    // Trigger input by typing a space (to trigger dedent check)
+    await page.keyboard.type(' ');
+    await page.waitForTimeout(100);
+
+    const val = await getEditorValue(page);
+    expect(val).toBe('  \n  end ');
   });
 
   test('typing "endif" at end of line auto-dedents', async ({ page }) => {
@@ -525,12 +565,18 @@ test.describe('Run / Step / Reset', () => {
     await page.locator('[data-example="sum"]').click();
     await page.waitForTimeout(50);
 
+    // Set up dialog handler to accept (confirm)
+    page.on('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      await dialog.accept();
+    });
+
     // Click "جديد" button
     await page.locator('#algoNewBtn').click();
     await page.waitForTimeout(100);
 
     const val = await getEditorValue(page);
-    expect(val).toContain('Algorithm');
+    expect(val).toBe('');
   });
 });
 
@@ -658,7 +704,7 @@ test.describe('New Button', () => {
     await page.waitForTimeout(100);
 
     const val = await getEditorValue(page);
-    expect(val).toContain('Algorithm');
+    expect(val).toBe('');
   });
 });
 
@@ -688,3 +734,5 @@ test.describe('Scroll Sync', () => {
     expect(highlightScroll).toBe(100);
   });
 });
+
+

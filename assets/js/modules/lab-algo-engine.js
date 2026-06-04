@@ -16,6 +16,7 @@
 
         let algoCurrentLang = 'en';
         let algoIsRunning = false;
+        let algoReplacingAssign = false;
 
         // ==================== CONSTANTS ====================
         const algoKW_ALGORITHM = ['algorithm', 'algorithme'];
@@ -28,16 +29,67 @@
         const algoKW_ELSE = ['else', 'sinon'];
         const algoKW_WHILE_START = ['while', 'tantque'];
         const algoKW_FOR_START = ['for', 'pour'];
-        const algoKW_TO = ['to', 'a', '\u00e0'];
+        const algoKW_TO = ['to', '\u00e0'];
         const algoKW_DO = ['do', 'faire'];
         const algoKW_READ = ['read', 'lire'];
         const algoKW_WRITE = ['write', 'ecrire', '\u00e9crire'];
 
-        const algoHL_KEYWORDS = [...algoKW_ALGORITHM, ...algoKW_VAR, ...algoKW_START, ...algoKW_END, 'const'];
+        const algoHL_KEYWORDS = [...algoKW_ALGORITHM, ...algoKW_VAR, ...algoKW_START, ...algoKW_END.filter(k => !['endif', 'endwhile', 'endfor', 'finsi', 'fintantque', 'finpour'].includes(k)), 'const'];
         const algoHL_CONTROL = [...algoKW_IF_START, ...algoKW_THEN, ...algoKW_ELSE, ...algoKW_WHILE_START, ...algoKW_FOR_START, ...algoKW_TO, ...algoKW_DO, 'finsi', 'fintantque', 'finpour', 'endif', 'endwhile', 'endfor', 'end while', 'end for', 'fin si', 'fin tant que', 'fin pour', 'else if', 'sinon si'];
         const algoHL_IO = [...algoKW_READ, ...algoKW_WRITE, 'print', 'let'];
         const algoHL_TYPES = ['integer', 'real', 'string', 'boolean', 'char', 'entier', 'reel', 'r\u00e9el', 'chaine', 'cha\u00eene', 'booleen', 'bool\u00e9en', 'caractere', 'caract\u00e8re'];
         const algoHL_LOGIC = ['and', 'or', 'not', 'true', 'false', 'et', 'ou', 'non', 'vrai', 'faux'];
+
+        const algoEnToFr = {
+            'algorithm': 'algorithme', 'begin': 'debut', 'start': 'debut', 'end': 'fin',
+            'var': 'var', 'variable': 'variable', 'variables': 'variables',
+            'if': 'si', 'then': 'alors', 'else': 'sinon', 'else if': 'sinon si', 'endif': 'finsi',
+            'while': 'tantque', 'endwhile': 'fintantque',
+            'for': 'pour', 'endfor': 'finpour', 'to': '\u00e0', 'do': 'faire',
+            'write': 'ecrire', 'read': 'lire', 'print': 'print', 'let': 'let', 'const': 'const',
+            'and': 'et', 'or': 'ou', 'not': 'non', 'true': 'vrai', 'false': 'faux',
+            'integer': 'entier', 'real': 'reel', 'string': 'chaine', 'boolean': 'booleen', 'char': 'caractere',
+        };
+
+        const algoFrToEn = {
+            'algorithme': 'algorithm', 'debut': 'begin', 'd\u00e9but': 'begin', 'fin': 'end',
+            'var': 'var', 'variable': 'variable', 'variables': 'variables',
+            'si': 'if', 'alors': 'then', 'sinon': 'else', 'sinon si': 'else if', 'finsi': 'endif',
+            'tantque': 'while', 'fintantque': 'endwhile',
+            'pour': 'for', 'finpour': 'endfor', '\u00e0': 'to', 'faire': 'do',
+            'ecrire': 'write', '\u00e9crire': 'write', 'lire': 'read',
+            'print': 'print', 'let': 'let', 'const': 'const',
+            'et': 'and', 'ou': 'or', 'non': 'not', 'vrai': 'true', 'faux': 'false',
+            'entier': 'integer', 'reel': 'real', 'r\u00e9el': 'real',
+            'chaine': 'string', 'cha\u00eene': 'string',
+            'booleen': 'boolean', 'bool\u00e9en': 'boolean',
+            'caractere': 'char', 'caract\u00e8re': 'char',
+        };
+
+        function algoTranslateKeywords(text, fromLang, toLang) {
+            const map = fromLang === 'en' ? algoEnToFr : algoFrToEn;
+            const parts = [];
+            const tokenRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\d+(?:\.\d+)?)|([A-Za-z\u00C0-\u00FF_]\w*)|(\u2190|:=|<=|>=|<>|!=|&&|\|\||[+\-*/%<>=!(),;:])|(\s+)|(.)/g;
+            let m;
+            while ((m = tokenRe.exec(text)) !== null) {
+                if (m[3] !== undefined) {
+                    const word = m[3], low = word.toLowerCase();
+                    const trans = map[low];
+                    if (trans) {
+                        const allUp = word.length > 1 && word === word.toUpperCase();
+                        const firstUp = word[0] === word[0].toUpperCase();
+                        if (allUp) parts.push(trans.toUpperCase());
+                        else if (firstUp) parts.push(trans.charAt(0).toUpperCase() + trans.slice(1));
+                        else parts.push(trans);
+                    } else {
+                        parts.push(word);
+                    }
+                } else {
+                    parts.push(m[0]);
+                }
+            }
+            return parts.join('');
+        }
 
         const algoReservedKeywords = new Set([
             ...algoHL_KEYWORDS,
@@ -53,20 +105,11 @@
         };
 
         const algoExamples = {
-            en: {
-                hello: 'Algorithm HelloWorld\nBegin\n  Write("Hello World!");\nEnd',
-                sum: 'Algorithm Summation\nVar\n  a, b, s : integer\nBegin\n  a = 10\n  b = 20\n  s = a + b\n  Write("The sum is:");\n  Write(s);\nEnd',
-                condition: 'Algorithm Grades\nVar\n  score : integer\nBegin\n  score = 85\n  if score >= 90 then\n    Write("Excellent");\n  else if score >= 80 then\n    Write("Very Good");\n  else if score >= 70 then\n    Write("Good");\n  else\n    Write("Needs improvement");\n  endif\nEnd',
-                loop: 'Algorithm Counting\nVar\n  i : integer\nBegin\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  endfor\nEnd',
-                boolean: 'Algorithm BooleanExample\nVar\n  isAdult, hasLicense : boolean\nBegin\n  isAdult = true\n  hasLicense = false\n  if isAdult and hasLicense then\n    Write("Allowed to drive");\n  else\n    Write("Not allowed to drive");\n  endif\nEnd'
-            },
-            fr: {
-                hello: 'Algorithme HelloWorld\nDebut\n  Ecrire("Bonjour tout le monde!");\nFin',
-                sum: 'Algorithme Somme\nVar\n  a, b, s : entier\nDebut\n  a := 10\n  b := 20\n  s := a + b\n  Ecrire("La somme est:");\n  Ecrire(s);\nFin',
-                condition: 'Algorithme Notes\nVar\n  score : entier\nDebut\n  score := 85\n  Si score >= 90 Alors\n    Ecrire("Excellent");\n  Sinon si score >= 80 Alors\n    Ecrire("Tr\u00e8s bien");\n  Sinon si score >= 70 Alors\n    Ecrire("Bien");\n  Sinon\n    Ecrire("Am\u00e9lioration n\u00e9cessaire");\n  FinSi\nFin',
-                loop: 'Algorithme Comptage\nVar\n  i : entier\nDebut\n  Pour i = 1 a 5 Faire\n    Ecrire("Nombre:");\n    Ecrire(i);\n  FinPour\nFin',
-                boolean: 'Algorithme ExempleBooleen\nVar\n  estAdulte, aPermis : booleen\nDebut\n  estAdulte := vrai\n  aPermis := faux\n  Si estAdulte et aPermis Alors\n    Ecrire("Autorise a conduire");\n  Sinon\n    Ecrire("Non autorise a conduire");\n  FinSi\nFin'
-            }
+            hello: 'Algorithm HelloWorld\nBegin\n  Write("Hello World!");\nEnd',
+            sum: 'Algorithm Summation\nVar\n  a, b, s : integer\nBegin\n  a = 10\n  b = 20\n  s = a + b\n  Write("The sum is:");\n  Write(s);\nEnd',
+            condition: 'Algorithm Grades\nVar\n  score : integer\nBegin\n  score = 85\n  if score >= 90 then\n    Write("Excellent");\n  else if score >= 80 then\n    Write("Very Good");\n  else if score >= 70 then\n    Write("Good");\n  else\n    Write("Needs improvement");\n  endif\nEnd',
+            loop: 'Algorithm Counting\nVar\n  i : integer\nBegin\n  for i = 1 to 5 do\n    Write("Number:");\n    Write(i);\n  endfor\nEnd',
+            boolean: 'Algorithm BooleanExample\nVar\n  isAdult, hasLicense : boolean\nBegin\n  isAdult = true\n  hasLicense = false\n  if isAdult and hasLicense then\n    Write("Allowed to drive");\n  else\n    Write("Not allowed to drive");\n  endif\nEnd'
         };
 
         // ==================== VM ====================
@@ -94,7 +137,7 @@
             const style = getComputedStyle(textarea);
             algoCursorMirror.style.cssText = `
                 position: fixed; top: -9999px; left: -9999px;
-                white-space: pre; word-wrap: break-word;
+                white-space: pre; word-wrap: break-word; direction: ltr;
                 font-size: ${style.fontSize};
                 font-family: ${style.fontFamily};
                 line-height: ${style.lineHeight};
@@ -315,6 +358,29 @@
             const result = parseExpr();
             if (pos < s.length) throw new Error('يوجد محتوى إضافي بعد التعبير في الموقع ' + pos);
             return result;
+        }
+
+        function algoSplitArgs(text) {
+            const parts = [];
+            let current = '';
+            let depth = 0;
+            let inString = false;
+            let quote = null;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (inString) {
+                    current += ch;
+                    if (ch === '\\') { i++; if (i < text.length) current += text[i]; }
+                    else if (ch === quote) inString = false;
+                } else if (ch === '"' || ch === "'") {
+                    inString = true; quote = ch; current += ch;
+                } else if (ch === '(') { depth++; current += ch; }
+                else if (ch === ')') { depth--; current += ch; }
+                else if (ch === ',' && depth === 0) { parts.push(current.trim()); current = ''; }
+                else current += ch;
+            }
+            parts.push(current.trim());
+            return parts.filter(p => p.length > 0);
         }
 
         function algoEvalExpr(expr, vars) {
@@ -702,8 +768,9 @@
                 } else if (kind === 'write') {
                     const m = s.match(/^(?:write|ecrire|\u00e9crire)\s*\(\s*(.+)\s*\)\s*$/i);
                     if (!m) throw new Error('صيغة Write/Ecrire غير صحيحة (سطر ' + (lineIdx + 1) + ')');
-                    const val = algoEvalExpr(m[1], algoVM.vars);
-                    algoVM.out.push(String(val));
+                    const parts = algoSplitArgs(m[1]);
+                    const vals = parts.map(p => String(algoEvalExpr(p, algoVM.vars)));
+                    algoVM.out.push(vals.join(' '));
                     algoVM.pc += 1;
                 } else if (kind === 'print') {
                     const expr = s.slice(6).trim();
@@ -816,7 +883,7 @@
         /** Full-line keywords that also open an indented block */
         const algoINDENT_AFTER_EXACT = ['else', 'sinon', 'begin', 'debut', 'début', 'start', 'var', 'variable', 'variables'];
         /** Keywords that are block closers — the line itself should be dedented on type */
-        const algoDEDENT_EXACT = ['endif', 'endwhile', 'endfor', 'end while', 'end for',
+        const algoDEDENT_EXACT = ['endif', 'endwhile', 'endfor', 'end while', 'end for', 'end',
             'finsi', 'fintantque', 'finpour', 'fin si', 'fin tant que', 'fin pour', 'fin',
             'else', 'sinon'];
 
@@ -840,7 +907,13 @@
             // Check if line ends with a block-opening keyword
             const endsWithOpener = algoINDENT_AFTER_ENDS.some(kw => trimLow === kw || trimLow.endsWith(' ' + kw));
             // Check if the entire trimmed line is an opener keyword
-            const isExactOpener = algoINDENT_AFTER_EXACT.some(kw => trimLow === kw || trimLow.startsWith(kw + ' ') || trimLow.startsWith(kw + ':'));
+            // For var/variable/variables, only exact line match (not "var a,b: integer" declarations)
+            const isExactOpener = algoINDENT_AFTER_EXACT.some(kw => {
+                if (kw === 'var' || kw === 'variable' || kw === 'variables') {
+                    return trimLow === kw;
+                }
+                return trimLow === kw || trimLow.startsWith(kw + ' ') || trimLow.startsWith(kw + ':');
+            });
 
             if (endsWithOpener || isExactOpener) {
                 newIndent = indent + ALGO_INDENT;
@@ -960,10 +1033,19 @@
             }
         });
 
-        // Auto-dedent closing keywords as they are typed
+        // Auto-replace := with ← and auto-dedent closing keywords as they are typed
         algoEditorEl.addEventListener('input', (ev) => {
-            // Only run dedent heuristic on regular character input (not paste, delete, etc.)
+            if (algoReplacingAssign) { algoReplacingAssign = false; return; }
             if (ev.inputType === 'insertText' || ev.inputType === 'insertFromPaste') {
+                const val = algoEditorEl.value;
+                const pos = algoEditorEl.selectionStart;
+                if (pos >= 2 && val.substring(pos - 2, pos) === ':=') {
+                    algoReplacingAssign = true;
+                    algoEditorEl.value = val.slice(0, pos - 2) + '\u2190' + val.slice(pos);
+                    algoEditorEl.setSelectionRange(pos - 1, pos - 1);
+                    algoEditorEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    return;
+                }
                 algoSmartDedentOnClose();
             }
         }, true); // capture phase so it runs before the main input handler
@@ -1029,15 +1111,9 @@
             algoNewBtn.addEventListener('click', () => {
                 const hasContent = algoEditorEl.value.trim() !== '';
                 if (hasContent && !confirm('سيتم مسح المحرر وبدء صفحة جديدة. هل تريد المتابعة؟')) return;
-                const blank = algoCurrentLang === 'fr'
-                    ? 'Algorithme NomAlgorithme\nVar\n  // صرح عن متغيراتك هنا\nDebut\n  // اكتب التعليمات هنا\nFin'
-                    : 'Algorithm AlgorithmName\nVar\n  // Declare your variables here\nBegin\n  // Write your instructions here\nEnd';
-                algoEditorEl.value = blank;
+                algoEditorEl.value = '';
                 algoEditorEl.dispatchEvent(new Event('input'));
                 algoEditorEl.focus();
-                // Place cursor after the Algorithm name for quick editing
-                const firstNewline = blank.indexOf('\n');
-                algoEditorEl.setSelectionRange(firstNewline, firstNewline);
                 algoResetVM();
             });
         }
@@ -1048,10 +1124,16 @@
                 btn.addEventListener('click', () => {
                     const lang = btn.dataset.lang;
                     if (lang === algoCurrentLang) return;
+                    const fromLang = algoCurrentLang;
                     algoCurrentLang = lang;
                     langBtns.forEach(b => b.classList.remove('is-active'));
                     btn.classList.add('is-active');
-                    algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
+                    if (algoEditorEl.value.trim()) {
+                        algoEditorEl.value = algoTranslateKeywords(algoEditorEl.value, fromLang, lang);
+                        algoEditorEl.dispatchEvent(new Event('input'));
+                    } else {
+                        algoEditorEl.value = algoDefaultPrograms[lang];
+                    }
                     algoResetVM();
                 });
             });
@@ -1062,8 +1144,11 @@
         algoExampleBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const type = btn.dataset.example;
-                if (algoExamples[algoCurrentLang] && algoExamples[algoCurrentLang][type]) {
-                    algoEditorEl.value = algoExamples[algoCurrentLang][type];
+                const ex = algoExamples[type];
+                if (ex) {
+                    let code = ex;
+                    if (algoCurrentLang === 'fr') code = algoTranslateKeywords(code, 'en', 'fr');
+                    algoEditorEl.value = code;
                     algoEditorEl.dispatchEvent(new Event('input'));
                     algoResetVM();
                     algoEditorEl.focus();
