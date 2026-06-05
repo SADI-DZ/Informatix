@@ -750,6 +750,8 @@
             inset: 0;
             pointer-events: none;
             color: #e2e8f0;
+            z-index: 1;
+            background: transparent;
         }
 
         .algo-editor {
@@ -758,9 +760,9 @@
             outline: none;
             background: transparent;
             color: transparent;
-            -webkit-text-fill-color: transparent;
             caret-color: #e2e8f0;
             padding-left: calc(44px + 0.75rem + 1rem);
+            z-index: 2;
         }
 
         .algo-line {
@@ -786,6 +788,21 @@
             background: rgba(34, 211, 238, 0.10);
             border-radius: 10px;
             padding: 0.1rem 0.25rem;
+        }
+
+        .algo-line.is-error {
+            border-left: 4px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.12) !important;
+            border-radius: 4px;
+        }
+
+        .algo-line.is-error .algo-code {
+            text-decoration: underline wavy #ef4444;
+            text-underline-offset: 3px;
+        }
+
+        .algo-line.is-error .algo-ln {
+            color: #ef4444 !important;
         }
 
         .algo-tok-keyword {
@@ -1144,6 +1161,8 @@
                                     <i class="ph ph-arrow-counter-clockwise"></i>
                                     إعادة
                                 </button>
+                                <button id="algoUndoBtn" class="btn-reset" type="button" disabled title="تراجع (Ctrl+Z)">↩</button>
+                                <button id="algoRedoBtn" class="btn-reset" type="button" disabled title="إعادة (Ctrl+Y)">↪</button>
                                 <button id="algoNewBtn" class="btn-reset" type="button">
                                     <i class="ph ph-file-plus"></i>
                                     جديد
@@ -1201,7 +1220,7 @@
     </footer>
 
     <!-- محرك الخوارزميات - يستخدم الوحدة النمطية المشتركة -->
-    <script src="../assets/js/modules/lab-algo-engine.js?v=3"></script>
+    <script src="../assets/js/modules/lab-algo-engine.js?v=4"></script>
     <!-- ربط زر السمة بالـ theme-manager -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {

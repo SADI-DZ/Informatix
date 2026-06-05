@@ -113,6 +113,11 @@
             htmlLN.innerHTML = nums;
         }
 
+        function htmlSyncScroll() {
+            if (htmlHL) { htmlHL.scrollTop = htmlTA.scrollTop; htmlHL.scrollLeft = htmlTA.scrollLeft; }
+            if (htmlLN) htmlLN.scrollTop = htmlTA.scrollTop;
+        }
+
         // ==================== CURSOR / CONTEXT ====================
         function htmlUpdateCursorInfo() {
             if (!htmlTA || !htmlLI) return;
@@ -451,6 +456,7 @@
                 htmlUpdateHighlight();
                 htmlRunErrorCheck();
                 htmlUpdateLineNumbers();
+                htmlSyncScroll();
                 htmlUpdateCursorInfo();
                 htmlUpdatePreview();
             }, 80);
@@ -564,10 +570,7 @@
             });
 
             htmlTA.addEventListener('scroll', () => {
-                requestAnimationFrame(() => {
-                    if (htmlHL) { htmlHL.scrollTop = htmlTA.scrollTop; htmlHL.scrollLeft = htmlTA.scrollLeft; }
-                    if (htmlLN) htmlLN.scrollTop = htmlTA.scrollTop;
-                });
+                requestAnimationFrame(htmlSyncScroll);
             }, { passive: true });
 
             htmlTA.addEventListener('keydown', (e) => {
