@@ -13,17 +13,42 @@
         const algoRedoBtn = document.getElementById('algoRedoBtn');
         const algoNewBtn = document.getElementById('algoNewBtn');
         const algoLangToggle = document.getElementById('algoLangToggle');
+        const algoStepCounterEl = document.getElementById('algoStepCounter');
 
         if (!algoEditorEl || !algoHighlightEl || !algoVarsBody || !algoOutputEl || !algoRunBtn || !algoStepBtn || !algoResetBtn) return;
+        algoOutputEl.setAttribute('dir', 'rtl');
 
         let algoCurrentLang = 'en';
         let algoIsRunning = false;
         let algoReplacingAssign = false;
         let algoErrorLine = -1;
+        let algoStepCounter = 0;
         let algoHistory = [];
         let algoHistoryIdx = -1;
         const ALGO_MAX_HISTORY = 100;
+        const ALGO_STORAGE_KEY_CODE = 'algo-editor-code';
+        const ALGO_STORAGE_KEY_LANG = 'algo-editor-lang';
         let algoIsUndoRedoing = false;
+
+        function algoSaveState() {
+            try {
+                localStorage.setItem(ALGO_STORAGE_KEY_CODE, algoEditorEl.value);
+                localStorage.setItem(ALGO_STORAGE_KEY_LANG, algoCurrentLang);
+            } catch (e) { /* localStorage غير متاح أو ممتلئ */ }
+        }
+
+        function algoLoadState() {
+            try {
+                const savedCode = localStorage.getItem(ALGO_STORAGE_KEY_CODE);
+                const savedLang = localStorage.getItem(ALGO_STORAGE_KEY_LANG);
+                if (savedLang && (savedLang === 'en' || savedLang === 'fr')) {
+                    algoCurrentLang = savedLang;
+                    const langBtns = document.querySelectorAll('.algo-lang-btn');
+                    langBtns.forEach(b => b.classList.toggle('is-active', b.dataset.lang === savedLang));
+                }
+                return savedCode || null;
+            } catch (e) { return null; }
+        }
 
         function algoPushHistory() {
             if (algoIsUndoRedoing) return;
@@ -36,6 +61,7 @@
             if (algoHistory.length > ALGO_MAX_HISTORY) algoHistory.shift();
             algoHistoryIdx = algoHistory.length - 1;
             algoUpdateUndoButtons();
+            algoSaveState();
         }
 
         function algoUndo() {
@@ -63,6 +89,52 @@
         function algoUpdateUndoButtons() {
             if (algoUndoBtn) algoUndoBtn.disabled = algoHistoryIdx <= 0;
             if (algoRedoBtn) algoRedoBtn.disabled = algoHistoryIdx >= algoHistory.length - 1;
+        }
+
+        function algoFormatError(msg) {
+            if (/غير معروف|أمر غير معروف/i.test(msg)) return '[E001] ' + msg;
+            if (/غير معرّف|not defined|not declared|لم يعرّف/i.test(msg)) return '[E002] ' + msg;
+            if (/محجوزة|محجوز|reserved/i.test(msg)) return '[E003] ' + msg;
+            if (/صيغة.*غير صحيحة|غير صحيحة.*صيغة/i.test(msg)) return '[E004] ' + msg;
+            if (/بنية|structure|هيكل/i.test(msg)) return '[E005] ' + msg;
+            if (/لا تتوقف|infinite|حلقة لا نهائية/i.test(msg)) return '[E006] ' + msg;
+            if (/قسمة|division|zero|صفر/i.test(msg)) return '[E007] ' + msg;
+            return '[E008] ' + msg;
+        }
+
+        function algoLineIsRtl(line) {
+            return /[\u0600-\u06FF]/.test(line) || /^❌|^خطأ/.test(line);
+        }
+
+        function algoResizeEditor() {
+            const selStart = algoEditorEl.selectionStart;
+            const selEnd = algoEditorEl.selectionEnd;
+            const prev = algoEditorEl.style.height;
+            if (prev) {
+                algoEditorEl.style.height = '1px';
+            } else {
+                algoEditorEl.style.height = 'auto';
+            }
+            const newHeight = Math.max(360, algoEditorEl.scrollHeight);
+            if (newHeight !== parseInt(prev) || !prev) {
+                algoEditorEl.style.height = newHeight + 'px';
+            } else {
+                algoEditorEl.style.height = prev;
+            }
+            if (algoEditorEl.selectionStart !== selStart || algoEditorEl.selectionEnd !== selEnd) {
+                algoEditorEl.setSelectionRange(selStart, selEnd);
+            }
+        }
+
+        function algoUpdateStepCounter() {
+            if (!algoStepCounterEl) return;
+            if (algoStepCounter > 0) {
+                algoStepCounterEl.textContent = 'الخطوات: ' + algoStepCounter;
+                algoStepCounterEl.classList.add('is-visible');
+            } else {
+                algoStepCounterEl.textContent = '';
+                algoStepCounterEl.classList.remove('is-visible');
+            }
         }
 
         // ==================== CONSTANTS ====================
@@ -174,6 +246,7 @@
         algoSyntaxErrorEl.style.fontWeight = 'bold';
         algoSyntaxErrorEl.style.display = 'none';
         algoSyntaxErrorEl.setAttribute('role', 'alert');
+        algoSyntaxErrorEl.setAttribute('dir', 'rtl');
         algoEditorEl.parentElement.appendChild(algoSyntaxErrorEl);
 
         function algoParseErrorLine(msg) {
@@ -355,7 +428,7 @@
         }
 
         function algoNormalizeLine(line) {
-            return algoStripComments(line).replace(/\s*;+\s*$/, '');
+            return algoStripComments(line).replace(/^\uFEFF/, '').replace(/\s*;+\s*$/, '');
         }
 
         function algoStartsWithAny(low, prefixes) {
@@ -608,7 +681,12 @@
                 }).join('');
         }
 
-        function algoRenderOutput() { algoOutputEl.textContent = algoVM.out.join('\n'); }
+        function algoRenderOutput() {
+            algoOutputEl.innerHTML = algoVM.out.map(function (line) {
+                var d = algoLineIsRtl(line) ? 'rtl' : 'ltr';
+                return '<span dir="' + d + '" style="display:block">' + algoEscapeHtml(line) + '</span>';
+            }).join('\n');
+        }
 
         function algoHighlightLine(raw) {
             if (!raw.trim()) return '&nbsp;';
@@ -668,6 +746,8 @@
         }
 
         function algoResetVM() {
+            algoStepCounter = 0;
+            algoUpdateStepCounter();
             algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
             let err = null;
             try {
@@ -755,6 +835,9 @@
                     const m = s.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+)$/);
                     if (!m) throw new Error('صيغة الإسناد غير صحيحة - الصيغة: اسم_متغير = قيمة (سطر ' + (lineIdx + 1) + ')');
                     const [, name, expr] = m;
+                    if (algoReservedKeywords.has(name.toLowerCase())) {
+                        throw new Error(`"${name}" كلمة محجوزة - لا يمكن استخدامها في الإسناد. (سطر ${lineIdx + 1})`);
+                    }
                     if (!(name in algoVM.vars)) {
                         throw new Error(`"${name}" غير معرّف - أضف "${name}" في قسم Var. (سطر ${lineIdx + 1})`);
                     }
@@ -863,10 +946,13 @@
             } catch (e) {
                 let msg = e && e.message ? e.message : String(e);
                 if (!msg.includes('(سطر')) msg += ' (في السطر ' + (lineIdx + 1) + ')';
+                msg = algoFormatError(msg);
                 algoVM.out.push('❌ خطأ: ' + msg);
                 algoErrorLine = lineIdx;
                 algoVM.halted = true;
             }
+            algoStepCounter++;
+            algoUpdateStepCounter();
             algoRenderVars(); algoRenderOutput(); algoRenderHighlight();
         }
 
@@ -881,7 +967,11 @@
             await runChunk();
         }
 
-        function algoSyncScroll() { algoHighlightEl.scrollTop = algoEditorEl.scrollTop; algoHighlightEl.scrollLeft = algoEditorEl.scrollLeft; }
+        function algoSyncScroll() {
+            if (!algoHighlightEl || !algoEditorEl) return;
+            algoHighlightEl.scrollTop = algoEditorEl.scrollTop;
+            algoHighlightEl.scrollLeft = algoEditorEl.scrollLeft;
+        }
 
         // ==================== SMART INDENT HELPERS ====================
         const ALGO_INDENT = '  '; // 2 spaces per level
@@ -1029,6 +1119,7 @@
 
 
         algoEditorEl.addEventListener('input', () => {
+            algoResizeEditor();
             algoVM.lines = algoEditorEl.value.replace(/\r\n/g, '\n').split('\n');
             algoSyntaxErrorEl.style.display = 'none';
             algoErrorLine = -1;
@@ -1044,7 +1135,7 @@
                 algoVM._whileMap = result.mapWhileByLine;
                 algoVM._forMap = result.mapForByLine;
             } catch (e) {
-                algoSyntaxErrorEl.textContent = '❌ خطأ: ' + e.message;
+                algoSyntaxErrorEl.textContent = '❌ خطأ: ' + algoFormatError(e.message);
                 algoSyntaxErrorEl.style.display = 'block';
                 algoErrorLine = algoParseErrorLine(e.message);
                 console.error('Syntax error at line', algoErrorLine, e.message);
@@ -1065,8 +1156,9 @@
                 await algoRunAll();
             } catch (e) {
                 const msg = e && e.message ? e.message : String(e);
-                if (!algoVM.out.length || algoVM.out[algoVM.out.length - 1] !== '❌ خطأ: ' + msg) {
-                    algoVM.out.push('❌ خطأ: ' + msg);
+                const formatted = algoFormatError(msg);
+                if (!algoVM.out.length || algoVM.out[algoVM.out.length - 1] !== '❌ خطأ: ' + formatted) {
+                    algoVM.out.push('❌ خطأ: ' + formatted);
                 }
                 algoErrorLine = algoParseErrorLine(msg);
                 algoVM.halted = true;
@@ -1083,8 +1175,9 @@
             if ((algoVM.isStale || algoVM.halted || !algoVM.lines || algoVM.lines.length === 0) && algoEditorEl.value.trim()) {
                 try { algoResetVM(); } catch (e) {
                     const msg = e && e.message ? e.message : String(e);
-                    if (!algoVM.out.length || algoVM.out[algoVM.out.length - 1] !== '❌ خطأ: ' + msg) {
-                        algoVM.out.push('❌ خطأ: ' + msg);
+                    const formatted = algoFormatError(msg);
+                    if (!algoVM.out.length || algoVM.out[algoVM.out.length - 1] !== '❌ خطأ: ' + formatted) {
+                        algoVM.out.push('❌ خطأ: ' + formatted);
                     }
                     algoErrorLine = algoParseErrorLine(msg);
                     algoVM.halted = true;
@@ -1103,6 +1196,7 @@
                 const hasContent = algoEditorEl.value.trim() !== '';
                 if (hasContent && !confirm('سيتم مسح المحرر وبدء صفحة جديدة. هل تريد المتابعة؟')) return;
                 algoEditorEl.value = '';
+                try { localStorage.removeItem(ALGO_STORAGE_KEY_CODE); } catch (e) { /* ignore */ }
                 algoEditorEl.dispatchEvent(new Event('input'));
                 algoEditorEl.focus();
                 algoResetVM();
@@ -1133,6 +1227,7 @@
                         algoEditorEl.value = algoDefaultPrograms[lang];
                     }
                     algoResetVM();
+                    algoSaveState();
                 });
             });
         }
@@ -1155,8 +1250,14 @@
         });
 
 
-        if (!algoEditorEl.value.trim()) algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
+        const savedCode = algoLoadState();
+        if (savedCode) {
+            algoEditorEl.value = savedCode;
+        } else if (!algoEditorEl.value.trim()) {
+            algoEditorEl.value = algoDefaultPrograms[algoCurrentLang];
+        }
         algoPushHistory();
+        algoResizeEditor();
         try { algoResetVM(); } catch (e) { console.error('Init error:', e); }
     });
 })();

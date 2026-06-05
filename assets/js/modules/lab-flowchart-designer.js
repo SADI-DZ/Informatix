@@ -21,6 +21,9 @@
     const ZOOM_MIN = 0.25;
     const ZOOM_MAX = 3;
     const ZOOM_STEP = 0.1;
+    const STORAGE_KEY = 'informatix_fc_save';
+    const STORAGE_AUTO_KEY = 'informatix_fc_autosave';
+    const MAX_LOOP_ITER = 10000;
 
     // ==================== STATE ====================
     let state = {
@@ -49,7 +52,9 @@
         execStep: -1,
         execPath: [],
         execVars: {},
-        execOutput: []
+        execOutput: [],
+        _connCounters: {},
+        _lastSaveHash: ''
     };
 
     // ==================== DOM REFS ====================
@@ -536,13 +541,50 @@
             const x2 = toPt.x * zoom + panX;
             const y2 = toPt.y * zoom + panY;
 
-            // Bezier curve for nice routing
+            // Smart bezier routing based on handle directions
+            const fromH = conn.fromHandle || 'bottom';
+            const toH = conn.toHandle || 'top';
             const dx = Math.abs(x2 - x1);
             const dy = Math.abs(y2 - y1);
-            const cx1 = x1;
-            const cy1 = y1 + Math.max(dy * 0.3, 30);
-            const cx2 = x2;
-            const cy2 = y2 - Math.max(dy * 0.3, 30);
+            let cx1, cy1, cx2, cy2;
+            // Vertical connections (top↔bottom)
+            if ((fromH === 'bottom' && toH === 'top') || (fromH === 'top' && toH === 'bottom')) {
+                const midY = (y1 + y2) / 2;
+                cx1 = x1; cy1 = midY;
+                cx2 = x2; cy2 = midY;
+            }
+            // Horizontal connections (left↔right)
+            else if ((fromH === 'left' && toH === 'right') || (fromH === 'right' && toH === 'left')) {
+                const midX = (x1 + x2) / 2;
+                cx1 = midX; cy1 = y1;
+                cx2 = midX; cy2 = y2;
+            }
+            // From bottom/side to something else
+            else if (fromH === 'bottom') {
+                const stretch = Math.max(dy * 0.4, 40);
+                cx1 = x1; cy1 = y1 + stretch;
+                cx2 = x2; cy2 = y2 - Math.max(dy * 0.2, 20);
+            }
+            else if (fromH === 'top') {
+                const stretch = Math.max(dy * 0.4, 40);
+                cx1 = x1; cy1 = y1 - stretch;
+                cx2 = x2; cy2 = y2 + Math.max(dy * 0.2, 20);
+            }
+            else if (fromH === 'left') {
+                const stretch = Math.max(dx * 0.4, 40);
+                cx1 = x1 - stretch; cy1 = y1;
+                cx2 = x2 + Math.max(dx * 0.2, 20); cy2 = y2;
+            }
+            else if (fromH === 'right') {
+                const stretch = Math.max(dx * 0.4, 40);
+                cx1 = x1 + stretch; cy1 = y1;
+                cx2 = x2 - Math.max(dx * 0.2, 20); cy2 = y2;
+            }
+            // Fallback
+            else {
+                cx1 = x1; cy1 = y1 + Math.max(dy * 0.3, 30);
+                cx2 = x2; cy2 = y2 - Math.max(dy * 0.3, 30);
+            }
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
@@ -554,16 +596,28 @@
             path.setAttribute('marker-end', 'url(#fc-arrow-' + (dom.canvas.id || 'main') + ')');
             svg.appendChild(path);
 
-            // Connection label
+            // Connection label (positioned at midpoint of bezier, offset from curve)
             if (conn.label) {
                 const midX = (x1 + x2) / 2;
-                const midY = (y1 + y2) / 2 - 10;
+                const midY = (y1 + y2) / 2 - 14;
+                // Background pill for label
+                const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                const tw = conn.label.length * 8 + 12;
+                bg.setAttribute('x', midX - tw / 2);
+                bg.setAttribute('y', midY - 11);
+                bg.setAttribute('width', tw);
+                bg.setAttribute('height', '20');
+                bg.setAttribute('rx', '10');
+                bg.setAttribute('fill', conn.label === 'لا' ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)');
+                bg.setAttribute('stroke', conn.label === 'لا' ? 'rgba(239,68,68,0.4)' : 'rgba(34,197,94,0.4)');
+                bg.setAttribute('stroke-width', '1');
+                svg.appendChild(bg);
                 const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 label.setAttribute('x', midX);
-                label.setAttribute('y', midY);
+                label.setAttribute('y', midY + 3);
                 label.setAttribute('text-anchor', 'middle');
                 label.setAttribute('fill', conn.label === 'لا' ? '#ef4444' : '#22c55e');
-                label.setAttribute('font-size', '12');
+                label.setAttribute('font-size', '11');
                 label.setAttribute('font-weight', 'bold');
                 label.setAttribute('style', 'pointer-events: none; user-select: none;');
                 label.textContent = conn.label;
@@ -620,6 +674,7 @@
         state.execShapeHighlight = null;
         state.execVars = {};
         state.execOutput = [];
+        state._connCounters = {};
         state.halted = true;
         state.running = false;
         fullRender();
@@ -700,6 +755,21 @@
             return;
         }
 
+        // Loop detection: count back-edge traversals
+        state._connCounters = state._connCounters || {};
+        const connKey = currentId + '->' + nextShape.id;
+        state._connCounters[connKey] = (state._connCounters[connKey] || 0) + 1;
+        if (state._connCounters[connKey] > MAX_LOOP_ITER) {
+            state.execOutput.push('⚠ الحلقة لا تتوقف! تجاوزت ' + MAX_LOOP_ITER.toLocaleString() + ' تكرار.');
+            state.halted = true;
+            fullRender();
+            return;
+        }
+        // Show loop iteration count when revisiting
+        if (state._connCounters[connKey] > 1 && state._connCounters[connKey] % 100 === 0) {
+            state.execOutput.push('↻ تكرار الحلقة: ' + state._connCounters[connKey]);
+        }
+
         state.execShapeHighlight = nextShape.id;
         state.execPath.push(nextShape.id);
         state.execStep++;
@@ -709,19 +779,17 @@
     function runAllExecution() {
         if (!state.running) {
             state.running = true;
-            state._runSteps = 0;
             resetExecution();
-            // Start
             stepExecution();
-            // Continue until halted
             runContinuation();
         }
     }
 
     function runContinuation() {
         if (state.halted || !state.running) { state.running = false; return; }
-        state._runSteps = (state._runSteps || 0) + 1;
-        if (state._runSteps > 200) {
+        // Check total steps across all connections
+        const totalSteps = Object.values(state._connCounters || {}).reduce((a, b) => a + b, 0);
+        if (totalSteps > MAX_LOOP_ITER * 2) {
             state.execOutput.push('⚠ توقف التنفيذ: تجاوز الحد الأقصى للخطوات');
             state.halted = true;
             state.running = false;
@@ -741,35 +809,45 @@
         const text = shape.text || '';
         const lower = text.toLowerCase();
 
-        // I/O - Read: "أدخل X" or "read X"
-        const readMatch = text.match(/^(أدخل|اقرأ|read|lire)\s+(\w+)/i);
+        // I/O - Read: "أدخل X" or "read X" or "lire X"
+        const readMatch = text.match(/^(أدخل|اقرأ|read|lire|input)\s+(\w+)/i);
         if (readMatch) {
             const varName = readMatch[2];
-            const val = prompt('أدخل قيمة ' + varName + ':') || '';
-            const num = Number(val);
-            state.execVars[varName] = Number.isFinite(num) && val.trim() !== '' ? num : val;
+            const rawVal = prompt('أدخل قيمة ' + varName + ':') || '';
+            const num = Number(rawVal);
+            state.execVars[varName] = Number.isFinite(num) && rawVal.trim() !== '' ? num : rawVal;
             state.execOutput.push('> أدخل: ' + varName + ' = ' + state.execVars[varName]);
             return;
         }
 
         // I/O - Write: "أظهر X" or "write X" or "print X"
-        const writeMatch = text.match(/^(أظهر|اطبع|write|print|ecrire)\s+(.+)/i);
+        const writeMatch = text.match(/^(أظهر|اطبع|write|print|ecrire|output|display)\s+(.+)/i);
         if (writeMatch) {
             let expr = writeMatch[2].trim();
-            // Evaluate expression
             const val = evaluateSimpleExpr(expr);
-            state.execOutput.push(val);
+            state.execOutput.push(String(val));
             return;
         }
 
-        // Assignment: "X ← Y" or "X = Y"
-        const assignMatch = text.match(/^(\w+)\s*(?:←|=)\s*(.+)/);
+        // Assignment: "X ← Y" or "X = Y" (including multi-char variable names)
+        const assignMatch = text.match(/^([A-Za-z_]\w*)\s*(?:←|=)\s*(.+)/);
         if (assignMatch) {
             const varName = assignMatch[1];
             const expr = assignMatch[2].trim();
             const val = evaluateSimpleExpr(expr);
             state.execVars[varName] = val;
             state.execOutput.push('← ' + varName + ' = ' + val);
+            return;
+        }
+
+        // Multi-assignment: "X ← Y, Z ← W" or "X=1, Y=2"
+        const multiAssign = text.match(/^([A-Za-z_]\w*)\s*(?:←|=)\s*(.+?)\s*,\s*([A-Za-z_]\w*)\s*(?:←|=)\s*(.+)/);
+        if (multiAssign) {
+            const v1 = multiAssign[1], e1 = multiAssign[2].trim();
+            const v2 = multiAssign[3], e2 = multiAssign[4].trim();
+            state.execVars[v1] = evaluateSimpleExpr(e1);
+            state.execVars[v2] = evaluateSimpleExpr(e2);
+            state.execOutput.push('← ' + v1 + '=' + state.execVars[v1] + ', ' + v2 + '=' + state.execVars[v2]);
             return;
         }
 
@@ -791,50 +869,11 @@
     }
 
     function evaluateSimpleExpr(expr) {
-        expr = expr.trim();
-        // Check if it's a string literal
-        if ((expr.startsWith('"') && expr.endsWith('"')) ||
-            (expr.startsWith("'") && expr.endsWith("'"))) {
-            return expr.slice(1, -1);
-        }
-        // Check for number
-        const num = Number(expr);
-        if (!isNaN(num) && expr !== '') return num;
-        // Check for variable
-        if (expr in state.execVars) return state.execVars[expr];
-        // Handle comparisons
-        const compMatch = expr.match(/^(.+?)\s*(>|>=|<|<=|==|=|!=|<>)\s*(.+)$/);
-        if (compMatch) {
-            const left = evaluateSimpleExpr(compMatch[1].trim());
-            const op = compMatch[2];
-            const right = evaluateSimpleExpr(compMatch[3].trim());
-            switch (op) {
-                case '>': return left > right;
-                case '>=': return left >= right;
-                case '<': return left < right;
-                case '<=': return left <= right;
-                case '==': return left == right;
-                case '=': return left == right;
-                case '!=': case '<>': return left != right;
-            }
-        }
-        // Handle arithmetic
         try {
-            let safeExpr = expr;
-            // Replace variable names with values
-            for (const [k, v] of Object.entries(state.execVars)) {
-                const val = typeof v === 'string' ? JSON.stringify(v) : String(v);
-                safeExpr = safeExpr.replace(new RegExp('\\b' + k + '\\b', 'g'), val);
-            }
-            safeExpr = safeExpr.replace(/×/g, '*').replace(/÷/g, '/');
-            // Safe evaluator: only allow math characters
-            if (/^[0-9\.\s\+\-\*\/\(\)%]+$/.test(safeExpr)) {
-                // eslint-disable-next-line no-new-func
-                return new Function('return (' + safeExpr + ')')();
-            } else {
-                return safeExpr;
-            }
+            const result = fcSafeEval(expr, state.execVars);
+            return result;
         } catch (e) {
+            // Fallback: try as literal string
             return expr;
         }
     }
@@ -842,100 +881,159 @@
     // ==================== CODE GENERATION ====================
     function generateCode() {
         const lines = ['// الكود المولد من المخطط الانسيابي', ''];
-        const visited = new Set();
         const start = findStartShape();
         if (!start) {
             lines.push('// لا توجد نقطة بداية');
             return lines.join('\n');
         }
 
-        let current = start;
         let indent = 0;
-        let stepCounter = 1;
-        const shapeSteps = {};
+        const visited = new Set();
+        const visiting = new Set(); // For cycle detection
+
+        // Detect loop headers: decision shapes that have a back-edge (cycle)
+        function findLoopHeaders() {
+            const loopHeaders = new Set();
+            function dfs(id, path) {
+                if (path.includes(id)) {
+                    // Found a cycle. The node being revisited is the loop header.
+                    const cycleStart = path.indexOf(id);
+                    loopHeaders.add(path[cycleStart]);
+                    return;
+                }
+                if (visited.has(id)) return;
+                visited.add(id);
+                path.push(id);
+                const conns = getConnectionsFrom(id);
+                for (const c of conns) {
+                    const next = getShapeById(c.toId);
+                    if (next) dfs(next.id, [...path]);
+                }
+            }
+            visited.clear();
+            if (start) dfs(start.id, []);
+            visited.clear();
+            return loopHeaders;
+        }
+
+        const loopHeaders = findLoopHeaders();
+
+        const backEdgeHeaders = findBackEdges();
 
         function visit(shape) {
             if (!shape) return;
             if (visited.has(shape.id)) {
-                if (shapeSteps[shape.id]) {
-                    lines.push(' '.repeat(indent) + 'ارجع إلى الخطوة ' + shapeSteps[shape.id]);
-                }
                 return;
             }
             visited.add(shape.id);
-            shapeSteps[shape.id] = stepCounter++;
 
             const text = shape.text || '';
-            const stepPrefix = ' '.repeat(indent) + 'خطوة ' + shapeSteps[shape.id] + ': ';
+            const pfx = ' '.repeat(indent);
 
             switch (shape.type) {
                 case 'start': {
-                    if (shape.role === 'end') {
-                        lines.push(stepPrefix + 'نهاية البرنامج');
+                    if (shape.role !== 'end') {
+                        lines.push(pfx + 'Begin');
                     } else {
-                        lines.push(stepPrefix + 'بداية البرنامج');
+                        lines.push(pfx + 'End');
                     }
                     break;
                 }
                 case 'io': {
-                    const readMatch = text.match(/^(أدخل|اقرأ|read|lire)\s+(\w+)/i);
-                    const writeMatch = text.match(/^(أظهر|اطبع|write|print|ecrire)\s+(.+)/i);
+                    const readMatch = text.match(/^(أدخل|اقرأ|read|lire|input)\s+(\w+)/i);
+                    const writeMatch = text.match(/^(أظهر|اطبع|write|print|ecrire|output|display)\s+(.+)/i);
                     if (readMatch) {
-                        lines.push(stepPrefix + 'اقرأ المتغير (' + readMatch[2] + ')');
+                        lines.push(pfx + 'Read(' + readMatch[2] + ');');
                     } else if (writeMatch) {
-                        lines.push(stepPrefix + 'اكتب (' + writeMatch[2].trim() + ')');
+                        lines.push(pfx + 'Write(' + writeMatch[2].trim() + ');');
                     } else {
-                        lines.push(stepPrefix + text);
+                        lines.push(pfx + text + ';');
                     }
                     break;
                 }
                 case 'process': {
-                    const assignMatch = text.match(/^(\w+)\s*(?:←|=)\s*(.+)/);
+                    const assignMatch = text.match(/^([A-Za-z_]\w*)\s*(?:←|=)\s*(.+)/);
                     if (assignMatch) {
-                        lines.push(stepPrefix + assignMatch[1] + ' ← ' + assignMatch[2].trim());
+                        lines.push(pfx + assignMatch[1] + ' ← ' + assignMatch[2].trim() + ';');
                     } else {
-                        lines.push(stepPrefix + text);
+                        const multiMatch = text.match(/^([A-Za-z_]\w*)\s*(?:←|=)\s*(.+?)\s*,\s*([A-Za-z_]\w*)\s*(?:←|=)\s*(.+)/);
+                        if (multiMatch) {
+                            lines.push(pfx + multiMatch[1] + ' ← ' + multiMatch[2].trim() + ';');
+                            lines.push(pfx + multiMatch[3] + ' ← ' + multiMatch[4].trim() + ';');
+                        } else {
+                            lines.push(pfx + text + ';');
+                        }
                     }
                     break;
                 }
                 case 'decision': {
+                    const isLoopHeader = loopHeaders.has(shape.id);
                     const condMatch = text.replace(/^(هل|if|si)\s+/i, '');
-                    lines.push(stepPrefix + 'إذا كان (' + condMatch + ') فإن:');
                     const yesConn = state.connections.find(c =>
                         c.fromId === shape.id && c.label === 'نعم'
                     );
                     const noConn = state.connections.find(c =>
                         c.fromId === shape.id && c.label === 'لا'
                     );
-                    // Follow yes branch
-                    if (yesConn) {
+                    // Check if branches go back (loop)
+                    const noGoesBack = noConn && loopHeaders.has(shape.id);
+                    const yesGoesBack = yesConn && loopHeaders.has(shape.id);
+
+                    if (noGoesBack) {
+                        // While loop: condition + body (yes branch)
+                        lines.push(pfx + 'While (' + condMatch + ') Do');
                         indent += 4;
-                        const nextShape = getShapeById(yesConn.toId);
-                        visit(nextShape);
+                        if (yesConn) {
+                            const nextShape = getShapeById(yesConn.toId);
+                            visit(nextShape);
+                        }
                         indent -= 4;
-                    }
-                    // Follow no branch
-                    if (noConn) {
-                        lines.push(' '.repeat(indent) + 'وإلا:');
+                        lines.push(pfx + 'EndWhile');
+                        return;
+                    } else if (yesGoesBack) {
+                        // Repeat-until: body (no branch) + condition
+                        lines.push(pfx + 'Repeat');
                         indent += 4;
-                        const nextShape = getShapeById(noConn.toId);
-                        visit(nextShape);
+                        if (noConn) {
+                            const nextShape = getShapeById(noConn.toId);
+                            visit(nextShape);
+                        }
                         indent -= 4;
+                        lines.push(pfx + 'Until (' + condMatch + ')');
+                        return;
+                    } else {
+                        // Standard if/else
+                        lines.push(pfx + 'If (' + condMatch + ') Then');
+                        if (yesConn) {
+                            indent += 4;
+                            const nextShape = getShapeById(yesConn.toId);
+                            visit(nextShape);
+                            indent -= 4;
+                        }
+                        if (noConn) {
+                            lines.push(pfx + 'Else');
+                            indent += 4;
+                            const nextShape = getShapeById(noConn.toId);
+                            visit(nextShape);
+                            indent -= 4;
+                        }
+                        lines.push(pfx + 'EndIf');
+                        return;
                     }
-                    lines.push(' '.repeat(indent) + 'نهاية إذا');
-                    return; // Don't visit default next
                 }
                 case 'connector': {
-                    lines.push(stepPrefix + 'نقطة ربط');
+                    lines.push(pfx + '// نقطة ربط');
                     break;
                 }
             }
 
-            // Follow connection
-            const conns = getConnectionsFrom(shape.id);
-            if (conns.length > 0 && shape.type !== 'decision') {
-                const next = getShapeById(conns[0].toId);
-                visit(next);
+            // Follow connection (for non-decision shapes)
+            if (shape.type !== 'decision') {
+                const conns = getConnectionsFrom(shape.id);
+                if (conns.length > 0) {
+                    const next = getShapeById(conns[0].toId);
+                    visit(next);
+                }
             }
         }
 
@@ -1191,8 +1289,8 @@
         document.addEventListener('keydown', (e) => {
             // Delete shape
             if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedId) {
-                // Don't delete if editing an input
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                // Don't delete if editing an input or selecting from dropdown
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
                 removeShape(state.selectedId);
                 e.preventDefault();
             }
@@ -1391,9 +1489,298 @@
         const zoomInBtn = document.querySelector('.fc-zoom-in');
         const zoomOutBtn = document.querySelector('.fc-zoom-out');
         const zoomResetBtn = document.querySelector('.fc-zoom-reset');
+        const zoomFitBtn = document.querySelector('.fc-zoom-fit');
         if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
         if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
         if (zoomResetBtn) zoomResetBtn.addEventListener('click', zoomReset);
+        if (zoomFitBtn) zoomFitBtn.addEventListener('click', zoomToFit);
+
+        // Save / Load buttons
+        const saveBtn = document.getElementById('fcSaveBtn');
+        const loadBtn = document.getElementById('fcLoadBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                const name = prompt('اسم المخطط للحفظ:', '');
+                if (name) saveChart(name);
+            });
+        }
+        if (loadBtn) {
+            loadBtn.addEventListener('click', () => {
+                const saves = listSaves();
+                if (saves.length === 0) { showToast('❌ لا توجد مخططات محفوظة'); return; }
+                const list = saves.map(([k, v]) => k).join('\n');
+                const name = prompt('اختر اسماً للتحميل:\n' + list);
+                if (name) loadChart(name);
+            });
+        }
+
+        // Auto Layout button
+        const layoutBtn = document.getElementById('fcAutoLayoutBtn');
+        if (layoutBtn) layoutBtn.addEventListener('click', autoLayout);
+
+        // Example selector
+        const exampleSelect = document.getElementById('fcExampleSelect');
+        if (exampleSelect) {
+            exampleSelect.addEventListener('change', () => {
+                const val = exampleSelect.value;
+                if (val && examples[val]) {
+                    loadExample(val);
+                }
+                exampleSelect.value = '';
+            });
+        }
+
+        // Auto-save on pushHistory via intercepting shapes changes
+        var _origPushHistory = pushHistory;
+        pushHistory = function() {
+            _origPushHistory();
+            autoSave();
+        };
+    }
+
+    // ==================== SAVE / LOAD ====================
+    function getStateHash() {
+        return JSON.stringify({ shapes: state.shapes, connections: state.connections });
+    }
+
+    function autoSave() {
+        try {
+            localStorage.setItem(STORAGE_AUTO_KEY, JSON.stringify({
+                shapes: state.shapes,
+                connections: state.connections,
+                execVars: state.execVars,
+                execOutput: state.execOutput,
+                nextId: state.nextId
+            }));
+            state._lastSaveHash = getStateHash();
+        } catch (e) { /* storage full - ignore */ }
+    }
+
+    function saveChart(name) {
+        const label = name || prompt('اسم المخطط:', '') || 'مخطط_' + new Date().toLocaleDateString('ar-SA');
+        if (!label) return;
+        try {
+            const saves = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            saves[label] = {
+                shapes: cloneShapes(),
+                connections: cloneConnections(),
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
+            showToast('✅ تم حفظ المخطط "' + label + '"');
+            return label;
+        } catch (e) {
+            showToast('❌ فشل الحفظ: ' + e.message);
+            return null;
+        }
+    }
+
+    function listSaves() {
+        try {
+            return Object.entries(JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));
+        } catch (e) { return []; }
+    }
+
+    function loadChart(name) {
+        try {
+            const saves = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const entry = saves[name];
+            if (!entry) { showToast('❌ لم يتم العثور على "' + name + '"'); return false; }
+            state.shapes = JSON.parse(JSON.stringify(entry.shapes));
+            state.connections = JSON.parse(JSON.stringify(entry.connections));
+            state.selectedId = null;
+            resetExecution();
+            pushHistory();
+            fullRender();
+            showToast('✅ تم تحميل "' + name + '"');
+            return true;
+        } catch (e) {
+            showToast('❌ فشل التحميل: ' + e.message);
+            return false;
+        }
+    }
+
+    function deleteChart(name) {
+        try {
+            const saves = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            delete saves[name];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
+            showToast('🗑 تم حذف "' + name + '"');
+        } catch (e) { /* ignore */ }
+    }
+
+    function showToast(msg) {
+        let toast = document.getElementById('fcToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'fcToast';
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#e2e8f0;padding:0.75rem 1.5rem;border-radius:12px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4);transition:all 0.3s ease;opacity:0;font-family:inherit;direction:rtl;';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(20px)';
+        }, 2500);
+    }
+
+    // ==================== ZOOM TO FIT ====================
+    function zoomToFit() {
+        if (state.shapes.length === 0) { zoomReset(); return; }
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        state.shapes.forEach(s => {
+            if (s.x < minX) minX = s.x;
+            if (s.y < minY) minY = s.y;
+            if (s.x + s.w > maxX) maxX = s.x + s.w;
+            if (s.y + s.h > maxY) maxY = s.y + s.h;
+        });
+        const padding = 60;
+        const contentW = maxX - minX + padding * 2;
+        const contentH = maxY - minY + padding * 2;
+        const canvasEl = dom.canvas;
+        if (!canvasEl) return;
+        const availW = canvasEl.clientWidth - 40;
+        const availH = canvasEl.clientHeight - 40;
+        const zoomX = availW / contentW;
+        const zoomY = availH / contentH;
+        state.zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.min(zoomX, zoomY)));
+        // Center in viewport
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        state.panX = (canvasEl.clientWidth / 2) - (centerX * state.zoom);
+        state.panY = (canvasEl.clientHeight / 2) - (centerY * state.zoom);
+        updateZoomLabel();
+        fullRender();
+    }
+
+    // ==================== AUTO LAYOUT ====================
+    function autoLayout() {
+        if (state.shapes.length === 0) return;
+        const start = findStartShape();
+        if (!start) { showToast('❌ لا توجد نقطة بداية لترتيب المخطط'); return; }
+        // BFS to assign levels
+        const levels = {};
+        const visited = new Set();
+        const queue = [{ id: start.id, level: 0 }];
+        visited.add(start.id);
+        while (queue.length > 0) {
+            const { id, level } = queue.shift();
+            if (!levels[level]) levels[level] = [];
+            levels[level].push(id);
+            const conns = getConnectionsFrom(id);
+            for (const c of conns) {
+                if (!visited.has(c.toId)) {
+                    visited.add(c.toId);
+                    queue.push({ id: c.toId, level: level + 1 });
+                }
+            }
+        }
+        const spacingX = 220, spacingY = 130, startX = 60, startY = 40;
+        const levelIds = Object.keys(levels).sort((a, b) => Number(a) - Number(b));
+        for (const lv of levelIds) {
+            const ids = levels[lv];
+            const totalW = (ids.length - 1) * spacingX;
+            ids.forEach((id, i) => {
+                const shape = getShapeById(id);
+                if (shape) {
+                    shape.x = startX + i * spacingX - totalW / 2 - shape.w / 2;
+                    shape.y = startY + Number(lv) * spacingY;
+                    if (shape.x < 0) shape.x = 20;
+                    if (shape.y < 0) shape.y = 20;
+                }
+            });
+        }
+        pushHistory();
+        fullRender();
+        zoomToFit();
+        showToast('✅ تم ترتيب المخطط تلقائياً');
+    }
+
+    // ==================== SAFE EXPRESSION EVALUATOR ====================
+    function fcSafeEval(expr, vars) {
+        let pos = 0;
+        const s = String(expr ?? '').trim();
+        function peek() { return pos < s.length ? s[pos] : null; }
+        function consume() { return pos < s.length ? s[pos++] : null; }
+        function skipWS() { while (pos < s.length && s[pos] === ' ') pos++; }
+        function parseExpr() { skipWS(); return parseOr(); }
+        function parseOr() {
+            let left = parseAnd(); skipWS();
+            while (peek() === '|' && s[pos + 1] === '|') { pos += 2; const right = parseAnd(); left = Boolean(left) || Boolean(right); skipWS(); }
+            return left;
+        }
+        function parseAnd() {
+            let left = parseComparison(); skipWS();
+            while (peek() === '&' && s[pos + 1] === '&') { pos += 2; const right = parseComparison(); left = Boolean(left) && Boolean(right); skipWS(); }
+            return left;
+        }
+        function parseComparison() {
+            let left = parseAddSub(); skipWS();
+            const op = peek();
+            if (op === '<' || op === '>' || op === '=' || op === '!') {
+                let fullOp = consume();
+                if ((fullOp === '<' || fullOp === '>') && peek() === '=') { fullOp += consume(); }
+                if (fullOp === '<' && peek() === '>') { fullOp += consume(); }
+                if (fullOp === '=' && peek() === '=') { fullOp += consume(); }
+                if (fullOp === '!' && peek() === '=') { fullOp += consume(); }
+                const right = parseAddSub();
+                if (fullOp === '==') return left == right;
+                if (fullOp === '!=' || fullOp === '<>') return left != right;
+                if (fullOp === '<') return left < right;
+                if (fullOp === '>') return left > right;
+                if (fullOp === '<=') return left <= right;
+                if (fullOp === '>=') return left >= right;
+            }
+            return left;
+        }
+        function parseAddSub() {
+            let left = parseMulDiv(); skipWS();
+            while (peek() === '+' || peek() === '-') {
+                const op = consume(); const right = parseMulDiv(); skipWS();
+                if (op === '+') left = (typeof left === 'number' && typeof right === 'number') ? left + right : String(left) + String(right);
+                else left = left - right;
+            }
+            return left;
+        }
+        function parseMulDiv() {
+            let left = parseUnary(); skipWS();
+            while (true) {
+                skipWS();
+                if (peek() === '*') { consume(); const right = parseUnary(); skipWS(); left = left * right; }
+                else if (peek() === '/') { consume(); const right = parseUnary(); skipWS(); if (right === 0) throw new Error('Division by zero'); left = left / right; }
+                else if (peek() === '%') { consume(); const right = parseUnary(); skipWS(); if (right === 0) throw new Error('Mod by zero'); left = left % right; }
+                else break;
+            }
+            return left;
+        }
+        function parseUnary() {
+            skipWS();
+            if (peek() === '!') { consume(); return !Boolean(parseUnary()); }
+            if (peek() === '-') { consume(); return -parseUnary(); }
+            return parsePrimary();
+        }
+        function parsePrimary() {
+            skipWS();
+            if (peek() === '(') { consume(); const val = parseExpr(); skipWS(); if (peek() === ')') consume(); return val; }
+            if (peek() === '"' || peek() === "'") {
+                const quote = consume(); let str = '';
+                while (pos < s.length && peek() !== quote) str += consume();
+                if (peek() === quote) consume();
+                return str;
+            }
+            let word = '';
+            while (pos < s.length && /[a-zA-Z0-9_\u0600-\u06FF]/.test(peek())) word += consume();
+            if (!word) throw new Error('Empty expression');
+            if (word === 'true' || word === 'True' || word === 'TRUE') return true;
+            if (word === 'false' || word === 'False' || word === 'FALSE') return false;
+            if (word in vars) return vars[word];
+            const num = Number(word);
+            if (!isNaN(num) && word !== '') return num;
+            return word;
+        }
+        return parseExpr();
     }
 
     // ==================== PRE-BUILT EXAMPLES ====================
@@ -1439,6 +1826,92 @@
                 { fromId: 'ex_f4', fromHandle: 'left', toId: 'ex_f7', toHandle: 'top', label: 'لا' },
                 { fromId: 'ex_f7', fromHandle: 'bottom', toId: 'ex_f8', toHandle: 'top', label: '' }
             ]
+        },
+        sumNumbers: {
+            shapes: [
+                { id: 'ex_sn1', type: 'start', x: 200, y: 20, text: 'بداية', color: 'default', role: 'start' },
+                { id: 'ex_sn2', type: 'io', x: 185, y: 110, text: 'أدخل N', color: 'default', role: null },
+                { id: 'ex_sn3', type: 'process', x: 150, y: 200, text: 'Sum ← 0, I ← 1', color: 'default', role: null },
+                { id: 'ex_sn4', type: 'decision', x: 175, y: 300, text: 'I ≤ N؟', color: 'default', role: null },
+                { id: 'ex_sn5', type: 'process', x: 280, y: 400, text: 'Sum ← Sum + I', color: 'default', role: null },
+                { id: 'ex_sn6', type: 'process', x: 280, y: 490, text: 'I ← I + 1', color: 'default', role: null },
+                { id: 'ex_sn7', type: 'io', x: 80, y: 580, text: 'أظهر Sum', color: 'default', role: null },
+                { id: 'ex_sn8', type: 'start', x: 200, y: 680, text: 'نهاية', color: 'default', role: 'end' }
+            ],
+            connections: [
+                { fromId: 'ex_sn1', fromHandle: 'bottom', toId: 'ex_sn2', toHandle: 'top', label: '' },
+                { fromId: 'ex_sn2', fromHandle: 'bottom', toId: 'ex_sn3', toHandle: 'top', label: '' },
+                { fromId: 'ex_sn3', fromHandle: 'bottom', toId: 'ex_sn4', toHandle: 'top', label: '' },
+                { fromId: 'ex_sn4', fromHandle: 'right', toId: 'ex_sn5', toHandle: 'top', label: 'نعم' },
+                { fromId: 'ex_sn5', fromHandle: 'bottom', toId: 'ex_sn6', toHandle: 'top', label: '' },
+                { fromId: 'ex_sn6', fromHandle: 'bottom', toId: 'ex_sn4', toHandle: 'right', label: '' },
+                { fromId: 'ex_sn4', fromHandle: 'left', toId: 'ex_sn7', toHandle: 'top', label: 'لا' },
+                { fromId: 'ex_sn7', fromHandle: 'bottom', toId: 'ex_sn8', toHandle: 'top', label: '' }
+            ]
+        },
+        evenOdd: {
+            shapes: [
+                { id: 'ex_eo1', type: 'start', x: 200, y: 20, text: 'بداية', color: 'default', role: 'start' },
+                { id: 'ex_eo2', type: 'io', x: 185, y: 110, text: 'أدخل X', color: 'default', role: null },
+                { id: 'ex_eo3', type: 'process', x: 175, y: 200, text: 'R ← X % 2', color: 'default', role: null },
+                { id: 'ex_eo4', type: 'decision', x: 140, y: 300, text: 'R = 0؟', color: 'default', role: null },
+                { id: 'ex_eo5', type: 'io', x: 70, y: 420, text: 'أظهر "زوجي"', color: 'success', role: null },
+                { id: 'ex_eo6', type: 'io', x: 250, y: 420, text: 'أظهر "فردي"', color: 'warning', role: null },
+                { id: 'ex_eo7', type: 'start', x: 200, y: 540, text: 'نهاية', color: 'default', role: 'end' }
+            ],
+            connections: [
+                { fromId: 'ex_eo1', fromHandle: 'bottom', toId: 'ex_eo2', toHandle: 'top', label: '' },
+                { fromId: 'ex_eo2', fromHandle: 'bottom', toId: 'ex_eo3', toHandle: 'top', label: '' },
+                { fromId: 'ex_eo3', fromHandle: 'bottom', toId: 'ex_eo4', toHandle: 'top', label: '' },
+                { fromId: 'ex_eo4', fromHandle: 'left', toId: 'ex_eo5', toHandle: 'top', label: 'نعم' },
+                { fromId: 'ex_eo4', fromHandle: 'right', toId: 'ex_eo6', toHandle: 'top', label: 'لا' },
+                { fromId: 'ex_eo5', fromHandle: 'bottom', toId: 'ex_eo7', toHandle: 'top', label: '' },
+                { fromId: 'ex_eo6', fromHandle: 'bottom', toId: 'ex_eo7', toHandle: 'top', label: '' }
+            ]
+        },
+        calc: {
+            shapes: [
+                { id: 'ex_c1', type: 'start', x: 200, y: 20, text: 'بداية', color: 'default', role: 'start' },
+                { id: 'ex_c2', type: 'io', x: 170, y: 110, text: 'أدخل A', color: 'default', role: null },
+                { id: 'ex_c3', type: 'io', x: 170, y: 200, text: 'أدخل B', color: 'default', role: null },
+                { id: 'ex_c4', type: 'process', x: 170, y: 290, text: 'C ← A + B', color: 'default', role: null },
+                { id: 'ex_c5', type: 'process', x: 170, y: 380, text: 'D ← A - B', color: 'default', role: null },
+                { id: 'ex_c6', type: 'process', x: 170, y: 470, text: 'E ← A × B', color: 'default', role: null },
+                { id: 'ex_c7', type: 'process', x: 170, y: 560, text: 'F ← A / B', color: 'warning', role: null },
+                { id: 'ex_c8', type: 'io', x: 90, y: 660, text: 'أظهر C, D', color: 'default', role: null },
+                { id: 'ex_c9', type: 'io', x: 260, y: 660, text: 'أظهر E, F', color: 'default', role: null },
+                { id: 'ex_c10', type: 'start', x: 200, y: 770, text: 'نهاية', color: 'default', role: 'end' }
+            ],
+            connections: [
+                { fromId: 'ex_c1', fromHandle: 'bottom', toId: 'ex_c2', toHandle: 'top', label: '' },
+                { fromId: 'ex_c2', fromHandle: 'bottom', toId: 'ex_c3', toHandle: 'top', label: '' },
+                { fromId: 'ex_c3', fromHandle: 'bottom', toId: 'ex_c4', toHandle: 'top', label: '' },
+                { fromId: 'ex_c4', fromHandle: 'bottom', toId: 'ex_c5', toHandle: 'top', label: '' },
+                { fromId: 'ex_c5', fromHandle: 'bottom', toId: 'ex_c6', toHandle: 'top', label: '' },
+                { fromId: 'ex_c6', fromHandle: 'bottom', toId: 'ex_c7', toHandle: 'top', label: '' },
+                { fromId: 'ex_c7', fromHandle: 'bottom', toId: 'ex_c8', toHandle: 'top', label: '' },
+                { fromId: 'ex_c7', fromHandle: 'right', toId: 'ex_c9', toHandle: 'top', label: '' },
+                { fromId: 'ex_c8', fromHandle: 'bottom', toId: 'ex_c10', toHandle: 'top', label: '' },
+                { fromId: 'ex_c9', fromHandle: 'bottom', toId: 'ex_c10', toHandle: 'top', label: '' }
+            ]
+        },
+        tempConv: {
+            shapes: [
+                { id: 'ex_t1', type: 'start', x: 200, y: 20, text: 'بداية', color: 'default', role: 'start' },
+                { id: 'ex_t2', type: 'io', x: 170, y: 110, text: 'أدخل C', color: 'default', role: null },
+                { id: 'ex_t3', type: 'process', x: 170, y: 200, text: 'F ← (C × 9/5) + 32', color: 'default', role: null },
+                { id: 'ex_t4', type: 'io', x: 100, y: 300, text: 'أظهر C + "°C"', color: 'default', role: null },
+                { id: 'ex_t5', type: 'io', x: 260, y: 300, text: 'أظهر F + "°F"', color: 'warning', role: null },
+                { id: 'ex_t6', type: 'start', x: 200, y: 420, text: 'نهاية', color: 'default', role: 'end' }
+            ],
+            connections: [
+                { fromId: 'ex_t1', fromHandle: 'bottom', toId: 'ex_t2', toHandle: 'top', label: '' },
+                { fromId: 'ex_t2', fromHandle: 'bottom', toId: 'ex_t3', toHandle: 'top', label: '' },
+                { fromId: 'ex_t3', fromHandle: 'bottom', toId: 'ex_t4', toHandle: 'top', label: '' },
+                { fromId: 'ex_t3', fromHandle: 'right', toId: 'ex_t5', toHandle: 'top', label: '' },
+                { fromId: 'ex_t4', fromHandle: 'bottom', toId: 'ex_t6', toHandle: 'top', label: '' },
+                { fromId: 'ex_t5', fromHandle: 'bottom', toId: 'ex_t6', toHandle: 'top', label: '' }
+            ]
         }
     };
 
@@ -1471,16 +1944,28 @@
         setupTouch();
         setupEvents();
 
-        // Initial empty state
+        // Try to load auto-saved state
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_AUTO_KEY));
+            if (saved && saved.shapes && saved.shapes.length > 0) {
+                state.shapes = saved.shapes;
+                state.connections = saved.connections || [];
+                state.execVars = saved.execVars || {};
+                state.execOutput = saved.execOutput || [];
+                state.nextId = saved.nextId || 1000;
+            }
+        } catch (e) { /* ignore corrupt saves */ }
+
         pushHistory();
         fullRender();
         updateZoomLabel();
+        zoomToFit();
 
         // Check for URL param to load example
         const params = new URLSearchParams(window.location.search);
         const exParam = params.get('example');
         if (exParam && examples[exParam]) {
-            setTimeout(() => loadExample(exParam), 100);
+            setTimeout(() => loadExample(exParam), 200);
         }
     }
 
@@ -1502,6 +1987,12 @@
         zoomIn,
         zoomOut,
         zoomReset,
+        zoomToFit,
+        autoLayout,
+        saveChart,
+        loadChart,
+        listSaves,
+        deleteChart,
         resetExecution,
         stepExecution,
         runAllExecution,
