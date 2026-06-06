@@ -1,0 +1,11 @@
+{
+  "name": "algo-editor-tester",
+  "version": "1.0.0",
+  "description": "Automated tester for Informatix algo editor engine using jsdom",
+  "main": "algo_engine_tester.js",
+  "scripts": {
+    "test": "node algo_engine_tester.js"
+  },
+  "dependencies": {
+  }
+}

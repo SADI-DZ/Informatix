@@ -190,7 +190,9 @@
         function algoTranslateKeywords(text, fromLang, toLang) {
             const map = fromLang === 'en' ? algoEnToFr : algoFrToEn;
             const parts = [];
-            const tokenRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\d+(?:\.\d+)?)|([A-Za-z\u00C0-\u00FF_]\w*)|(\u2190|:=|<=|>=|<>|!=|&&|\|\||[+\-*/%<>=!(),;:])|(\s+)|(.)/g;
+            const _ident = '[A-Za-z\\u00C0-\\u024F\\u0590-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF_][A-Za-z0-9_\\u00C0-\\u024F\\u0590-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF]*';
+            const _pattern = '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')|(\\d+(?:\\.\\d+)?)|(' + _ident + ')|(\\u2190|:=|<=|>=|<>|!=|&&|\\|\\||[+\\-*/%<>=!(),;:])|(\\s+)|(.)';
+            const tokenRe = new RegExp(_pattern,'g');
             let m;
             while ((m = tokenRe.exec(text)) !== null) {
                 if (m[3] !== undefined) {
@@ -250,19 +252,29 @@
         algoEditorEl.parentElement.appendChild(algoSyntaxErrorEl);
 
         function algoParseErrorLine(msg) {
-            const m = msg.match(/سطر (\d+)/);
-            return m ? parseInt(m[1], 10) - 1 : -1;
+            if (!msg || typeof msg !== 'string') return -1;
+            // try Arabic pattern (سطر X) or parentheses (سطر X) or English 'line X'
+            let m = msg.match(/\(\s*سطر\s*(\d+)\s*\)/);
+            if (!m) m = msg.match(/سطر\s*(\d+)/);
+            if (!m) m = msg.match(/\bline\s*(\d+)\b/i);
+            if (m) {
+                const n = parseInt(m[1], 10);
+                return Number.isFinite(n) ? (n - 1) : -1;
+            }
+            return -1;
         }
 
         // ==================== HELPERS ====================
         /** تنظيف وحظر التعبيرات الخطرة (حقن) */
         function algoSanitizeExpr(expr) {
-            const s = String(expr ?? '').trim();
-            if (!/^[\w\s"'\p{L}\p{N}\p{M}،؟;?+\-*/%<>=!&|().,:]+$/u.test(s)) throw new Error('التعبير يحتوي على رموز غير مسموح بها.');
-            const forbidden = ['window', 'document', 'fetch', 'XMLHttpRequest', 'eval', 'setTimeout', 'setInterval', 'Function', 'alert', 'console', 'cookie', 'localStorage', 'sessionStorage', 'process', 'require', 'import', 'export', 'class', 'function', 'new', 'delete', 'typeof', 'instanceof', 'in', 'this'];
+            let s = String(expr ?? '').trim();
+            try { s = s.normalize('NFKC'); } catch (e) { /* ignore if not supported */ }
+            if (!/^[A-Za-z\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF0-9_\s"'\u0300-\u036F،؟;?+\-*/%<>=!&|().,:]+$/.test(s)) throw new Error('التعبير يحتوي على رموز غير مسموح بها.');
+            const forbidden = ['window', 'document', 'fetch', 'xmlhttprequest', 'eval', 'settimeout', 'setinterval', 'function', 'alert', 'console', 'cookie', 'localstorage', 'sessionstorage', 'process', 'require', 'import', 'export', 'class', 'new', 'delete', 'typeof', 'instanceof', 'this'];
             const lower = s.toLowerCase();
             if (forbidden.some(word => new RegExp('\\b' + word + '\\b').test(lower))) throw new Error('التعبير يحتوي على كلمات ممنوعة.');
-            if (/\w+\s*\(/.test(s)) throw new Error('استدعاء دوال (مثل الدوال الجاهزة) غير مسموح في التعبيرات.');
+            // Detect function call attempts (Unicode-aware)
+            if (/[A-Za-z\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF0-9_]+\s*\(/.test(s)) throw new Error('استدعاء دوال (مثل الدوال الجاهزة) غير مسموح في التعبيرات.');
             return s;
         }
 
@@ -362,14 +374,14 @@
                     return str;
                 }
                 let word = '';
-                while (pos < s.length && /[a-zA-Z0-9_.]/.test(peek())) word += consume();
+                while (pos < s.length && /[A-Za-z0-9_\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF.]/.test(peek())) word += consume();
                 if (!word) throw new Error('تعبير غير مكتمل - هل نسيت كتابة قيمة أو متغير؟ (الموقع ' + pos + ')');
                 if (word === 'true') return true;
                 if (word === 'false') return false;
                 if (word in vars) return vars[word];
                 const num = Number(word);
                 if (!isNaN(num) && word !== '') return num;
-                if (/^[A-Za-z_]/.test(word)) {
+                if (/^[A-Za-z_\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(word)) {
                     throw new Error(`"${word}" غير معرّف - أضف "${word}" في قسم Var.`);
                 }
                 return word;
@@ -513,7 +525,7 @@
                     }
                 } else if (lineKind.kind === 'const') {
                     const rest = lineKind.text.slice(5).trim();
-                    const m = rest.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+)$/);
+                    const m = rest.match(/^([\p{L}_][\p{L}\p{N}_]*)\s*(?:\u2190|:=|=)\s*(.+)$/u);
                     if (m) {
                         const name = m[1];
                         if (algoReservedKeywords.has(name.toLowerCase())) {
@@ -522,7 +534,7 @@
                     }
                 } else if (lineKind.kind === 'let') {
                     const rest = lineKind.text.slice(4).trim();
-                    const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                    const m = rest.match(/^([\p{L}_][\p{L}\p{N}_]*)\s*=\s*(.+)$/u);
                     if (m) {
                         const name = m[1];
                         if (algoReservedKeywords.has(name.toLowerCase())) {
@@ -562,7 +574,7 @@
                 const forPrefix = algoStartsWithAny(low, algoKW_FOR_START);
                 if (forPrefix && doSuffix) {
                     const middle = line.slice(forPrefix.length + 1, -(doSuffix.length + 1)).trim();
-                    const match = middle.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+?)\s+(to|\u00e0)\s+(.+)$/i);
+                    const match = middle.match(/^([\p{L}_][\p{L}\p{N}_]*)\s*(?:\u2190|:=|=)\s*(.+?)\s+(to|\u00e0)\s+(.+)$/iu);
                     if (!match) throw new Error('صيغة for غير صحيحة - الصيغة الصحيحة: for متغير = بداية to نهاية do (سطر ' + (i + 1) + ')');
                     const [, name, startExpr, , endExpr] = match;
                     if (algoReservedKeywords.has(name.toLowerCase())) {
@@ -631,7 +643,7 @@
             const forP = algoStartsWithAny(low, algoKW_FOR_START);
             if (forP && doS) return { kind: 'for', text: s };
             if (algoKW_END.includes(low) || low === 'finpour' || low === 'finsi' || low === 'fintantque') return { kind: 'end', text: s };
-            if (/^([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*:\s*([A-Za-z_]\w*)\s*;?$/.test(s)) return { kind: 'var', text: s };
+            if (/^([A-Za-z\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF_][A-Za-z0-9_\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF]*(?:\s*,\s*[A-Za-z\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF_][A-Za-z0-9_\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF]*)*)\s*:\s*([A-Za-z\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF_][A-Za-z0-9_\u00C0-\u024F\u0590-\u06FF\u0750-\u077F\u08A0-\u08FF]*)\s*;?$/.test(s)) return { kind: 'var', text: s };
             if (s.includes('\u2190') || s.includes(':=') || s.includes('=')) return { kind: 'assign', text: s };
             return { kind: 'unknown', text: s };
         }
@@ -697,7 +709,9 @@
             else if (slashIdx >= 0) commentStart = slashIdx;
             if (commentStart >= 0) { mainPart = raw.slice(0, commentStart); commentPart = raw.slice(commentStart); }
             const tokens = [];
-            const tokenRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\d+(?:\.\d+)?)|([A-Za-z\u00C0-\u00FF_]\w*)|(\u2190|:=|<=|>=|<>|!=|&&|\|\||[+\-*/%<>=!(),;:])|(\s+)|(.)/g;
+            const _ident = '[A-Za-z\\u00C0-\\u024F\\u0590-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF_][A-Za-z0-9_\\u00C0-\\u024F\\u0590-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF]*';
+            const _pattern = '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')|(\\d+(?:\\.\\d+)?)|(' + _ident + ')|(\\u2190|:=|<=|>=|<>|!=|&&|\\|\\||[+\\-*/%<>=!(),;:])|(\\s+)|(.)';
+            const tokenRe = new RegExp(_pattern,'g');
             let m;
             while ((m = tokenRe.exec(mainPart)) !== null) {
                 if (m[1] !== undefined) tokens.push('<span class="algo-tok-string">' + algoEscapeHtml(m[1]) + '</span>');
@@ -813,7 +827,7 @@
                     algoVM.pc += 1;
                 } else if (kind === 'const') {
                     const rest = s.slice(5).trim();
-                    const m = rest.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+)$/);
+                    const m = rest.match(/^([\p{L}_][\p{L}\p{N}_]*)\s*(?:\u2190|:=|=)\s*(.+)$/u);
                     if (!m) throw new Error('صيغة const غير صحيحة - الصيغة: const اسم = قيمة (سطر ' + (lineIdx + 1) + ')');
                     const [, name, expr] = m;
                     if (algoReservedKeywords.has(name.toLowerCase())) {
@@ -823,7 +837,7 @@
                     algoVM.pc += 1;
                 } else if (kind === 'let') {
                     const rest = s.slice(4).trim();
-                    const m = rest.match(/^([A-Za-z_]\w*)\s*=\s*(.+)$/);
+                    const m = rest.match(/^([\p{L}_][\p{L}\p{N}_]*)\s*=\s*(.+)$/u);
                     if (!m) throw new Error('صيغة let غير صحيحة - الصيغة: let اسم = قيمة (سطر ' + (lineIdx + 1) + ')');
                     const [, name, expr] = m;
                     if (algoReservedKeywords.has(name.toLowerCase())) {
@@ -832,7 +846,7 @@
                     algoVM.vars[name] = algoEvalExpr(expr, algoVM.vars);
                     algoVM.pc += 1;
                 } else if (kind === 'assign') {
-                    const m = s.match(/^([A-Za-z_]\w*)\s*(?:\u2190|:=|=)\s*(.+)$/);
+                    const m = s.match(/^([\p{L}_][\p{L}\p{N}_]*)\s*(?:\u2190|:=|=)\s*(.+)$/u);
                     if (!m) throw new Error('صيغة الإسناد غير صحيحة - الصيغة: اسم_متغير = قيمة (سطر ' + (lineIdx + 1) + ')');
                     const [, name, expr] = m;
                     if (algoReservedKeywords.has(name.toLowerCase())) {
@@ -1192,9 +1206,14 @@
         });
 
         if (algoNewBtn) {
-            algoNewBtn.addEventListener('click', () => {
+            algoNewBtn.addEventListener('click', async () => {
                 const hasContent = algoEditorEl.value.trim() !== '';
-                if (hasContent && !confirm('سيتم مسح المحرر وبدء صفحة جديدة. هل تريد المتابعة؟')) return;
+                if (hasContent) {
+                    try {
+                        const ans = await algoShowInputModal('سيتم مسح المحرر وبدء صفحة جديدة. اكتب "نعم" للتأكيد');
+                        if (!ans || String(ans).trim().toLowerCase() !== 'نعم' && ans.trim().toLowerCase() !== 'yes') return;
+                    } catch (e) { return; }
+                }
                 algoEditorEl.value = '';
                 try { localStorage.removeItem(ALGO_STORAGE_KEY_CODE); } catch (e) { /* ignore */ }
                 algoEditorEl.dispatchEvent(new Event('input'));
