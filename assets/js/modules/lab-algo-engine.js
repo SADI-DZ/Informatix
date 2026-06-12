@@ -1218,7 +1218,7 @@
                 try { localStorage.removeItem(ALGO_STORAGE_KEY_CODE); } catch (e) { /* ignore */ }
                 algoEditorEl.dispatchEvent(new Event('input'));
                 algoEditorEl.focus();
-                algoResetVM();
+                try { algoResetVM(); } catch (e) { /* محرر فارغ — لا حاجة لإعادة تهيئة VM */ }
             });
         }
 

@@ -16,22 +16,38 @@
         }
         return EMOJI_BASE + codePoints.join('-') + '.svg';
     }
-
-    function replaceEmojisInText(text) {
-        if (!text || text.length === 0) return text;
-        var result = '';
+    function createFragmentFromText(text) {
+        var frag = document.createDocumentFragment();
+        if (!text || text.length === 0) {
+            frag.appendChild(document.createTextNode(text));
+            return frag;
+        }
         var lastIndex = 0;
         var match;
         var re = new RegExp(emojiRegex.source, 'gu');
         while ((match = re.exec(text)) !== null) {
-            result += text.slice(lastIndex, match.index);
+            if (match.index > lastIndex) {
+                frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            }
             var emoji = match[0];
             var path = emojiToPath(emoji);
-            result += '<img src="' + path + '" alt="' + emoji + '" class="emoji-replaced" aria-hidden="true" loading="lazy">';
+            var img = document.createElement('img');
+            img.src = path;
+            img.alt = emoji;
+            img.className = 'emoji-replaced';
+            img.setAttribute('aria-hidden', 'true');
+            img.loading = 'lazy';
+            img.addEventListener('error', function () {
+                var txt = document.createTextNode(this.alt);
+                this.replaceWith(txt);
+            });
+            frag.appendChild(img);
             lastIndex = match.index + emoji.length;
         }
-        result += text.slice(lastIndex);
-        return result;
+        if (lastIndex < text.length) {
+            frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+        return frag;
     }
 
     function shouldSkipElement(el) {
@@ -51,11 +67,10 @@
             var text = node.textContent;
             if (!emojiRegex.test(text)) return;
             emojiRegex.lastIndex = 0;
-            var html = replaceEmojisInText(text);
-            if (html !== text) {
-                var span = document.createElement('span');
-                span.innerHTML = html;
-                parent.replaceChild(span, node);
+            var frag = createFragmentFromText(text);
+            if (frag && frag.childNodes && frag.childNodes.length > 0) {
+                parent.insertBefore(frag, node);
+                parent.removeChild(node);
             }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
             if (shouldSkipElement(node)) return;

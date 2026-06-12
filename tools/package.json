@@ -7,5 +7,6 @@
     "test": "node algo_engine_tester.js"
   },
   "dependencies": {
+    "jsdom": "^26.1.0"
   }
 }
