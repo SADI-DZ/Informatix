@@ -1053,6 +1053,62 @@
                 transition: none !important;
             }
         }
+
+        /* Tabs bar styles */
+        .tabs-bar {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: calc(var(--radius-md));
+            background: var(--surface-color);
+            margin: 0.75rem 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.45rem 0.75rem;
+            border-radius: var(--radius-md);
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, rgba(79,70,229,0.12), rgba(6,182,212,0.08));
+            color: var(--text-main);
+            border-color: rgba(79,70,229,0.18);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab .close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 
@@ -1168,7 +1224,17 @@
                                     <i class="ph ph-file-plus"></i>
                                     جديد
                                 </button>
+                                <button id="algoSaveBtn" class="btn-run" type="button" title="حفظ الملف">
+                                    <i class="ph ph-floppy-disk"></i>
+                                    حفظ
+                                </button>
                             </div>
+                        </div>
+
+                        <!-- Tabs bar: will display open files like editor tabs -->
+                        <div class="tabs-bar" id="algoTabsBar" aria-label="ملفات المحرر">
+                            <div id="algoTabs" class="tabs"></div>
+                            <button id="algoNewTabBtn" class="btn-reset" type="button" title="ملف جديد">+</button>
                         </div>
 
                         <div class="algo-editor-wrap" dir="ltr">
@@ -1274,6 +1340,193 @@
                 applyFontSize(fontSizes[currentSizeIndex]);
             });
         }
+    });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const TABS_KEY = 'algo-editor-tabs';
+        const tabsEl = document.getElementById('algoTabs');
+        const newTabBtn = document.getElementById('algoNewTabBtn');
+        const editor = document.getElementById('algoEditor');
+
+        function loadTabs() {
+            try { return JSON.parse(localStorage.getItem(TABS_KEY) || 'null') || null; }
+            catch (e) { return null; }
+        }
+        function saveTabs(t) { try { localStorage.setItem(TABS_KEY, JSON.stringify(t)); } catch (e) { } }
+
+        let tabs = loadTabs();
+        if (!tabs || !tabs.length) {
+            tabs = [
+                { id: 'tab-' + Date.now(), name: 'algorithm_1.algo', content: 'Algorithm example\nBegin\n  Write("Hello World!");\nEnd' },
+                { id: 'tab-' + (Date.now() + 1), name: 'algorithm_2.algo', content: 'Algorithm example\nBegin\n  Write("Second file");\nEnd' }
+            ];
+            saveTabs(tabs);
+        }
+
+        let activeId = tabs[0].id;
+
+        function renderTabs() {
+            tabsEl.innerHTML = '';
+            tabs.forEach(t => {
+                const btn = document.createElement('div');
+                btn.className = 'tab' + (t.id === activeId ? ' active' : '');
+                btn.setAttribute('role', 'tab');
+                btn.title = t.name;
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'tab-name';
+                nameSpan.textContent = t.name;
+                btn.appendChild(nameSpan);
+                // rename on double click
+                nameSpan.addEventListener('dblclick', async (e) => {
+                    e.stopPropagation();
+                    const newName = await showNameModal('إعادة تسمية الملف:', t.name);
+                    if (newName) { t.name = newName; saveTabs(tabs); renderTabs(); }
+                });
+                const close = document.createElement('button');
+                close.className = 'close';
+                close.innerHTML = '✕';
+                close.title = 'إغلاق';
+                close.addEventListener('click', (e) => { e.stopPropagation(); closeTab(t.id); });
+                btn.appendChild(close);
+                btn.addEventListener('click', () => selectTab(t.id));
+                tabsEl.appendChild(btn);
+            });
+        }
+
+        function selectTab(id) {
+            // save current tab state (history + cursor) before switching
+            try {
+                const cur = tabs.find(x => x.id === activeId);
+                if (cur && window.algoEditorBridge) {
+                    cur.content = window.algoEditorBridge.getValue();
+                    cur.history = window.algoEditorBridge.getHistory();
+                    cur.historyIdx = window.algoEditorBridge.getHistoryIdx();
+                }
+            } catch (e) { /* ignore */ }
+
+            const tab = tabs.find(x => x.id === id);
+            if (!tab) return;
+            activeId = id;
+            // restore content and history
+            if (window.algoEditorBridge) {
+                window.algoEditorBridge.setValue(tab.content || '');
+                window.algoEditorBridge.setHistory(tab.history || [], typeof tab.historyIdx === 'number' ? tab.historyIdx : (tab.history ? tab.history.length - 1 : -1));
+            } else {
+                editor.value = tab.content || '';
+                editor.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            renderTabs();
+            saveTabs(tabs);
+        }
+
+        function closeTab(id) {
+            const idx = tabs.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const wasActive = tabs[idx].id === activeId;
+            tabs.splice(idx, 1);
+            if (!tabs.length) {
+                const nId = 'tab-' + Date.now();
+                tabs.push({ id: nId, name: 'untitled.algo', content: '' });
+                activeId = nId;
+            } else if (wasActive) {
+                activeId = tabs[Math.max(0, idx - 1)].id;
+            }
+            saveTabs(tabs);
+            renderTabs();
+            selectTab(activeId);
+        }
+
+        function showNameModal(label, defaultVal) {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.inset = '0';
+                overlay.style.background = 'rgba(0,0,0,0.5)';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.zIndex = '9999';
+                overlay.innerHTML = `
+                    <div style="background:var(--surface-color);padding:1rem;border-radius:12px;min-width:320px;border:1px solid var(--border-color);">
+                      <label style="display:block;font-weight:700;margin-bottom:0.5rem;">${label}</label>
+                      <input id="__tabNameField" style="width:100%;padding:0.5rem;border:1px solid var(--border-color);border-radius:6px;margin-bottom:0.75rem;" value="${defaultVal || ''}" />
+                      <div style="text-align:left;display:flex;gap:0.5rem;justify-content:flex-end;">
+                        <button id="__tabCancel" class="btn-reset">إلغاء</button>
+                        <button id="__tabOk" class="btn-run">موافق</button>
+                      </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+                const field = overlay.querySelector('#__tabNameField');
+                const ok = overlay.querySelector('#__tabOk');
+                const cancel = overlay.querySelector('#__tabCancel');
+                requestAnimationFrame(() => field && field.focus());
+                const done = (val) => { overlay.remove(); resolve(val); };
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) done(null); });
+                cancel.addEventListener('click', () => done(null));
+                ok.addEventListener('click', () => done(field.value.trim() || null));
+                field.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } if (e.key === 'Escape') { cancel.click(); } });
+            });
+        }
+
+        function newTab(name) {
+            const n = tabs.length + 1;
+            const id = 'tab-' + Date.now();
+            let filename = name || ('algorithm_' + n + '.algo');
+            if (filename && !/\.[a-zA-Z0-9]+$/.test(filename)) filename = filename + '.algo';
+            const content = 'Algorithm example\nBegin\n  Write("Hello World!");\nEnd';
+            tabs.push({ id, name: filename, content });
+            saveTabs(tabs);
+            renderTabs();
+            selectTab(id);
+        }
+
+        // keep tab content and history in sync with editor
+        editor.addEventListener('input', () => {
+            const tab = tabs.find(x => x.id === activeId);
+            if (tab) {
+                try {
+                    tab.content = window.algoEditorBridge ? window.algoEditorBridge.getValue() : editor.value;
+                    tab.history = window.algoEditorBridge ? window.algoEditorBridge.getHistory() : (tab.history || []);
+                    tab.historyIdx = window.algoEditorBridge ? window.algoEditorBridge.getHistoryIdx() : (tab.historyIdx || -1);
+                } catch (e) {
+                    tab.content = editor.value;
+                }
+                saveTabs(tabs);
+            }
+        });
+
+        // + button creates a new tab after asking for a filename
+        newTabBtn?.addEventListener('click', async () => {
+            const input = await showNameModal('اسم الملف الجديد:', 'untitled.algo');
+            if (input) newTab(input);
+        });
+
+        // Hook the toolbar "جديد" button to open the name modal as requested
+        const algoNewBtn = document.getElementById('algoNewBtn');
+        if (algoNewBtn) {
+            algoNewBtn.addEventListener('click', async () => {
+                const input = await showNameModal('اسم الملف الجديد:', 'untitled.algo');
+                if (input) newTab(input);
+            });
+        }
+
+        const saveBtn = document.getElementById('algoSaveBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                const tab = tabs.find(x => x.id === activeId);
+                const filename = (tab && tab.name) ? tab.name : 'untitled.algo';
+                const content = (tab && tab.content) ? tab.content : (window.algoEditorBridge ? window.algoEditorBridge.getValue() : editor.value);
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+            });
+        }
+
+        renderTabs();
+        selectTab(activeId);
     });
     </script>
 </body>

@@ -91,6 +91,19 @@
             if (algoRedoBtn) algoRedoBtn.disabled = algoHistoryIdx >= algoHistory.length - 1;
         }
 
+        // Expose a small bridge for tab manager to save/restore history and editor content
+        try {
+            window.algoEditorBridge = {
+                getHistory: () => algoHistory.slice(),
+                getHistoryIdx: () => algoHistoryIdx,
+                setHistory: (h, idx) => { algoHistory = Array.isArray(h) ? h.slice() : []; algoHistoryIdx = typeof idx === 'number' ? idx : (algoHistory.length - 1); algoUpdateUndoButtons(); },
+                getValue: () => algoEditorEl ? algoEditorEl.value : '',
+                setValue: (v) => { if (algoEditorEl) { algoEditorEl.value = v; algoEditorEl.dispatchEvent(new Event('input',{bubbles:true})); } },
+                focus: () => { if (algoEditorEl) algoEditorEl.focus(); },
+                setSelection: (s,e) => { if (algoEditorEl) algoEditorEl.setSelectionRange(s,e); }
+            };
+        } catch (e) { /* ignore if not allowed */ }
+
         function algoFormatError(msg) {
             if (/غير معروف|أمر غير معروف/i.test(msg)) return '[E001] ' + msg;
             if (/غير معرّف|not defined|not declared|لم يعرّف/i.test(msg)) return '[E002] ' + msg;

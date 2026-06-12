@@ -300,7 +300,6 @@
                             <div class="station-workspace">
                                 <div class="sub-tabs">
                                     <button class="sub-tab active" data-subtab="flowchart">مصمم المخططات</button>
-                                    <button class="sub-tab" data-subtab="algo-editor">محرر الخوارزميات</button>
                                 </div>
 
                                 <!-- التبويب 1: مصمم المخططات -->
@@ -462,97 +461,7 @@
 
 
                                 <!-- التبويب 2: محرر الخوارزميات -->
-                                <div class="subtab-content" id="subtab-algo-editor">
-                                    <div class="algo-container">
-                                        <div class="algo-examples-bar">
-                                            <div class="algo-examples-list horizontal">
-                                                <button class="example-item" data-example="hello">
-                                                    <span class="example-icon"><i class="ph ph-chat-centered-text"></i></span>
-                                                    <div class="example-info">
-                                                        <span class="example-name">مرحباً بالعالم</span>
-                                                    </div>
-                                                </button>
-                                                <button class="example-item" data-example="sum">
-                                                    <span class="example-icon"><i class="ph ph-plus-circle"></i></span>
-                                                    <div class="example-info">
-                                                        <span class="example-name">جمع عددين</span>
-                                                    </div>
-                                                </button>
-                                                <button class="example-item" data-example="condition">
-                                                    <span class="example-icon"><i class="ph ph-git-fork"></i></span>
-                                                    <div class="example-info">
-                                                        <span class="example-name">الشروط (Else If)</span>
-                                                    </div>
-                                                </button>
-                                                <button class="example-item" data-example="loop">
-                                                    <span class="example-icon"><i class="ph ph-arrows-clockwise"></i></span>
-                                                    <div class="example-info">
-                                                        <span class="example-name">حلقة تكرارية (For)</span>
-                                                    </div>
-                                                </button>
-                                                <button class="example-item" data-example="boolean">
-                                                    <span class="example-icon"><i class="ph ph-toggle-left"></i></span>
-                                                    <div class="example-info">
-                                                        <span class="example-name">القيم المنطقية (Boolean)</span>
-                                                    </div>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="algo-grid">
-                                            <div class="algo-card algo-editor-card">
-                                                <div class="algo-card-header">
-                                                    <h3>محرر الخوارزمية</h3>
-                                                    <div class="algo-lang-toggle" id="algoLangToggle">
-                                                        <button class="algo-lang-btn is-active" data-lang="en">EN</button>
-                                                        <button class="algo-lang-btn" data-lang="fr">FR</button>
-                                                    </div>
-                                                    <div class="algo-actions">
-                                                        <button id="algoNewBtn" class="algo-btn-new" type="button" title="صفحة جديدة — يمسح المحرر ويبدأ من الصفر">📄 جديد</button>
-                                                        <button id="algoRunBtn" class="algo-btn-run" type="button">▶ تشغيل</button>
-                                                        <button id="algoStepBtn" class="algo-btn-reset" type="button">⏭ خطوة</button>
-                                                        <button id="algoResetBtn" class="algo-btn-reset" type="button">↺ إعادة</button>
-                                                        <button id="algoUndoBtn" class="algo-btn-reset" type="button" title="تراجع (Ctrl+Z)">↩</button>
-                                                        <button id="algoRedoBtn" class="algo-btn-reset" type="button" title="إعادة (Ctrl+Y)">↪</button>
-                                                    </div>
-                                                </div>
-                                                <div class="algo-editor-wrap" dir="ltr">
-                                                    <pre id="algoHighlight" class="algo-highlight" aria-hidden="true"></pre>
-                                                    <textarea id="algoEditor" class="algo-editor" spellcheck="false" aria-label="محرر الخوارزميات" dir="ltr"></textarea>
-                                                </div>
-                                                <p class="algo-note">ملاحظة: هذه صيغة تعليمية مبسطة، وليست لغة برمجة كاملة.</p>
-                                            </div>
-
-                                            <div class="algo-card algo-results-card">
-                                                <div class="algo-card-header">
-                                                    <h3>التتبع والنتائج</h3>
-                                                </div>
-                                                <div class="algo-panels">
-                                                    <div class="algo-panel">
-                                                        <h4 class="algo-panel-title">المتغيرات</h4>
-                                                        <div class="algo-vars" role="region" aria-label="جدول المتغيرات">
-                                                            <table class="algo-table">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>الاسم</th>
-                                                                        <th>القيمة</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="algoVarsBody" aria-live="polite">
-                                                                    <tr><td colspan="2" class="algo-empty">لا توجد متغيرات بعد</td></tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                    <div class="algo-panel">
-                                                        <h4 class="algo-panel-title">الإخراج</h4>
-                                                        <pre id="algoOutput" class="algo-output" aria-label="مخرجات الخوارزمية" aria-live="polite" aria-atomic="false"></pre>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- تمت إزالة المحرر المدمج هنا لصيانة أسهل؛ استخدم الصفحة المستقلة algo-editor.html -->
                             </div>
                         </div>
                     </div>
@@ -706,7 +615,7 @@
     <!-- lab-installer.js مُعلق: عناصر DOM المقابلة غير موجودة في هذه الصفحة -->
     <script src="../assets/js/modules/lab-flowchart-designer.js?v=2"></script>
     <script src="../assets/js/modules/lab-html-editor.js?v=2"></script>
-    <script src="../assets/js/modules/lab-algo-engine.js?v=3"></script>
+    <!-- algo engine is used by the standalone editor (algo-editor.html) and removed from the embedded lab to avoid loading it unnecessarily -->
     <script src="../assets/js/modules/lab-workshop.js?v=2"></script>
     <script src="../assets/js/emoji-replacer.js?v=2"></script>
     <script src="../assets/js/lab.js?v=2"></script>

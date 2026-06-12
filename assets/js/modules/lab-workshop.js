@@ -118,6 +118,13 @@
             if (ws.id === 'algo-editor') targetId = 'subtab-algo-editor';
 
             const originalContent = document.getElementById(targetId);
+
+            // Special-case: open the standalone algo editor directly in the same page
+            if (ws.id === 'algo-editor') {
+                window.location.href = 'algo-editor.html';
+                return;
+            }
+
             if (originalContent && fsContentArea) {
                 currentWorkshopParent = originalContent.parentElement;
                 currentWorkshopElement = originalContent;
@@ -133,6 +140,10 @@
             if (currentWorkshopElement && currentWorkshopParent) {
                 currentWorkshopParent.appendChild(currentWorkshopElement);
             }
+            // remove any iframe used for standalone workshops
+            const iframe = document.getElementById('workshop-iframe');
+            if (iframe && iframe.parentElement) iframe.parentElement.removeChild(iframe);
+
             if (wsFullscreen) wsFullscreen.classList.remove('active');
             document.body.style.overflow = '';
             currentWorkshopElement = null;
