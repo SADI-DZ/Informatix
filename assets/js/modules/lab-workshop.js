@@ -21,7 +21,6 @@
 
     // Initialize logic
     function initWorkshopModule() {
-        console.log('informatix: تهيئة وحدة الورشات...');
 
         // 1. Fetch data from JSON
         fetch('../assets/data/workshops.json')
@@ -29,7 +28,6 @@
             .then(data => {
                 workshopsData = data;
                 isDataLoaded = true;
-                console.log('informatix: تم تحميل البيانات من JSON بنجاح');
             })
             .catch(err => {
                 console.warn('informatix: فشل تحميل JSON، سيتم استخدام البيانات الاحتياطية', err);
@@ -53,7 +51,7 @@
 
         // Core Functions
         async function showWorkshopSelection(categoryId) {
-            console.log('informatix: تفعيل المجال ->', categoryId);
+            // activation of category: categoryId
             
             const data = workshopsData[categoryId];
             if (!data) {
@@ -172,7 +170,7 @@
             if (target && !target.classList.contains('sub-tab') && !target.classList.contains('station-dot')) {
                 const stationId = target.getAttribute('data-station');
                 if (stationId) {
-                    console.log('informatix: التقاط نقرة على محطة:', stationId);
+                    // station click captured: stationId
                     e.preventDefault();
                     showWorkshopSelection(stationId);
                 }

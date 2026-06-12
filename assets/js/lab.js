@@ -6,6 +6,5 @@
 (function() {
     "use strict";
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('informatix: تم تهيئة المخبر بنجاح');
     });
 })();

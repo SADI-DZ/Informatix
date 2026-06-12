@@ -22,7 +22,7 @@
         const SNIPPETS = {
             'html5': '<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n  <meta charset="UTF-8">\n  <title>Document</title>\n</head>\n<body>\n  \n</body>\n</html>',
             'style': '<style>\n  /* CSS Code */\n  body { font-family: Arial; }\n</style>',
-            'script': '<script>\n  // JS Code\n  console.log("Hello");\n</script>',
+            'script': '<script>\n  // JS Code\n</script>',
             'form': '<form action="" method="post">\n  <label>الاسم: <input type="text" name="name"></label>\n  <button type="submit">إرسال</button>\n</form>',
             'table': '<table border="1">\n  <tr>\n    <th>العنوان</th>\n  </tr>\n  <tr>\n    <td>البيانات</td>\n  </tr>\n</table>'
         };
